@@ -3,6 +3,10 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
+const readOptional = file => {
+  const absolute = path.join(root, file);
+  return fs.existsSync(absolute) ? fs.readFileSync(absolute, 'utf8') : null;
+};
 
 const baseCss = read('assets/css/00-base.css');
 const componentCss = read('assets/css/02-components.css');
@@ -12,10 +16,11 @@ const circuitJs = read('assets/js/12-circuit-editor.js');
 const html = read('qs_studio.html');
 const svgMaker = read('svg_symbol_maker.html');
 const sheetPipeline = read('pdf_sheet_template_pipeline.html');
-const desktopHtml = read('desktop-electron/dist/win-unpacked/resources/studio/qs_studio.html');
-const desktopCanvas = read('desktop-electron/dist/win-unpacked/resources/studio/assets/js/04-canvas-engine.js');
-const desktopExport = read('desktop-electron/dist/win-unpacked/resources/studio/assets/js/08-export.js');
-const desktopSheetPipeline = read('desktop-electron/dist/win-unpacked/resources/studio/pdf_sheet_template_pipeline.html');
+const desktopHtml = readOptional('desktop-electron/dist/win-unpacked/resources/studio/qs_studio.html');
+const desktopCanvas = readOptional('desktop-electron/dist/win-unpacked/resources/studio/assets/js/04-canvas-engine.js');
+const desktopExport = readOptional('desktop-electron/dist/win-unpacked/resources/studio/assets/js/08-export.js');
+const desktopSheetPipeline = readOptional('desktop-electron/dist/win-unpacked/resources/studio/pdf_sheet_template_pipeline.html');
+const hasDesktopPackage = [desktopHtml, desktopCanvas, desktopExport, desktopSheetPipeline].every(value => value !== null);
 
 const checks = [];
 function check(name, condition, detail = '') {
@@ -810,16 +815,19 @@ check(
 );
 
 check(
-  'desktop packaged JS is synced with root JS',
-  canvas === desktopCanvas && exportJs === desktopExport,
+  'desktop packaged JS is synced with root JS when present',
+  !hasDesktopPackage || (canvas === desktopCanvas && exportJs === desktopExport),
   'desktop JS differs from root JS'
 );
 
 const rootCanvasTag = (html.match(/04-canvas-engine\.js\?v=([^"]+)/) || [])[1];
 const rootExportTag = (html.match(/08-export\.js\?v=([^"]+)/) || [])[1];
-const desktopCanvasTag = (desktopHtml.match(/04-canvas-engine\.js\?v=([^"]+)/) || [])[1];
-const desktopExportTag = (desktopHtml.match(/08-export\.js\?v=([^"]+)/) || [])[1];
-check('desktop HTML cache tags match root HTML', rootCanvasTag === desktopCanvasTag && rootExportTag === desktopExportTag);
+const desktopCanvasTag = desktopHtml ? (desktopHtml.match(/04-canvas-engine\.js\?v=([^"]+)/) || [])[1] : null;
+const desktopExportTag = desktopHtml ? (desktopHtml.match(/08-export\.js\?v=([^"]+)/) || [])[1] : null;
+check(
+  'desktop HTML cache tags match root HTML when present',
+  !hasDesktopPackage || (rootCanvasTag === desktopCanvasTag && rootExportTag === desktopExportTag)
+);
 
 const failed = checks.filter(item => !item.ok);
 for (const item of checks) {

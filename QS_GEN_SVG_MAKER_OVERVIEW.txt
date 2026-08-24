@@ -230,7 +230,7 @@ node tools/stability-regression.js
 
 
 SUMMARY
-=======
+-------
 
 QS Gen is the main authoring/export application. SVG Maker is the vector asset creation tool that feeds reusable diagrams and symbols into QS Gen.
 
