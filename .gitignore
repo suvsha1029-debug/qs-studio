@@ -1,0 +1,44 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+*.key
+
+# Dependencies and generated desktop packages
+desktop-electron/node_modules/
+desktop-electron/dist/
+# GitHub Pages publishes only the browser QS Studio.
+desktop-electron/
+
+# Local agent/runtime metadata is never part of the product release.
+.agents/
+.codex/
+
+# Local scratch and historical snapshots
+tmp/
+*.bak_*
+*.pre_rowsurface_*
+*.pre_*_backup.js
+tmp_custom_symbol_test.svg
+
+# Local desktop launch/build helpers are outside the browser release.
+build-qs-studio-installer.bat
+open-qs-studio-desktop.bat
+README_PERFECT_PRE_GIT.txt
+
+# Generated question banks, keys, papers, and logs
+*.qbank.json
+*_qspaper*.json
+*_key*.json
+*.log
+*.pdf
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

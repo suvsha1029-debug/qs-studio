@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "symbols": [
+    {
+      "version": 1,
+      "kind": "qs-studio-circuit-symbol",
+      "id": "custom_custom_symbol_mqq7gxvj",
+      "libraryKey": "custom_symbol",
+      "label": "Custom Symbol",
+      "category": "Passive",
+      "subcategory": "Resistor",
+      "width": 680,
+      "height": 440,
+      "ports": [],
+      "elements": [
+        {
+          "id": "symbol_mqq7g6lf_20",
+          "type": "line",
+          "x1": 240,
+          "y1": 130,
+          "x2": 250,
+          "y2": 120,
+          "stroke": "#111111",
+          "sw": 2,
+          "amp": 14
+        },
+        {
+          "id": "symbol_mqq7g8nu_21",
+          "type": "line",
+          "x1": 250,
+          "y1": 120,
+          "x2": 260,
+          "y2": 130,
+          "stroke": "#111111",
+          "sw": 2,
+          "amp": 14
+        },
+        {
+          "id": "symbol_mqq7g9tm_22",
+          "type": "line",
+          "x1": 260,
+          "y1": 130,
+          "x2": 270,
+          "y2": 120,
+          "stroke": "#111111",
+          "sw": 2,
+          "amp": 14
+        },
+        {
+          "id": "symbol_mqq7gb1e_23",
+          "type": "line",
+          "x1": 270,
+          "y1": 120,
+          "x2": 280,
+          "y2": 130,
+          "stroke": "#111111",
+          "sw": 2,
+          "amp": 14
+        },
+        {
+          "id": "symbol_mqq7gcg2_24",
+          "type": "line",
+          "x1": 280,
+          "y1": 130,
+          "x2": 290,
+          "y2": 120,
+          "stroke": "#111111",
+          "sw": 2,
+          "amp": 14
+        },
+        {
+          "id": "symbol_mqq7gdic_25",
+          "type": "line",
+          "x1": 290,
+          "y1": 120,
+          "x2": 300,
+          "y2": 130,
+          "stroke": "#111111",
+          "sw": 2,
+          "amp": 14
+        },
+        {
+          "id": "symbol_mqq7gfgg_26",
+          "type": "line",
+          "x1": 300,
+          "y1": 130,
+          "x2": 320,
+          "y2": 130,
+          "stroke": "#111111",
+          "sw": 2,
+          "amp": 14
+        },
+        {
+          "id": "symbol_mqq7ghwo_27",
+          "type": "line",
+          "x1": 240,
+          "y1": 130,
+          "x2": 220,
+          "y2": 130,
+          "stroke": "#111111",
+          "sw": 2,
+          "amp": 14
+        }
+      ],
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"680\" height=\"440\" viewBox=\"0 0 680 440\">\n  <line x1=\"240\" y1=\"130\" x2=\"250\" y2=\"120\" stroke=\"#111111\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n  <line x1=\"250\" y1=\"120\" x2=\"260\" y2=\"130\" stroke=\"#111111\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n  <line x1=\"260\" y1=\"130\" x2=\"270\" y2=\"120\" stroke=\"#111111\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n  <line x1=\"270\" y1=\"120\" x2=\"280\" y2=\"130\" stroke=\"#111111\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n  <line x1=\"280\" y1=\"130\" x2=\"290\" y2=\"120\" stroke=\"#111111\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n  <line x1=\"290\" y1=\"120\" x2=\"300\" y2=\"130\" stroke=\"#111111\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n  <line x1=\"300\" y1=\"130\" x2=\"320\" y2=\"130\" stroke=\"#111111\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n  <line x1=\"240\" y1=\"130\" x2=\"220\" y2=\"130\" stroke=\"#111111\" stroke-width=\"2\" stroke-linecap=\"round\"/>\n</svg>"
+    }
+  ]
+}

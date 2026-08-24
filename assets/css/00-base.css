@@ -1,0 +1,11 @@
+﻿*{box-sizing:border-box;margin:0;padding:0;-webkit-user-select:none;user-select:none}
+:root{
+  --bg:#233f6f;--surface:#eef5fb;--surface2:#d9e8f4;--border:#6f8fb2;--border2:#173f6c;
+  --text:#0b1e35;--muted:#345678;--accent:#004b7a;--accent2:#d5e9f6;
+  --red:#b63f4e;--green:#2d7c65;
+  --mono:'Courier New',monospace;--sans:'Arial','Helvetica Neue','Segoe UI',system-ui,sans-serif;--display:'Georgia','Times New Roman',serif;
+  --exam-font:'Arial','Helvetica Neue','Segoe UI','Noto Sans','Segoe UI Symbol','Cambria Math',sans-serif
+}
+body{font-family:var(--sans);font-size:13px;background:linear-gradient(180deg,#244572 0%,#122b4d 100%);color:var(--text);height:100vh;overflow:hidden}
+input,textarea,select{-webkit-user-select:text;user-select:text}
+

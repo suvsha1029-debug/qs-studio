@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+    <path d="M0,0 L10,5 L0,10 Z" fill="#000"/>
+  </marker>
+</defs>
+<style>
+.L{stroke:#000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.T{stroke:#000;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.C{stroke:#000;stroke-width:3;fill:#fff}
+.t{font-family:Arial,Helvetica,sans-serif;fill:#000;font-size:18px;text-anchor:middle;dominant-baseline:middle}
+.l{font-family:Arial,Helvetica,sans-serif;fill:#000;font-size:18px;text-anchor:middle;dominant-baseline:middle}
+.f{font-family:Arial,Helvetica,sans-serif;fill:#000;font-size:13px;text-anchor:middle;dominant-baseline:middle}
+</style>
+<rect x="1.5" y="1.5" width="253" height="253" rx="10" ry="10" fill="#fff" stroke="#ddd" stroke-width="1.5"/>
+<text class="t" x="128" y="26">JFET</text>
+<text class="t" x="128" y="48">P Channel</text>
+
+<!-- Small circle -->
+<circle class="T" cx="118" cy="140" r="50"/>
+
+<!-- Continuous channel bar -->
+<path class="L" d="M112 100 V180"/>
+
+<!-- D stub -->
+<path class="L" d="M112 112 H132 V76"/>
+<circle class="C" cx="132" cy="70" r="6"/>
+<text class="l" x="154" y="70">D</text>
+
+<!-- S stub -->
+<path class="L" d="M112 168 H132 V204"/>
+<circle class="C" cx="132" cy="210" r="6"/>
+<text class="l" x="154" y="210">S</text>
+
+<!-- G wire + arrow pointing LEFT (← out of channel toward G = P-ch standard) -->
+<circle class="C" cx="44" cy="140" r="6"/>
+<text class="l" x="22" y="140">G</text>
+<!-- Draw from channel rightward to G, tip at G end pointing left -->
+<path class="L" d="M112 140 H50" marker-end="url(#arr)"/>
+
+<text class="f" x="128" y="246">JFET_P_Channel_15.svg</text>
+</svg>

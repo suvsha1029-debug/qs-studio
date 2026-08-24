@@ -1,0 +1,2558 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Page Layout Designer</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <style>
+    :root {
+      --bg: #101114;
+      --panel: #181a20;
+      --panel2: #20232b;
+      --text: #f3f4f6;
+      --muted: #a6adbb;
+      --line: #303440;
+      --accent: #7dd3fc;
+      --danger: #fb7185;
+      --good: #86efac;
+      --shadow: 0 12px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top left, #182032 0, var(--bg) 45%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 22px 28px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      background: rgba(16,17,20,.72);
+      backdrop-filter: blur(14px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 22px;
+      letter-spacing: -.02em;
+    }
+
+    .sub { color: var(--muted); font-size: 13px; }
+
+    main {
+      display: grid;
+      grid-template-columns: 380px minmax(420px, 1fr);
+      gap: 18px;
+      padding: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: rgba(24, 26, 32, .92);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel h2 {
+      font-size: 14px;
+      font-weight: 700;
+      margin: 0;
+      padding: 14px 16px;
+      background: rgba(255,255,255,.04);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+
+    .section {
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+
+    .section:last-child { border-bottom: 0; }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 7px;
+      font-weight: 650;
+    }
+
+    input[type="text"], input[type="number"], textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #111318;
+      color: var(--text);
+      padding: 10px 11px;
+      outline: none;
+      font: inherit;
+      font-size: 13px;
+    }
+
+    textarea { min-height: 60px; resize: vertical; }
+
+    input[type="color"] {
+      width: 100%;
+      height: 39px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #111318;
+      padding: 5px;
+      cursor: pointer;
+    }
+
+    .checks {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .check {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text);
+      font-size: 12px;
+      font-weight: 650;
+      margin: 0;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #111318;
+      user-select: none;
+    }
+
+    .check input { accent-color: #38bdf8; }
+
+
+    #vectorInput {
+      min-height: 130px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+      line-height: 1.38;
+      white-space: pre;
+      overflow-wrap: normal;
+      overflow-x: auto;
+    }
+
+    .tiny {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.45;
+    }
+
+    input[type="file"] {
+      width: 100%;
+      font-size: 12px;
+      color: var(--muted);
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      padding: 11px;
+      background: #111318;
+    }
+
+    input[type="range"] { width: 100%; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .triple {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    button {
+      border: 1px solid rgba(255,255,255,.1);
+      background: #252936;
+      color: var(--text);
+      border-radius: 11px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 750;
+      font-size: 13px;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+    }
+
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: rgba(125,211,252,.5);
+    }
+
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+    }
+
+    .primary { background: linear-gradient(135deg, #0369a1, #0e7490); }
+    .danger { background: rgba(251,113,133,.13); color: #fecdd3; }
+    .ghost { background: transparent; }
+    .good { background: rgba(34,197,94,.15); color: #bbf7d0; }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+      margin-top: 8px;
+    }
+
+    #stagePanel { min-height: calc(100vh - 110px); }
+
+    #toolbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 14px;
+      align-items: center;
+      background: rgba(255,255,255,.035);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+
+    #status {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #previewScroller {
+      overflow: auto;
+      max-height: calc(100vh - 170px);
+      padding: 26px;
+      display: grid;
+      place-items: start center;
+    }
+
+    #pageWrap {
+      position: relative;
+      background: #fff;
+      box-shadow: 0 20px 60px rgba(0,0,0,.52);
+      overflow: hidden;
+      user-select: none;
+      transform-origin: top center;
+    }
+
+    #pdfCanvas {
+      display: block;
+      background: white;
+    }
+
+    #overlayLayer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .overlayItem {
+      position: absolute;
+      border: 1px dashed rgba(56,189,248,.9);
+      outline: 9999px solid transparent;
+      pointer-events: auto;
+      cursor: move;
+      overflow: visible;
+      background: transparent;
+      min-width: 24px;
+      min-height: 18px;
+    }
+
+    .imageItem, .textItem { overflow: hidden; }
+    .svgItem { overflow: visible; }
+    .watermarkImageItem { overflow: visible; }
+
+    .overlayItem.selected {
+      border: 2px solid var(--accent);
+      background: rgba(125, 211, 252, .035);
+      box-shadow: 0 0 0 2px rgba(14,165,233,.2), 0 8px 30px rgba(14,165,233,.18);
+    }
+
+    .overlayItem.locked { pointer-events: none; }
+
+    .handle {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      right: 0;
+      bottom: 0;
+      background: var(--accent);
+      border: 1px solid #0f172a;
+      cursor: nwse-resize;
+      z-index: 3;
+    }
+
+    .textItem {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: #0f172a;
+      font-weight: 700;
+      line-height: 1.18;
+      padding: 4px;
+    }
+
+    .imageItem img, .watermarkImageItem img, .svgItem img, .svgItem svg, .svgInline {
+      width: 100%;
+      height: 100%;
+      display: block;
+      pointer-events: none;
+    }
+
+    .imageItem img { object-fit: cover; }
+    .watermarkImageItem img { object-fit: contain; }
+    .svgItem img { object-fit: contain; }
+    .svgItem svg { overflow: visible; }
+    .svgInline { overflow: visible; }
+
+    .badge {
+      font-size: 11px;
+      color: #dbeafe;
+      background: rgba(14,165,233,.16);
+      border: 1px solid rgba(14,165,233,.28);
+      padding: 5px 8px;
+      border-radius: 999px;
+    }
+
+    .progress {
+      height: 8px;
+      border-radius: 999px;
+      background: #111318;
+      border: 1px solid rgba(255,255,255,.07);
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #38bdf8, #86efac);
+      transition: width .15s ease;
+    }
+
+    .empty {
+      color: var(--muted);
+      text-align: center;
+      max-width: 520px;
+      margin: 80px auto;
+      line-height: 1.55;
+    }
+
+    .kbd {
+      border: 1px solid rgba(255,255,255,.13);
+      background: rgba(255,255,255,.07);
+      padding: 1px 5px;
+      border-radius: 6px;
+      color: #e5e7eb;
+      font-size: 11px;
+    }
+
+    @media (max-width: 980px) {
+      main { grid-template-columns: 1fr; }
+      #previewScroller { max-height: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Page Layout Designer</h1>
+    <div class="sub">Upload a PDF or start from blank A4, design page 1, then apply the same locked layout on every page.</div>
+  </header>
+
+  <main>
+    <aside class="panel">
+      <h2>1. Source PDF</h2>
+      <div class="section">
+        <label for="pdfInput">Upload PDF</label>
+        <input id="pdfInput" type="file" accept="application/pdf" />
+        <div class="btns">
+          <button id="blankTemplateBtn" class="good" type="button">Start Blank A4 Layout</button>
+        </div>
+        <div class="hint">Upload an exam PDF, or start from a default white A4 sheet to design a reusable page layout. Everything runs locally in your browser.</div>
+      </div>
+
+      <h2>2. Add items</h2>
+      <div class="section">
+        <label for="svgInput">SVG / vector JSON watermark file</label>
+        <input id="svgInput" type="file" accept=".svg,.json,image/svg+xml,application/json" />
+        <div class="hint">Upload SVG, a QS Studio symbol JSON, or paste raw SVG / vector JSON below and press Load vector. Rotated vectors are auto-padded so they do not disappear.</div>
+
+        <label for="vectorInput" style="margin-top:12px">Raw SVG / vector JSON</label>
+        <textarea id="vectorInput" spellcheck="false" placeholder='Paste raw <svg>...</svg>, QS Studio symbol JSON, or JSON like:
+{
+  "viewBox":"0 0 200 80",
+  "paths":[{"d":"M10 40 H190","stroke":"#111","strokeWidth":5,"fill":"none"}],
+  "texts":[{"x":100,"y":50,"text":"INSTI","fontSize":28,"fill":"#111","anchor":"middle"}]
+}'></textarea>
+        <div class="btns">
+          <button id="loadVector" class="good">Load vector</button>
+          <button id="clearVector" class="ghost">Clear pasted vector</button>
+        </div>
+        <div id="vectorMsg" class="tiny"></div>
+        <div class="checks">
+          <label class="check"><input id="vectorNative" type="checkbox" checked /> Native PDF vector for JSON symbols</label>
+          <label class="check"><input id="vectorKeepAspect" type="checkbox" checked /> Keep vector aspect</label>
+        </div>
+        <div class="row">
+          <div>
+            <label for="svgOpacity">SVG opacity</label>
+            <input id="svgOpacity" type="range" min="0" max="1" step="0.01" value="0.35" />
+          </div>
+          <div>
+            <label for="svgRotate">SVG rotate</label>
+            <input id="svgRotate" type="range" min="-180" max="180" step="1" value="0" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="svgRasterScale">Fallback SVG sharpness</label>
+            <input id="svgRasterScale" type="number" min="3" max="12" step="1" value="8" />
+          </div>
+          <div>
+            <label for="svgStrength">SVG/text thickness</label>
+            <input id="svgStrength" type="number" min="1" max="4" step="0.25" value="1" />
+          </div>
+        </div>
+        <div class="tiny">Original PDF text is never rasterized; sharpness and thickness only affect burned SVG/vector fallback layers.</div>
+        <div class="btns">
+          <button id="centerSvg" class="ghost">Center SVG</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <label for="watermarkImageInput">Watermark image</label>
+        <input id="watermarkImageInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" />
+        <div class="row">
+          <div>
+            <label for="watermarkImageOpacity">Image opacity</label>
+            <input id="watermarkImageOpacity" type="range" min="0" max="1" step="0.01" value="0.18" />
+          </div>
+          <div>
+            <label for="watermarkImageRotate">Image rotate</label>
+            <input id="watermarkImageRotate" type="range" min="-180" max="180" step="1" value="0" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="watermarkImageStrength">Image strength</label>
+            <input id="watermarkImageStrength" type="number" min="1" max="4" step="0.25" value="1" />
+          </div>
+          <div class="tiny" style="align-self:end">Strength redraws transparent pixels more densely before burning the layer.</div>
+        </div>
+        <div class="btns">
+          <button id="centerWatermarkImage" class="ghost">Center image</button>
+          <button id="clearWatermarkImage" class="ghost">Clear image</button>
+        </div>
+        <div class="hint">Use this for a large faded paper watermark. It is stored in the layout JSON and burned into the A4 sheet layer before exam text is printed.</div>
+      </div>
+
+      <div class="section">
+        <label for="logoInput">Institute image / logo</label>
+        <input id="logoInput" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" />
+        <div class="triple">
+          <div>
+            <label for="logoOpacity">Opacity</label>
+            <input id="logoOpacity" type="range" min="0" max="1" step="0.01" value="1" />
+          </div>
+          <div>
+            <label for="cropX">Crop X</label>
+            <input id="cropX" type="range" min="0" max="100" step="1" value="50" />
+          </div>
+          <div>
+            <label for="cropY">Crop Y</label>
+            <input id="cropY" type="range" min="0" max="100" step="1" value="50" />
+          </div>
+        </div>
+        <div class="hint">Crop works like CSS cover: resize the logo box, then shift the image using Crop X/Y.</div>
+      </div>
+
+      <div class="section">
+        <label for="topText">Top text</label>
+        <textarea id="topText" placeholder="Example: Institute Name | Department"></textarea>
+        <div class="row">
+          <div>
+            <label for="topSize">Top font size</label>
+            <input id="topSize" type="number" min="6" max="96" value="18" />
+          </div>
+          <div>
+            <label for="topColor">Top text colour</label>
+            <input id="topColor" type="color" value="#111827" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="topOpacity">Top opacity</label>
+            <input id="topOpacity" type="range" min="0" max="1" step="0.01" value="0.95" />
+          </div>
+          <div>
+            <label>Top text style</label>
+            <div class="checks">
+              <label class="check"><input id="topBold" type="checkbox" checked /> Bold</label>
+              <label class="check"><input id="topItalic" type="checkbox" /> Italic</label>
+              <label class="check"><input id="topUnderline" type="checkbox" /> Underline</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <label for="bottomText">Bottom text</label>
+        <textarea id="bottomText" placeholder="Example: Generated for official use only"></textarea>
+        <div class="row">
+          <div>
+            <label for="bottomSize">Bottom font size</label>
+            <input id="bottomSize" type="number" min="6" max="96" value="14" />
+          </div>
+          <div>
+            <label for="bottomColor">Bottom text colour</label>
+            <input id="bottomColor" type="color" value="#111827" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="bottomOpacity">Bottom opacity</label>
+            <input id="bottomOpacity" type="range" min="0" max="1" step="0.01" value="0.85" />
+          </div>
+          <div>
+            <label>Bottom text style</label>
+            <div class="checks">
+              <label class="check"><input id="bottomBold" type="checkbox" checked /> Bold</label>
+              <label class="check"><input id="bottomItalic" type="checkbox" /> Italic</label>
+              <label class="check"><input id="bottomUnderline" type="checkbox" /> Underline</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2>3. Selected item</h2>
+      <div class="section">
+        <div class="row">
+          <div><label for="xBox">X</label><input id="xBox" type="number" value="0" /></div>
+          <div><label for="yBox">Y</label><input id="yBox" type="number" value="0" /></div>
+        </div>
+        <div class="row">
+          <div><label for="wBox">Width</label><input id="wBox" type="number" value="0" /></div>
+          <div><label for="hBox">Height</label><input id="hBox" type="number" value="0" /></div>
+        </div>
+        <div class="row">
+          <div><label for="alignMargin">Align margin</label><input id="alignMargin" type="number" min="0" value="18" /></div>
+          <div><label>Center / edge align</label><button id="centerBoth" class="ghost" style="width:100%">Center both</button></div>
+        </div>
+        <div class="btns">
+          <button id="alignLeft" class="ghost">Left</button>
+          <button id="alignCenterH" class="ghost">Center H</button>
+          <button id="alignRight" class="ghost">Right</button>
+          <button id="alignTop" class="ghost">Top</button>
+          <button id="alignCenterV" class="ghost">Center V</button>
+          <button id="alignBottom" class="ghost">Bottom</button>
+        </div>
+        <div class="btns">
+          <button id="bringFront">Bring front</button>
+          <button id="sendBack">Send back</button>
+          <button id="deleteItem" class="danger">Delete</button>
+        </div>
+        <div class="hint">Select any box on the page, drag it, resize from the bottom-right handle, type exact pixel values, or use margin alignment buttons.</div>
+      </div>
+
+      <h2>4. Page number</h2>
+      <div class="section">
+        <label class="check"><input id="pageNumEnable" type="checkbox" /> Auto page number at bottom-center</label>
+        <label for="pageNumFormat" style="margin-top:12px">Format</label>
+        <input id="pageNumFormat" type="text" value="Page {page} / {total}" />
+        <div class="row">
+          <div>
+            <label for="pageNumSize">Page number size</label>
+            <input id="pageNumSize" type="number" min="6" max="72" value="11" />
+          </div>
+          <div>
+            <label for="pageNumColor">Page number colour</label>
+            <input id="pageNumColor" type="color" value="#111827" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="pageNumOpacity">Page number opacity</label>
+            <input id="pageNumOpacity" type="range" min="0" max="1" step="0.01" value="0.85" />
+          </div>
+          <div>
+            <label for="pageNumMargin">Bottom margin</label>
+            <input id="pageNumMargin" type="number" min="0" value="22" />
+          </div>
+        </div>
+        <div class="checks">
+          <label class="check"><input id="pageNumBold" type="checkbox" /> Bold</label>
+          <label class="check"><input id="pageNumItalic" type="checkbox" /> Italic</label>
+          <label class="check"><input id="pageNumUnderline" type="checkbox" /> Underline</label>
+        </div>
+        <div class="hint">Use <code>{page}</code> and <code>{total}</code>. It previews page 1 and exports correct numbers on every page.</div>
+      </div>
+
+      <h2>5. Printable content area</h2>
+      <div class="section">
+        <div class="row">
+          <div>
+            <label for="contentTopPct">Top %</label>
+            <input id="contentTopPct" type="number" min="0" max="45" step="0.1" value="14" />
+          </div>
+          <div>
+            <label for="contentBottomPct">Bottom %</label>
+            <input id="contentBottomPct" type="number" min="0" max="35" step="0.1" value="8" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="contentLeftPct">Left %</label>
+            <input id="contentLeftPct" type="number" min="0" max="35" step="0.1" value="12" />
+          </div>
+          <div>
+            <label for="contentRightPct">Right %</label>
+            <input id="contentRightPct" type="number" min="0" max="35" step="0.1" value="8" />
+          </div>
+        </div>
+        <div class="checks">
+          <label class="check"><input id="fitSourceToContentBox" type="checkbox" checked /> Fit source PDF inside this area on export</label>
+        </div>
+        <div class="btns">
+          <button id="autoContentBox" class="ghost" type="button">Auto from layers</button>
+        </div>
+        <div class="hint">This is the safe print area for questions. Headers, logos, watermarks, and page numbers stay fixed; paper content is kept inside these margins.</div>
+      </div>
+
+      <h2>6. Export</h2>
+      <div class="section">
+        <div class="btns">
+          <button id="makePdf" class="primary" disabled>Apply to all pages & download</button>
+          <button id="resetLayout" class="ghost">Reset layout</button>
+        </div>
+        <div class="btns">
+          <button id="saveTemplateJson" class="good" type="button">Save Layout JSON</button>
+          <label class="ghost" style="display:inline-flex;align-items:center;justify-content:center;cursor:pointer">
+            Load Layout JSON
+            <input id="templateJsonInput" type="file" accept=".json,application/json" style="display:none" />
+          </label>
+        </div>
+        <div class="progress"><div id="bar" class="bar"></div></div>
+        <div id="exportMsg" class="hint"></div>
+      </div>
+    </aside>
+
+    <section id="stagePanel" class="panel">
+      <div id="toolbar">
+        <div id="status">No PDF loaded.</div>
+        <div class="badge">Preview: first page only</div>
+      </div>
+      <div id="previewScroller">
+        <div id="emptyState" class="empty">
+          Upload a PDF or start from blank A4. Page 1 will appear here, then add SVG watermark, logo, and top/bottom text. The final button stamps them onto every page.
+          <br><br>
+          Tip: use <span class="kbd">Delete</span> to remove the selected item.
+        </div>
+        <div id="pageWrap" style="display:none">
+          <canvas id="pdfCanvas"></canvas>
+          <div id="overlayLayer"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const { PDFDocument, StandardFonts, rgb, degrees } = PDFLib;
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+    const els = {
+      pdfInput: document.getElementById('pdfInput'),
+      blankTemplateBtn: document.getElementById('blankTemplateBtn'),
+      svgInput: document.getElementById('svgInput'),
+      vectorInput: document.getElementById('vectorInput'),
+      loadVector: document.getElementById('loadVector'),
+      clearVector: document.getElementById('clearVector'),
+      vectorMsg: document.getElementById('vectorMsg'),
+      vectorNative: document.getElementById('vectorNative'),
+      vectorKeepAspect: document.getElementById('vectorKeepAspect'),
+      svgRasterScale: document.getElementById('svgRasterScale'),
+      svgStrength: document.getElementById('svgStrength'),
+      watermarkImageInput: document.getElementById('watermarkImageInput'),
+      watermarkImageOpacity: document.getElementById('watermarkImageOpacity'),
+      watermarkImageRotate: document.getElementById('watermarkImageRotate'),
+      watermarkImageStrength: document.getElementById('watermarkImageStrength'),
+      centerWatermarkImage: document.getElementById('centerWatermarkImage'),
+      clearWatermarkImage: document.getElementById('clearWatermarkImage'),
+      logoInput: document.getElementById('logoInput'),
+      svgOpacity: document.getElementById('svgOpacity'),
+      svgRotate: document.getElementById('svgRotate'),
+      logoOpacity: document.getElementById('logoOpacity'),
+      cropX: document.getElementById('cropX'),
+      cropY: document.getElementById('cropY'),
+      topText: document.getElementById('topText'),
+      bottomText: document.getElementById('bottomText'),
+      topSize: document.getElementById('topSize'),
+      bottomSize: document.getElementById('bottomSize'),
+      topColor: document.getElementById('topColor'),
+      bottomColor: document.getElementById('bottomColor'),
+      topBold: document.getElementById('topBold'),
+      bottomBold: document.getElementById('bottomBold'),
+      topItalic: document.getElementById('topItalic'),
+      bottomItalic: document.getElementById('bottomItalic'),
+      topUnderline: document.getElementById('topUnderline'),
+      bottomUnderline: document.getElementById('bottomUnderline'),
+      topOpacity: document.getElementById('topOpacity'),
+      bottomOpacity: document.getElementById('bottomOpacity'),
+      centerSvg: document.getElementById('centerSvg'),
+      makePdf: document.getElementById('makePdf'),
+      resetLayout: document.getElementById('resetLayout'),
+      saveTemplateJson: document.getElementById('saveTemplateJson'),
+      templateJsonInput: document.getElementById('templateJsonInput'),
+      status: document.getElementById('status'),
+      exportMsg: document.getElementById('exportMsg'),
+      pageWrap: document.getElementById('pageWrap'),
+      canvas: document.getElementById('pdfCanvas'),
+      overlay: document.getElementById('overlayLayer'),
+      emptyState: document.getElementById('emptyState'),
+      xBox: document.getElementById('xBox'),
+      yBox: document.getElementById('yBox'),
+      wBox: document.getElementById('wBox'),
+      hBox: document.getElementById('hBox'),
+      bringFront: document.getElementById('bringFront'),
+      sendBack: document.getElementById('sendBack'),
+      deleteItem: document.getElementById('deleteItem'),
+      alignMargin: document.getElementById('alignMargin'),
+      alignLeft: document.getElementById('alignLeft'),
+      alignCenterH: document.getElementById('alignCenterH'),
+      alignRight: document.getElementById('alignRight'),
+      alignTop: document.getElementById('alignTop'),
+      alignCenterV: document.getElementById('alignCenterV'),
+      alignBottom: document.getElementById('alignBottom'),
+      centerBoth: document.getElementById('centerBoth'),
+      pageNumEnable: document.getElementById('pageNumEnable'),
+      pageNumFormat: document.getElementById('pageNumFormat'),
+      pageNumSize: document.getElementById('pageNumSize'),
+      pageNumColor: document.getElementById('pageNumColor'),
+      pageNumOpacity: document.getElementById('pageNumOpacity'),
+      pageNumMargin: document.getElementById('pageNumMargin'),
+      pageNumBold: document.getElementById('pageNumBold'),
+      pageNumItalic: document.getElementById('pageNumItalic'),
+      pageNumUnderline: document.getElementById('pageNumUnderline'),
+      contentTopPct: document.getElementById('contentTopPct'),
+      contentBottomPct: document.getElementById('contentBottomPct'),
+      contentLeftPct: document.getElementById('contentLeftPct'),
+      contentRightPct: document.getElementById('contentRightPct'),
+      fitSourceToContentBox: document.getElementById('fitSourceToContentBox'),
+      autoContentBox: document.getElementById('autoContentBox'),
+      bar: document.getElementById('bar'),
+    };
+
+    const state = {
+      pdfBytes: null,
+      pdfName: 'watermarked.pdf',
+      pageCssW: 0,
+      pageCssH: 0,
+      pageCount: 0,
+      selected: null,
+      z: 10,
+      svgDataUrl: null,
+      svgMarkup: null,
+      svgObjectUrl: null,
+      svgSourceLabel: '',
+      svgNatural: null,
+      svgNative: null,
+      watermarkImageDataUrl: null,
+      watermarkImageNatural: null,
+      watermarkImageOriginalType: 'png',
+      logoDataUrl: null,
+      logoNatural: null,
+      logoOriginalType: 'png',
+      loadedSessionId: '',
+    };
+
+    function setStatus(text) { els.status.textContent = text; }
+    function setProgress(pct) { els.bar.style.width = `${Math.max(0, Math.min(100, pct))}%`; }
+
+    function readFileAsArrayBuffer(file) {
+      return new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result);
+        fr.onerror = reject;
+        fr.readAsArrayBuffer(file);
+      });
+    }
+
+    function readFileAsDataURL(file) {
+      return new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result);
+        fr.onerror = reject;
+        fr.readAsDataURL(file);
+      });
+    }
+
+    function readFileAsText(file) {
+      return new Promise((resolve, reject) => {
+        const fr = new FileReader();
+        fr.onload = () => resolve(fr.result);
+        fr.onerror = reject;
+        fr.readAsText(file);
+      });
+    }
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    async function loadPdfArrayBuffer(arrayBuffer, fileName = 'exam_paper.pdf') {
+      setProgress(0);
+      els.exportMsg.textContent = '';
+      state.pdfName = String(fileName || 'exam_paper.pdf').replace(/\.pdf$/i, '') + '_page_layout.pdf';
+      const buffer = arrayBuffer.slice(0);
+      state.pdfBytes = buffer.slice(0);
+      els.overlay.innerHTML = '';
+      selectItem(null);
+      await renderPdfFirstPage(buffer);
+      updatePageNumber();
+    }
+
+    async function startBlankA4Template() {
+      const pdfDoc = await PDFDocument.create();
+      pdfDoc.addPage([595.28, 841.89]);
+      const bytes = await pdfDoc.save();
+      await loadPdfArrayBuffer(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), 'blank_a4_layout.pdf');
+      els.exportMsg.textContent = 'Blank white A4 sheet ready. Design the page layout, then Save Layout JSON.';
+    }
+
+    async function renderPdfFirstPage(arrayBuffer) {
+      const bytesForPdfJs = new Uint8Array(arrayBuffer.slice(0));
+      const pdf = await pdfjsLib.getDocument({ data: bytesForPdfJs }).promise;
+      state.pageCount = pdf.numPages;
+      const page = await pdf.getPage(1);
+      const baseViewport = page.getViewport({ scale: 1 });
+      const maxW = Math.min(900, Math.max(420, window.innerWidth - 460));
+      const maxH = 1150;
+      const scale = Math.min(maxW / baseViewport.width, maxH / baseViewport.height, 1.55);
+      const viewport = page.getViewport({ scale });
+      const ctx = els.canvas.getContext('2d');
+      els.canvas.width = Math.floor(viewport.width);
+      els.canvas.height = Math.floor(viewport.height);
+      els.canvas.style.width = `${els.canvas.width}px`;
+      els.canvas.style.height = `${els.canvas.height}px`;
+      els.pageWrap.style.width = `${els.canvas.width}px`;
+      els.pageWrap.style.height = `${els.canvas.height}px`;
+      els.overlay.style.width = `${els.canvas.width}px`;
+      els.overlay.style.height = `${els.canvas.height}px`;
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      state.pageCssW = els.canvas.width;
+      state.pageCssH = els.canvas.height;
+      els.emptyState.style.display = 'none';
+      els.pageWrap.style.display = 'block';
+      els.makePdf.disabled = false;
+      setStatus(`${state.pdfName} loaded â€” ${state.pageCount} page(s). Design on page 1.`);
+    }
+
+    function px(num) { return `${Math.round(num)}px`; }
+
+    function clampBox(item) {
+      const wrapW = state.pageCssW;
+      const wrapH = state.pageCssH;
+      let x = parseFloat(item.style.left) || 0;
+      let y = parseFloat(item.style.top) || 0;
+      let w = parseFloat(item.style.width) || 50;
+      let h = parseFloat(item.style.height) || 50;
+      w = Math.max(24, Math.min(w, wrapW));
+      h = Math.max(18, Math.min(h, wrapH));
+      x = Math.max(0, Math.min(x, wrapW - w));
+      y = Math.max(0, Math.min(y, wrapH - h));
+      item.style.left = px(x);
+      item.style.top = px(y);
+      item.style.width = px(w);
+      item.style.height = px(h);
+    }
+
+    function selectItem(item) {
+      document.querySelectorAll('.overlayItem').forEach(i => i.classList.remove('selected'));
+      state.selected = item;
+      if (item) {
+        item.classList.add('selected');
+        syncBoxesFromSelected();
+      }
+    }
+
+    function syncBoxesFromSelected() {
+      const item = state.selected;
+      if (!item) return;
+      els.xBox.value = Math.round(parseFloat(item.style.left) || 0);
+      els.yBox.value = Math.round(parseFloat(item.style.top) || 0);
+      els.wBox.value = Math.round(parseFloat(item.style.width) || 0);
+      els.hBox.value = Math.round(parseFloat(item.style.height) || 0);
+    }
+
+    function applyBoxesToSelected() {
+      const item = state.selected;
+      if (!item) return;
+      item.style.left = px(Number(els.xBox.value));
+      item.style.top = px(Number(els.yBox.value));
+      item.style.width = px(Number(els.wBox.value));
+      item.style.height = px(Number(els.hBox.value));
+      clampBox(item);
+      syncBoxesFromSelected();
+    }
+
+    ['xBox','yBox','wBox','hBox'].forEach(id => els[id].addEventListener('input', applyBoxesToSelected));
+
+    function makeOverlay(kind, x, y, w, h) {
+      let item = document.querySelector(`.overlayItem[data-kind="${kind}"]`);
+      if (!item) {
+        item = document.createElement('div');
+        item.className = `overlayItem ${kind === 'logo' ? 'imageItem' : kind === 'image' ? 'watermarkImageItem' : kind === 'svg' ? 'svgItem' : 'textItem'}`;
+        item.dataset.kind = kind;
+        item.style.zIndex = ++state.z;
+        item.innerHTML = '<div class="handle"></div>';
+        els.overlay.appendChild(item);
+        wireDrag(item);
+      }
+      item.style.left = px(x);
+      item.style.top = px(y);
+      item.style.width = px(w);
+      item.style.height = px(h);
+      clampBox(item);
+      selectItem(item);
+      return item;
+    }
+
+    function wireDrag(item) {
+      let mode = null, startX = 0, startY = 0, startBox = null;
+
+      item.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        e.stopPropagation();
+        selectItem(item);
+        const rect = item.getBoundingClientRect();
+        mode = e.target.classList.contains('handle') ? 'resize' : 'move';
+        startX = e.clientX;
+        startY = e.clientY;
+        startBox = {
+          x: parseFloat(item.style.left) || 0,
+          y: parseFloat(item.style.top) || 0,
+          w: parseFloat(item.style.width) || rect.width,
+          h: parseFloat(item.style.height) || rect.height,
+        };
+        item.setPointerCapture(e.pointerId);
+      });
+
+      item.addEventListener('pointermove', e => {
+        if (!mode) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        if (mode === 'move') {
+          item.style.left = px(startBox.x + dx);
+          item.style.top = px(startBox.y + dy);
+        } else {
+          item.style.width = px(startBox.w + dx);
+          item.style.height = px(startBox.h + dy);
+        }
+        clampBox(item);
+        syncBoxesFromSelected();
+      });
+
+      item.addEventListener('pointerup', e => {
+        mode = null;
+        try { item.releasePointerCapture(e.pointerId); } catch (_) {}
+      });
+    }
+
+    els.overlay.addEventListener('pointerdown', e => {
+      if (e.target === els.overlay) selectItem(null);
+    });
+
+    document.addEventListener('keydown', e => {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && state.selected && !['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) {
+        state.selected.remove();
+        state.selected = null;
+      }
+    });
+
+    function requirePdf() {
+      if (!state.pdfBytes) {
+        alert('Upload a PDF first.');
+        return false;
+      }
+      return true;
+    }
+
+    function escapeXml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function escapeText(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function sanitizeSvgMarkup(svgText) {
+      let raw = String(svgText || '').trim();
+      if (!raw) return raw;
+      if (/^data:image\/svg\+xml/i.test(raw)) raw = decodeSvgDataUrl(raw);
+      raw = raw
+        .replace(/<script\b[\s\S]*?<\/script>/gi, '')
+        .replace(/\son\w+\s*=\s*(['"])[\s\S]*?\1/gi, '')
+        .replace(/\s(?:xlink:)?href\s*=\s*(['"])\s*(?:javascript:|file:)[\s\S]*?\1/gi, '')
+        .replace(/\s(?:xlink:)?href\s*=\s*(['"])\s*\1/gi, '')
+        .replace(/\ssrc\s*=\s*(['"])\s*(?:javascript:|file:)?[\s\S]*?\1/gi, '');
+      raw = raw.replace(/<svg\b(?![^>]*\sxmlns=)/i, '<svg xmlns="http://www.w3.org/2000/svg"');
+      return raw;
+    }
+
+    function svgMarkupToDataUrl(svgText) {
+      const normalized = sanitizeSvgMarkup(svgText);
+      return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(normalized)}`;
+    }
+
+    function svgMarkupToObjectUrl(svgText) {
+      const normalized = sanitizeSvgMarkup(svgText);
+      return URL.createObjectURL(new Blob([normalized], { type: 'image/svg+xml;charset=utf-8' }));
+    }
+
+    function setCurrentSvgMarkup(svgText) {
+      if (state.svgObjectUrl) {
+        try { URL.revokeObjectURL(state.svgObjectUrl); } catch (_) {}
+      }
+      state.svgMarkup = sanitizeSvgMarkup(svgText);
+      state.svgDataUrl = svgMarkupToDataUrl(state.svgMarkup);
+      state.svgObjectUrl = svgMarkupToObjectUrl(state.svgMarkup);
+      return state.svgObjectUrl;
+    }
+
+    function decodeSvgDataUrl(dataUrl) {
+      const raw = String(dataUrl || '');
+      const comma = raw.indexOf(',');
+      if (comma < 0) return raw;
+      const meta = raw.slice(0, comma);
+      const payload = raw.slice(comma + 1);
+      try {
+        if (/;base64/i.test(meta)) return atob(payload);
+        return decodeURIComponent(payload);
+      } catch (_) {
+        return payload;
+      }
+    }
+
+    function parseLengthNumber(value, fallback = 0) {
+      if (value === undefined || value === null) return fallback;
+      const n = Number(String(value).replace(/[^0-9.+-]/g, ''));
+      return Number.isFinite(n) && n > 0 ? n : fallback;
+    }
+
+    function getRootSvgAttrs(svgText) {
+      const m = String(svgText || '').match(/<svg\b([^>]*)>/i);
+      const attrs = {};
+      if (!m) return attrs;
+      const attrText = m[1] || '';
+      attrText.replace(/([:\w-]+)\s*=\s*(['"])(.*?)\2/g, (_, key, q, value) => {
+        attrs[key] = value;
+        return '';
+      });
+      return attrs;
+    }
+
+    function getSvgSizeFromMarkup(svgText) {
+      const attrs = getRootSvgAttrs(svgText);
+      const vbText = attrs.viewBox || attrs.viewbox || '';
+      if (vbText) {
+        const nums = vbText.trim().split(/[\s,]+/).map(Number).filter(Number.isFinite);
+        if (nums.length >= 4 && nums[2] > 0 && nums[3] > 0) return { x: nums[0], y: nums[1], w: nums[2], h: nums[3] };
+      }
+      const w = parseLengthNumber(attrs.width, 240);
+      const h = parseLengthNumber(attrs.height, 120);
+      return { x: 0, y: 0, w, h };
+    }
+
+    function extractSvgInner(svgText) {
+      return String(svgText || '')
+        .replace(/^\s*<\?xml[\s\S]*?\?>/i, '')
+        .replace(/^\s*<!DOCTYPE[\s\S]*?>/i, '')
+        .replace(/^[\s\S]*?<svg\b[^>]*>/i, '')
+        .replace(/<\/svg>\s*$/i, '');
+    }
+
+    function rotatedBoundsOfBox(box, angleDeg, cx, cy) {
+      const a = angleDeg * Math.PI / 180;
+      const cos = Math.cos(a), sin = Math.sin(a);
+      const pts = [
+        [box.x, box.y],
+        [box.x + box.w, box.y],
+        [box.x + box.w, box.y + box.h],
+        [box.x, box.y + box.h]
+      ].map(([x, y]) => {
+        const dx = x - cx, dy = y - cy;
+        return [cx + dx * cos - dy * sin, cy + dx * sin + dy * cos];
+      });
+      const xs = pts.map(p => p[0]);
+      const ys = pts.map(p => p[1]);
+      return { minX: Math.min(...xs), minY: Math.min(...ys), maxX: Math.max(...xs), maxY: Math.max(...ys) };
+    }
+
+    function unionBounds(a, b) {
+      return {
+        minX: Math.min(a.minX, b.minX),
+        minY: Math.min(a.minY, b.minY),
+        maxX: Math.max(a.maxX, b.maxX),
+        maxY: Math.max(a.maxY, b.maxY),
+      };
+    }
+
+    function padSvgMarkup(svgText, reason = '') {
+      let raw = sanitizeSvgMarkup(svgText);
+      if (!raw) return raw;
+      if (!raw.includes('<svg')) return raw;
+
+      const size = getSvgSizeFromMarkup(raw);
+      const inner = extractSvgInner(raw);
+      const base = { minX: size.x, minY: size.y, maxX: size.x + size.w, maxY: size.y + size.h };
+      let bounds = { ...base };
+      let foundRotate = false;
+      const src = raw + ' ' + reason;
+      src.replace(/rotate\s*\(\s*([-+]?\d*\.?\d+)(?:[\s,]+([-+]?\d*\.?\d+)[\s,]+([-+]?\d*\.?\d+))?/gi, (_, deg, cxRaw, cyRaw) => {
+        foundRotate = true;
+        const cx = Number.isFinite(Number(cxRaw)) ? Number(cxRaw) : size.x + size.w / 2;
+        const cy = Number.isFinite(Number(cyRaw)) ? Number(cyRaw) : size.y + size.h / 2;
+        bounds = unionBounds(bounds, rotatedBoundsOfBox(size, Number(deg) || 0, cx, cy));
+        return '';
+      });
+
+      const hasTransform = /transform\s*=|rotate\s*\(|matrix\s*\(|scale\s*\(|translate\s*\(/i.test(src);
+      const margin = Math.max(size.w, size.h) * (foundRotate ? 0.055 : hasTransform ? 0.12 : 0.025);
+      const x = bounds.minX - margin;
+      const y = bounds.minY - margin;
+      const w = Math.max(1, bounds.maxX - bounds.minX + margin * 2);
+      const h = Math.max(1, bounds.maxY - bounds.minY + margin * 2);
+      return `<svg xmlns="http://www.w3.org/2000/svg" width="${escapeXml(w)}" height="${escapeXml(h)}" viewBox="${escapeXml(`${x} ${y} ${w} ${h}`)}" overflow="visible" preserveAspectRatio="xMidYMid meet">${inner}</svg>`;
+    }
+
+    async function loadSvgImageWithFallback(markup) {
+      const primaryUrl = svgMarkupToObjectUrl(markup);
+      try {
+        const img = await loadImage(primaryUrl);
+        URL.revokeObjectURL(primaryUrl);
+        return img;
+      } catch (err) {
+        try { URL.revokeObjectURL(primaryUrl); } catch (_) {}
+        const fallbackMarkup = padSvgMarkup(markup, 'fallback');
+        const fallbackUrl = svgMarkupToObjectUrl(fallbackMarkup);
+        try {
+          const img = await loadImage(fallbackUrl);
+          URL.revokeObjectURL(fallbackUrl);
+          return img;
+        } catch (err2) {
+          try { URL.revokeObjectURL(fallbackUrl); } catch (_) {}
+          throw err2;
+        }
+      }
+    }
+
+    function asArray(value) {
+      if (value === undefined || value === null) return [];
+      return Array.isArray(value) ? value : [value];
+    }
+
+    function normalizeSvgAttrs(obj = {}) {
+      const out = { ...obj };
+      if (out.sw !== undefined && out.strokeWidth === undefined) out.strokeWidth = out.sw;
+      if (out.fs !== undefined && out.fontSize === undefined) out.fontSize = out.fs;
+      if (out.font_family !== undefined && out.fontFamily === undefined) out.fontFamily = out.font_family;
+      if (out.anchor !== undefined && out.textAnchor === undefined) out.textAnchor = out.anchor;
+      if (out.bold === true && out.fontWeight === undefined) out.fontWeight = 700;
+      if (out.italic === true && out.fontStyle === undefined) out.fontStyle = 'italic';
+      if (out.rotation !== undefined && out.transform === undefined) {
+        const cx = Number(out.cx ?? out.x ?? 0);
+        const cy = Number(out.cy ?? out.y ?? 0);
+        out.transform = `rotate(${Number(out.rotation) || 0} ${cx} ${cy})`;
+      }
+      return out;
+    }
+
+    function attrString(obj, allowed, defaults = {}) {
+      const attrs = { ...defaults };
+      const source = normalizeSvgAttrs(obj);
+      for (const key of allowed) {
+        if (source[key] !== undefined && source[key] !== null && source[key] !== '') attrs[key] = source[key];
+      }
+      const aliases = {
+        strokeWidth: 'stroke-width', fontSize: 'font-size', fontFamily: 'font-family',
+        fontWeight: 'font-weight', fontStyle: 'font-style', textDecoration: 'text-decoration',
+        strokeLinecap: 'stroke-linecap', strokeLinejoin: 'stroke-linejoin', fillOpacity: 'fill-opacity',
+        strokeOpacity: 'stroke-opacity', textAnchor: 'text-anchor', dominantBaseline: 'dominant-baseline'
+      };
+      return Object.entries(attrs)
+        .filter(([k]) => !['id','sw','fs','bold','italic','underline','rotation','anchor','font_family'].includes(k))
+        .map(([k, v]) => `${aliases[k] || k}="${escapeXml(v)}"`)
+        .join(' ');
+    }
+
+    function viewBoxFromObject(obj, width, height) {
+      if (obj.viewBox || obj.viewbox) return obj.viewBox || obj.viewbox;
+      const vb = obj.sourceViewBox || obj.bounds || obj.view_box;
+      if (vb && typeof vb === 'object') {
+        const x = Number(vb.x ?? 0);
+        const y = Number(vb.y ?? 0);
+        const w = Number(vb.w ?? vb.width ?? width);
+        const h = Number(vb.h ?? vb.height ?? height);
+        return `${x} ${y} ${w} ${h}`;
+      }
+      return `0 0 ${width} ${height}`;
+    }
+
+
+    function parseViewBoxText(vbText, fallbackW = 240, fallbackH = 120) {
+      if (typeof vbText === 'object' && vbText) {
+        const x = Number(vbText.x ?? 0);
+        const y = Number(vbText.y ?? 0);
+        const w = Number(vbText.w ?? vbText.width ?? fallbackW);
+        const h = Number(vbText.h ?? vbText.height ?? fallbackH);
+        return { x: Number.isFinite(x) ? x : 0, y: Number.isFinite(y) ? y : 0, w: Math.max(1, Number.isFinite(w) ? w : fallbackW), h: Math.max(1, Number.isFinite(h) ? h : fallbackH) };
+      }
+      const nums = String(vbText || '').trim().split(/[\s,]+/).map(Number).filter(Number.isFinite);
+      if (nums.length >= 4 && nums[2] > 0 && nums[3] > 0) return { x: nums[0], y: nums[1], w: nums[2], h: nums[3] };
+      return { x: 0, y: 0, w: Math.max(1, fallbackW), h: Math.max(1, fallbackH) };
+    }
+
+    function firstSvgRotate(svgLike) {
+      const txt = String(svgLike || '');
+      const m = txt.match(/rotate\s*\(\s*([-+]?\d*\.?\d+)(?:[\s,]+([-+]?\d*\.?\d+)[\s,]+([-+]?\d*\.?\d+))?/i);
+      if (!m) return null;
+      const deg = Number(m[1]);
+      if (!Number.isFinite(deg)) return null;
+      return { deg, cx: Number(m[2]), cy: Number(m[3]) };
+    }
+
+    function nativeVectorFromObject(obj) {
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return null;
+      const width = Number(obj.width || obj.w || obj.sourceViewBox?.w || obj.sourceViewBox?.width || obj.editorDraft?.width || 240);
+      const height = Number(obj.height || obj.h || obj.sourceViewBox?.h || obj.sourceViewBox?.height || obj.editorDraft?.height || 120);
+      const viewBox = parseViewBoxText(viewBoxFromObject(obj, width, height), width || 240, height || 120);
+      const defaults = obj.defaults || {};
+      const elements = [];
+      const add = (type, el, more = {}) => {
+        if (!el || typeof el !== 'object') return;
+        const fixed = normalizeSvgAttrs({ ...more, ...el });
+        fixed.type = type;
+        elements.push(fixed);
+      };
+
+      for (const p of asArray(obj.paths)) if (p?.d) add('path', p, { fill: p.fill ?? defaults.fill ?? 'none', stroke: p.stroke ?? defaults.stroke ?? '#111827', strokeWidth: p.strokeWidth ?? p.sw ?? defaults.strokeWidth ?? 2 });
+      for (const l of asArray(obj.lines)) add('line', l, { stroke: l.stroke ?? defaults.stroke ?? '#111827', strokeWidth: l.strokeWidth ?? l.sw ?? defaults.strokeWidth ?? 2 });
+      for (const r of [...asArray(obj.rects), ...asArray(obj.rectangles)]) add('rect', r, { fill: r.fill ?? defaults.fill ?? 'none', stroke: r.stroke ?? defaults.stroke ?? '#111827', strokeWidth: r.strokeWidth ?? r.sw ?? defaults.strokeWidth ?? 1 });
+      for (const c of asArray(obj.circles)) add('circle', c, { fill: c.fill ?? defaults.fill ?? 'none', stroke: c.stroke ?? defaults.stroke ?? '#111827', strokeWidth: c.strokeWidth ?? c.sw ?? defaults.strokeWidth ?? 1 });
+      for (const e of asArray(obj.ellipses)) add('ellipse', e, { fill: e.fill ?? defaults.fill ?? 'none', stroke: e.stroke ?? defaults.stroke ?? '#111827', strokeWidth: e.strokeWidth ?? e.sw ?? defaults.strokeWidth ?? 1 });
+      for (const poly of asArray(obj.polygons)) add('polygon', poly, { fill: poly.fill ?? defaults.fill ?? 'none', stroke: poly.stroke ?? defaults.stroke ?? '#111827', strokeWidth: poly.strokeWidth ?? poly.sw ?? defaults.strokeWidth ?? 1 });
+      for (const poly of asArray(obj.polylines)) add('polyline', poly, { fill: 'none', stroke: poly.stroke ?? defaults.stroke ?? '#111827', strokeWidth: poly.strokeWidth ?? poly.sw ?? defaults.strokeWidth ?? 1 });
+      for (const t of asArray(obj.texts ?? (typeof obj.text === 'object' ? obj.text : undefined))) add('text', t, { fill: t.fill ?? defaults.fill ?? '#111827', fontSize: t.fontSize ?? t.fs ?? 18, fontFamily: t.fontFamily ?? 'Arial, Helvetica, sans-serif' });
+
+      const generic = asArray(obj.elements?.length ? obj.elements : (!elements.length ? obj.editorDraft?.elements : []));
+      for (const el of generic) {
+        const tag = String(el?.tag || el?.type || '').toLowerCase();
+        if (!['path','line','rect','circle','ellipse','polygon','polyline','text'].includes(tag)) continue;
+        add(tag, el);
+      }
+
+      if (!elements.length) return null;
+      const svgLike = obj.svg || obj.sourceSvg || obj.svgText || obj.markup || obj.content || '';
+      const detected = firstSvgRotate(svgLike);
+      let nativeViewBox = { ...viewBox };
+      if (detected && Number.isFinite(detected.cx) && Number.isFinite(detected.cy)) {
+        // Maker exports often put the real rotation on a wrapping <g> in sourceSvg.
+        // Use that single rotation instead of double-rotating every element, and expand
+        // the native PDF viewBox the same way the preview SVG is padded.
+        elements.forEach(el => { if (el.rotation !== undefined) el._ignoreOwnRotation = true; });
+        const rb = rotatedBoundsOfBox(viewBox, detected.deg, detected.cx, detected.cy);
+        const margin = Math.max(viewBox.w, viewBox.h) * 0.055;
+        nativeViewBox = { x: rb.minX - margin, y: rb.minY - margin, w: Math.max(1, rb.maxX - rb.minX + margin * 2), h: Math.max(1, rb.maxY - rb.minY + margin * 2) };
+      }
+      return { width: width || nativeViewBox.w, height: height || nativeViewBox.h, viewBox: nativeViewBox, elements, rootRotate: detected, label: obj.kind || obj.libraryKey || 'vector-json' };
+    }
+
+    function nativeVectorFromInput(inputText) {
+      const raw = String(inputText || '').trim();
+      if (!raw || /^data:image\/svg\+xml/i.test(raw) || /^(?:<\?xml[\s\S]*?\?>\s*)?(?:<!DOCTYPE[\s\S]*?>\s*)?<svg\b/i.test(raw)) return null;
+      try {
+        const obj = JSON.parse(raw);
+        return nativeVectorFromObject(obj);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function vectorJsonToSvgMarkup(jsonText) {
+      const raw = String(jsonText || '').trim();
+      if (!raw) throw new Error('Paste SVG or JSON first.');
+      if (/^data:image\/svg\+xml/i.test(raw)) return padSvgMarkup(raw);
+      if (/^(?:<\?xml[\s\S]*?\?>\s*)?(?:<!DOCTYPE[\s\S]*?>\s*)?<svg\b/i.test(raw)) return padSvgMarkup(raw);
+
+      let obj;
+      try { obj = JSON.parse(raw); }
+      catch (_) { throw new Error('This is not valid JSON and it does not contain an <svg> tag.'); }
+
+      if (typeof obj === 'string') {
+        if (obj.includes('<svg')) return padSvgMarkup(obj);
+        throw new Error('JSON string found, but it does not contain SVG markup.');
+      }
+
+      const svgLike = obj.svg || obj.sourceSvg || obj.svgText || obj.markup || obj.content;
+      if (typeof svgLike === 'string' && svgLike.includes('<svg')) return padSvgMarkup(svgLike, obj.kind || obj.libraryKey || 'json');
+      if (typeof obj.dataUrl === 'string' && /^data:image\/svg\+xml/i.test(obj.dataUrl)) return padSvgMarkup(obj.dataUrl, obj.kind || 'json dataUrl');
+
+      const width = Number(obj.width || obj.w || obj.sourceViewBox?.w || obj.sourceViewBox?.width || obj.editorDraft?.width || 240);
+      const height = Number(obj.height || obj.h || obj.sourceViewBox?.h || obj.sourceViewBox?.height || obj.editorDraft?.height || 120);
+      const viewBox = viewBoxFromObject(obj, width, height);
+      const defaults = obj.defaults || {};
+      const pieces = [];
+
+      const pathAttrs = ['d','fill','stroke','strokeWidth','opacity','fillOpacity','strokeOpacity','strokeLinecap','strokeLinejoin','transform'];
+      for (const p of asArray(obj.paths)) {
+        if (p && p.d) pieces.push(`<path ${attrString(p, pathAttrs, { fill: p.fill ?? defaults.fill ?? 'none', stroke: p.stroke ?? defaults.stroke ?? '#111827', strokeWidth: p.strokeWidth ?? p.sw ?? defaults.strokeWidth ?? 2 })}/>`);
+      }
+
+      const lineAttrs = ['x1','y1','x2','y2','stroke','strokeWidth','opacity','strokeLinecap','transform'];
+      for (const l of asArray(obj.lines)) {
+        pieces.push(`<line ${attrString(l, lineAttrs, { stroke: l.stroke ?? defaults.stroke ?? '#111827', strokeWidth: l.strokeWidth ?? l.sw ?? defaults.strokeWidth ?? 2 })}/>`);
+      }
+
+      const rectAttrs = ['x','y','width','height','rx','ry','fill','stroke','strokeWidth','opacity','transform'];
+      for (const r of [...asArray(obj.rects), ...asArray(obj.rectangles)]) {
+        pieces.push(`<rect ${attrString(r, rectAttrs, { fill: r.fill ?? defaults.fill ?? 'none', stroke: r.stroke ?? defaults.stroke ?? '#111827', strokeWidth: r.strokeWidth ?? r.sw ?? defaults.strokeWidth ?? 1 })}/>`);
+      }
+
+      const circleAttrs = ['cx','cy','r','fill','stroke','strokeWidth','opacity','transform'];
+      for (const c of asArray(obj.circles)) {
+        pieces.push(`<circle ${attrString(c, circleAttrs, { fill: c.fill ?? defaults.fill ?? 'none', stroke: c.stroke ?? defaults.stroke ?? '#111827', strokeWidth: c.strokeWidth ?? c.sw ?? defaults.strokeWidth ?? 1 })}/>`);
+      }
+
+      const ellipseAttrs = ['cx','cy','rx','ry','fill','stroke','strokeWidth','opacity','transform'];
+      for (const e of asArray(obj.ellipses)) {
+        pieces.push(`<ellipse ${attrString(e, ellipseAttrs, { fill: e.fill ?? defaults.fill ?? 'none', stroke: e.stroke ?? defaults.stroke ?? '#111827', strokeWidth: e.strokeWidth ?? e.sw ?? defaults.strokeWidth ?? 1 })}/>`);
+      }
+
+      const polyAttrs = ['points','fill','stroke','strokeWidth','opacity','strokeLinejoin','transform'];
+      for (const poly of asArray(obj.polygons)) {
+        pieces.push(`<polygon ${attrString(poly, polyAttrs, { fill: poly.fill ?? defaults.fill ?? 'none', stroke: poly.stroke ?? defaults.stroke ?? '#111827', strokeWidth: poly.strokeWidth ?? poly.sw ?? defaults.strokeWidth ?? 1 })}/>`);
+      }
+      for (const poly of asArray(obj.polylines)) {
+        pieces.push(`<polyline ${attrString(poly, polyAttrs, { fill: 'none', stroke: poly.stroke ?? defaults.stroke ?? '#111827', strokeWidth: poly.strokeWidth ?? poly.sw ?? defaults.strokeWidth ?? 1 })}/>`);
+      }
+
+      const textAttrs = ['x','y','fill','stroke','strokeWidth','opacity','fontSize','fontFamily','fontWeight','fontStyle','textDecoration','textAnchor','dominantBaseline','transform'];
+      for (const t of asArray(obj.texts ?? obj.text)) {
+        const fixed = normalizeSvgAttrs({ ...t });
+        if (fixed.underline === true && fixed.textDecoration === undefined) fixed.textDecoration = 'underline';
+        pieces.push(`<text ${attrString(fixed, textAttrs, { fill: fixed.fill ?? defaults.fill ?? '#111827', fontSize: fixed.fontSize ?? fixed.fs ?? 18, fontFamily: fixed.fontFamily ?? 'Arial, sans-serif' })}>${escapeText(fixed.text ?? fixed.value ?? '')}</text>`);
+      }
+
+      for (const el of asArray(obj.elements)) {
+        const tag = String(el.tag || el.type || '').toLowerCase();
+        if (!['path','line','rect','circle','ellipse','polygon','polyline','text'].includes(tag)) continue;
+        const source = normalizeSvgAttrs({ ...el });
+        const content = tag === 'text' ? escapeText(source.text ?? source.value ?? '') : '';
+        if (source.underline === true && source.textDecoration === undefined) source.textDecoration = 'underline';
+        const common = ['x','y','x1','y1','x2','y2','cx','cy','r','rx','ry','width','height','points','d','fill','stroke','strokeWidth','opacity','fillOpacity','strokeOpacity','fontSize','fontFamily','fontWeight','fontStyle','textDecoration','textAnchor','dominantBaseline','strokeLinecap','strokeLinejoin','transform'];
+        pieces.push(`<${tag} ${attrString(source, common)}>${content}</${tag}>`);
+      }
+
+      if (!pieces.length) {
+        throw new Error('JSON parsed, but no drawable vector items were found. Use symbol JSON, paths/lines/rects/circles/texts/elements, or {"svg":"<svg..."}.');
+      }
+
+      return padSvgMarkup(`<svg xmlns="http://www.w3.org/2000/svg" width="${escapeXml(width)}" height="${escapeXml(height)}" viewBox="${escapeXml(viewBox)}" overflow="visible">${pieces.join('')}</svg>`, obj.kind || 'constructed json');
+    }
+
+    async function loadSvgMarkupAsWatermark(inputText, sourceLabel = 'pasted vector') {
+      if (!requirePdf()) return;
+      state.svgNative = nativeVectorFromInput(inputText);
+      let result = vectorJsonToSvgMarkup(inputText);
+      let markup = /^data:image\/svg\+xml/i.test(result) ? decodeSvgDataUrl(result) : result;
+      markup = padSvgMarkup(markup, sourceLabel);
+      setCurrentSvgMarkup(markup);
+
+      state.svgSourceLabel = sourceLabel;
+      let imgObj;
+      try {
+        imgObj = await loadSvgImageWithFallback(markup);
+      } catch (err) {
+        console.error(err);
+        throw new Error('Vector was parsed, but the browser could not render it. I switched preview to inline SVG; try exporting after reload, or simplify the SVG.');
+      }
+
+      const naturalW = imgObj.naturalWidth || getSvgSizeFromMarkup(markup).w || 240;
+      const naturalH = imgObj.naturalHeight || getSvgSizeFromMarkup(markup).h || 120;
+      state.svgNatural = { w: naturalW, h: naturalH };
+      const ratio = naturalW > 0 && naturalH > 0 ? naturalW / naturalH : 2.5;
+      let boxW = state.pageCssW * 0.42;
+      let boxH = boxW / ratio;
+      if (boxH < 38) { boxH = 38; boxW = boxH * ratio; }
+      if (boxH > state.pageCssH * 0.38) { boxH = state.pageCssH * 0.38; boxW = boxH * ratio; }
+      boxW = Math.min(boxW, state.pageCssW * 0.78);
+      const item = makeOverlay('svg', (state.pageCssW - boxW) / 2, (state.pageCssH - boxH) / 2, boxW, boxH);
+      item.innerHTML = `<div class="svgInline"></div><div class="handle"></div>`;
+      const holder = item.querySelector('.svgInline');
+      holder.innerHTML = markup;
+      const svgEl = holder.querySelector('svg');
+      if (svgEl) {
+        svgEl.removeAttribute('width');
+        svgEl.removeAttribute('height');
+        svgEl.style.width = '100%';
+        svgEl.style.height = '100%';
+        svgEl.style.overflow = 'visible';
+        svgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+      }
+      updateSvgVisual();
+      selectItem(item);
+      syncBoxesFromSelected();
+      const nativeNote = state.svgNative ? ' Native PDF vector export is available for this symbol JSON.' : ' Raw SVG fallback will export at high raster sharpness.';
+      els.vectorMsg.textContent = `Loaded ${sourceLabel} (${Math.round(naturalW)}Ã—${Math.round(naturalH)}).${nativeNote}`;
+    }
+
+    els.pdfInput.addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const buffer = await readFileAsArrayBuffer(file);
+        await loadPdfArrayBuffer(buffer, file.name);
+      } catch (err) {
+        console.error(err);
+        alert('Could not load this PDF. Try a different file.');
+      }
+    });
+
+    els.blankTemplateBtn.addEventListener('click', async () => {
+      try { await startBlankA4Template(); }
+      catch (err) {
+        console.error(err);
+        alert('Could not create a blank A4 layout.');
+      }
+    });
+
+    els.saveTemplateJson.addEventListener('click', downloadTemplateJson);
+
+    els.templateJsonInput.addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const template = JSON.parse(await readFileAsText(file));
+        await applyTemplateSnapshot(template);
+      } catch (err) {
+        console.error(err);
+        alert(err?.message || 'Could not load this layout JSON.');
+      } finally {
+        e.target.value = '';
+      }
+    });
+
+    window.addEventListener('message', async event => {
+      const data = event.data || {};
+      if (data.type !== 'qs-sheet-template-load-pdf' || !data.arrayBuffer) return;
+      if (data.sessionId && state.loadedSessionId === data.sessionId) {
+        try {
+          event.source?.postMessage({ type: 'qs-sheet-template-loaded', sessionId: data.sessionId }, event.origin || '*');
+        } catch (_) {}
+        return;
+      }
+      try {
+        state.loadedSessionId = data.sessionId || '';
+        await loadPdfArrayBuffer(data.arrayBuffer, data.name || 'exam_paper.pdf');
+        els.exportMsg.textContent = 'Exam paper loaded. Design the page layout, then apply it to all pages.';
+        try {
+          event.source?.postMessage({ type: 'qs-sheet-template-loaded', sessionId: data.sessionId || '' }, event.origin || '*');
+        } catch (_) {}
+      } catch (err) {
+        console.error(err);
+        alert('Could not load the exam PDF in the page layout designer.');
+      }
+    });
+
+    els.svgInput.addEventListener('change', async e => {
+      if (!requirePdf()) return;
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      try {
+        await loadSvgMarkupAsWatermark(text, file.name || 'SVG file');
+      } catch (err) {
+        console.error(err);
+        alert(err.message || 'Could not load SVG file.');
+      }
+    });
+
+    els.loadVector.addEventListener('click', async () => {
+      try {
+        await loadSvgMarkupAsWatermark(els.vectorInput.value, 'pasted vector');
+      } catch (err) {
+        console.error(err);
+        els.vectorMsg.textContent = err.message || 'Could not load pasted vector.';
+        alert(err.message || 'Could not load pasted vector.');
+      }
+    });
+
+    els.clearVector.addEventListener('click', () => {
+      els.vectorInput.value = '';
+      els.vectorMsg.textContent = 'Pasted vector cleared.';
+    });
+
+    function updateSvgVisual() {
+      const item = document.querySelector('.overlayItem[data-kind="svg"]');
+      if (!item) return;
+      item.style.opacity = els.svgOpacity.value;
+      item.style.transform = `rotate(${els.svgRotate.value}deg)`;
+    }
+
+    els.svgOpacity.addEventListener('input', updateSvgVisual);
+    els.svgRotate.addEventListener('input', updateSvgVisual);
+    els.centerSvg.addEventListener('click', () => {
+      const item = document.querySelector('.overlayItem[data-kind="svg"]');
+      if (!item || !requirePdf()) return;
+      const w = parseFloat(item.style.width) || state.pageCssW * 0.5;
+      const h = parseFloat(item.style.height) || state.pageCssH * 0.25;
+      item.style.left = px((state.pageCssW - w) / 2);
+      item.style.top = px((state.pageCssH - h) / 2);
+      selectItem(item);
+      syncBoxesFromSelected();
+    });
+
+    els.watermarkImageInput.addEventListener('change', async e => {
+      if (!requirePdf()) return;
+      const file = e.target.files[0];
+      if (!file) return;
+      state.watermarkImageOriginalType = file.type.includes('jpeg') ? 'jpg' : 'png';
+      state.watermarkImageDataUrl = await readFileAsDataURL(file);
+      const imgObj = await loadImage(state.watermarkImageDataUrl);
+      state.watermarkImageNatural = { w: imgObj.naturalWidth, h: imgObj.naturalHeight };
+      const ratio = Math.max(.15, Math.min(8, state.watermarkImageNatural.w / Math.max(1, state.watermarkImageNatural.h)));
+      let boxW = state.pageCssW * .58;
+      let boxH = boxW / ratio;
+      if (boxH > state.pageCssH * .46) {
+        boxH = state.pageCssH * .46;
+        boxW = boxH * ratio;
+      }
+      const item = makeOverlay('image', (state.pageCssW - boxW) / 2, (state.pageCssH - boxH) / 2, boxW, boxH);
+      item.innerHTML = `<img alt="Watermark image"><div class="handle"></div>`;
+      item.querySelector('img').src = state.watermarkImageDataUrl;
+      updateWatermarkImageVisual();
+    });
+
+    function updateWatermarkImageVisual() {
+      const item = document.querySelector('.overlayItem[data-kind="image"]');
+      if (!item) return;
+      const img = item.querySelector('img');
+      if (!img) return;
+      item.style.opacity = els.watermarkImageOpacity.value;
+      item.style.transform = `rotate(${els.watermarkImageRotate.value}deg)`;
+    }
+
+    ['watermarkImageOpacity','watermarkImageRotate'].forEach(id => els[id].addEventListener('input', updateWatermarkImageVisual));
+
+    els.centerWatermarkImage.addEventListener('click', () => {
+      const item = document.querySelector('.overlayItem[data-kind="image"]');
+      if (!item || !requirePdf()) return;
+      const w = parseFloat(item.style.width) || state.pageCssW * .5;
+      const h = parseFloat(item.style.height) || state.pageCssH * .25;
+      item.style.left = px((state.pageCssW - w) / 2);
+      item.style.top = px((state.pageCssH - h) / 2);
+      selectItem(item);
+      syncBoxesFromSelected();
+    });
+
+    els.clearWatermarkImage.addEventListener('click', () => {
+      const item = document.querySelector('.overlayItem[data-kind="image"]');
+      if (item) item.remove();
+      state.watermarkImageDataUrl = null;
+      state.watermarkImageNatural = null;
+      els.watermarkImageInput.value = '';
+      selectItem(null);
+    });
+
+    els.logoInput.addEventListener('change', async e => {
+      if (!requirePdf()) return;
+      const file = e.target.files[0];
+      if (!file) return;
+      state.logoOriginalType = file.type.includes('jpeg') ? 'jpg' : 'png';
+      state.logoDataUrl = await readFileAsDataURL(file);
+      const imgObj = await loadImage(state.logoDataUrl);
+      state.logoNatural = { w: imgObj.naturalWidth, h: imgObj.naturalHeight };
+      const item = makeOverlay('logo', state.pageCssW * 0.06, state.pageCssH * 0.05, state.pageCssW * 0.16, state.pageCssW * 0.16);
+      item.innerHTML = `<img alt="Institute logo"><div class="handle"></div>`;
+      item.querySelector('img').src = state.logoDataUrl;
+      updateLogoVisual();
+    });
+
+    function updateLogoVisual() {
+      const item = document.querySelector('.overlayItem[data-kind="logo"]');
+      if (!item) return;
+      const img = item.querySelector('img');
+      if (!img) return;
+      item.style.opacity = els.logoOpacity.value;
+      img.style.objectPosition = `${els.cropX.value}% ${els.cropY.value}%`;
+    }
+
+    ['logoOpacity','cropX','cropY'].forEach(id => els[id].addEventListener('input', updateLogoVisual));
+
+    function getTextOptions(which) {
+      if (which === 'top') {
+        return {
+          color: els.topColor.value || '#111827',
+          bold: els.topBold.checked,
+          italic: els.topItalic.checked,
+          underline: els.topUnderline.checked,
+          opacity: Number(els.topOpacity.value || 1),
+          size: Number(els.topSize.value || 18),
+        };
+      }
+      if (which === 'bottom') {
+        return {
+          color: els.bottomColor.value || '#111827',
+          bold: els.bottomBold.checked,
+          italic: els.bottomItalic.checked,
+          underline: els.bottomUnderline.checked,
+          opacity: Number(els.bottomOpacity.value || 1),
+          size: Number(els.bottomSize.value || 14),
+        };
+      }
+      return {
+        color: els.pageNumColor.value || '#111827',
+        bold: els.pageNumBold.checked,
+        italic: els.pageNumItalic.checked,
+        underline: els.pageNumUnderline.checked,
+        opacity: Number(els.pageNumOpacity.value || 1),
+        size: Number(els.pageNumSize.value || 11),
+      };
+    }
+
+    function applyTextVisual(item, text, options) {
+      item.textContent = text;
+      const handle = document.createElement('div');
+      handle.className = 'handle';
+      item.appendChild(handle);
+      item.dataset.text = text;
+      item.dataset.color = options.color;
+      item.dataset.bold = options.bold ? '1' : '0';
+      item.dataset.italic = options.italic ? '1' : '0';
+      item.dataset.underline = options.underline ? '1' : '0';
+      item.style.fontSize = `${options.size}px`;
+      item.style.opacity = options.opacity;
+      item.style.color = options.color;
+      item.style.fontWeight = options.bold ? '800' : '400';
+      item.style.fontStyle = options.italic ? 'italic' : 'normal';
+      item.style.textDecoration = options.underline ? 'underline' : 'none';
+      const align = 'center';
+      item.dataset.align = align;
+      item.style.justifyContent = 'center';
+      item.style.textAlign = align;
+      item.style.transform = 'none';
+    }
+
+    function updateText(which) {
+      if (!state.pdfBytes) return;
+      const isTop = which === 'top';
+      const text = isTop ? els.topText.value : els.bottomText.value;
+      const kind = isTop ? 'topText' : 'bottomText';
+      let item = document.querySelector(`.overlayItem[data-kind="${kind}"]`);
+      if (!text.trim()) {
+        if (item) item.remove();
+        return;
+      }
+      if (!item) {
+        const w = state.pageCssW * 0.82;
+        const h = isTop ? 46 : 42;
+        const x = state.pageCssW * 0.09;
+        const y = isTop ? 18 : state.pageCssH - h - 18;
+        item = makeOverlay(kind, x, y, w, h);
+      }
+      applyTextVisual(item, text, getTextOptions(which));
+    }
+
+    function formatPageNumber(format, page, total) {
+      return String(format || '{page}')
+        .replaceAll('{page}', String(page))
+        .replaceAll('{total}', String(total));
+    }
+
+    function updatePageNumber() {
+      if (!state.pdfBytes) return;
+      let item = document.querySelector('.overlayItem[data-kind="pageNumber"]');
+      if (!els.pageNumEnable.checked) {
+        if (item) item.remove();
+        return;
+      }
+      const text = formatPageNumber(els.pageNumFormat.value, 1, state.pageCount || 1);
+      const margin = Math.max(0, Number(els.pageNumMargin.value || 0));
+      const w = Math.max(90, state.pageCssW * 0.20);
+      const h = Math.max(24, Number(els.pageNumSize.value || 11) * 2.5);
+      if (!item) {
+        item = makeOverlay('pageNumber', (state.pageCssW - w) / 2, state.pageCssH - h - margin, w, h);
+      } else {
+        const currentW = parseFloat(item.style.width) || w;
+        const currentH = parseFloat(item.style.height) || h;
+        item.style.left = px((state.pageCssW - currentW) / 2);
+        item.style.top = px(state.pageCssH - currentH - margin);
+        clampBox(item);
+      }
+      item.dataset.format = els.pageNumFormat.value;
+      applyTextVisual(item, text, getTextOptions('pageNumber'));
+    }
+
+    ['input','change'].forEach(ev => {
+      els.topText.addEventListener(ev, () => updateText('top'));
+      els.bottomText.addEventListener(ev, () => updateText('bottom'));
+      els.topSize.addEventListener(ev, () => updateText('top'));
+      els.bottomSize.addEventListener(ev, () => updateText('bottom'));
+      els.topColor.addEventListener(ev, () => updateText('top'));
+      els.bottomColor.addEventListener(ev, () => updateText('bottom'));
+      els.topBold.addEventListener(ev, () => updateText('top'));
+      els.bottomBold.addEventListener(ev, () => updateText('bottom'));
+      els.topItalic.addEventListener(ev, () => updateText('top'));
+      els.bottomItalic.addEventListener(ev, () => updateText('bottom'));
+      els.topUnderline.addEventListener(ev, () => updateText('top'));
+      els.bottomUnderline.addEventListener(ev, () => updateText('bottom'));
+      els.topOpacity.addEventListener(ev, () => updateText('top'));
+      els.bottomOpacity.addEventListener(ev, () => updateText('bottom'));
+      els.pageNumEnable.addEventListener(ev, updatePageNumber);
+      els.pageNumFormat.addEventListener(ev, updatePageNumber);
+      els.pageNumSize.addEventListener(ev, updatePageNumber);
+      els.pageNumColor.addEventListener(ev, updatePageNumber);
+      els.pageNumOpacity.addEventListener(ev, updatePageNumber);
+      els.pageNumMargin.addEventListener(ev, updatePageNumber);
+      els.pageNumBold.addEventListener(ev, updatePageNumber);
+      els.pageNumItalic.addEventListener(ev, updatePageNumber);
+      els.pageNumUnderline.addEventListener(ev, updatePageNumber);
+    });
+
+    function alignSelected(mode) {
+      const item = state.selected;
+      if (!item || !state.pdfBytes) return;
+      const margin = Math.max(0, Number(els.alignMargin.value || 0));
+      const w = parseFloat(item.style.width) || 50;
+      const h = parseFloat(item.style.height) || 30;
+      if (mode === 'left') item.style.left = px(margin);
+      if (mode === 'right') item.style.left = px(state.pageCssW - w - margin);
+      if (mode === 'top') item.style.top = px(margin);
+      if (mode === 'bottom') item.style.top = px(state.pageCssH - h - margin);
+      if (mode === 'centerH' || mode === 'centerBoth') item.style.left = px((state.pageCssW - w) / 2);
+      if (mode === 'centerV' || mode === 'centerBoth') item.style.top = px((state.pageCssH - h) / 2);
+      clampBox(item);
+      syncBoxesFromSelected();
+    }
+
+    els.alignLeft.addEventListener('click', () => alignSelected('left'));
+    els.alignCenterH.addEventListener('click', () => alignSelected('centerH'));
+    els.alignRight.addEventListener('click', () => alignSelected('right'));
+    els.alignTop.addEventListener('click', () => alignSelected('top'));
+    els.alignCenterV.addEventListener('click', () => alignSelected('centerV'));
+    els.alignBottom.addEventListener('click', () => alignSelected('bottom'));
+    els.centerBoth.addEventListener('click', () => alignSelected('centerBoth'));
+
+    els.bringFront.addEventListener('click', () => {
+      if (!state.selected) return;
+      state.selected.style.zIndex = ++state.z;
+    });
+
+    els.sendBack.addEventListener('click', () => {
+      if (!state.selected) return;
+      state.selected.style.zIndex = 1;
+    });
+
+    els.deleteItem.addEventListener('click', () => {
+      if (!state.selected) return;
+      state.selected.remove();
+      state.selected = null;
+    });
+
+    els.resetLayout.addEventListener('click', () => {
+      els.overlay.innerHTML = '';
+      els.topText.value = '';
+      els.bottomText.value = '';
+      state.svgDataUrl = null;
+      state.svgMarkup = null;
+      if (state.svgObjectUrl) { try { URL.revokeObjectURL(state.svgObjectUrl); } catch (_) {} }
+      state.svgObjectUrl = null;
+      state.svgSourceLabel = '';
+      state.svgNatural = null;
+      state.svgNative = null;
+      state.watermarkImageDataUrl = null;
+      state.watermarkImageNatural = null;
+      els.watermarkImageInput.value = '';
+      els.vectorInput.value = '';
+      els.vectorMsg.textContent = '';
+      state.logoDataUrl = null;
+      els.pageNumEnable.checked = false;
+      state.selected = null;
+      setProgress(0);
+      els.exportMsg.textContent = 'Layout reset.';
+    });
+
+    function getLayoutItems() {
+      return [...document.querySelectorAll('.overlayItem')]
+        .map(el => ({
+          kind: el.dataset.kind,
+          xPct: (parseFloat(el.style.left) || 0) / state.pageCssW,
+          yPct: (parseFloat(el.style.top) || 0) / state.pageCssH,
+          wPct: (parseFloat(el.style.width) || 0) / state.pageCssW,
+          hPct: (parseFloat(el.style.height) || 0) / state.pageCssH,
+          z: Number(el.style.zIndex || 0),
+          opacity: parseFloat(el.style.opacity || 1),
+          rotate: el.dataset.kind === 'svg' ? Number(els.svgRotate.value || 0) : el.dataset.kind === 'image' ? Number(els.watermarkImageRotate.value || 0) : 0,
+          keepAspect: el.dataset.kind === 'svg' ? !!els.vectorKeepAspect.checked : true,
+          nativeVector: el.dataset.kind === 'svg' ? !!els.vectorNative.checked : false,
+          strength: el.dataset.kind === 'svg' ? Number(els.svgStrength.value || 1) : el.dataset.kind === 'image' ? Number(els.watermarkImageStrength.value || 1) : 1,
+          text: el.classList.contains('textItem') ? (el.dataset.text || el.childNodes[0]?.nodeValue || el.textContent) : '',
+          format: el.dataset.kind === 'pageNumber' ? (el.dataset.format || els.pageNumFormat.value || '{page}') : '',
+          fontPx: parseFloat(el.style.fontSize) || 14,
+          color: el.dataset.color || el.style.color || '#111827',
+          bold: el.dataset.bold === '1',
+          italic: el.dataset.italic === '1',
+          underline: el.dataset.underline === '1',
+          align: el.dataset.align || 'center',
+          cropX: el.dataset.kind === 'logo' ? Number(els.cropX.value || 50) : 50,
+          cropY: el.dataset.kind === 'logo' ? Number(els.cropY.value || 50) : 50,
+        }))
+        .filter(it => it.wPct > 0 && it.hPct > 0)
+        .sort((a, b) => a.z - b.z);
+    }
+
+    function clampPct(value, fallback, min = 0, max = 100) {
+      const n = Number(value);
+      return Math.max(min, Math.min(max, Number.isFinite(n) ? n : fallback));
+    }
+
+    function inferContentBoxFromItems(items = getLayoutItems()) {
+      let top = 12;
+      let bottom = 8;
+      const blockers = (Array.isArray(items) ? items : [])
+        .filter(item => !(item.kind === 'svg' && item.xPct <= .01 && item.yPct <= .01 && item.wPct >= .9 && item.hPct >= .9));
+      blockers.forEach(item => {
+        const y = Number(item.yPct || 0);
+        const h = Number(item.hPct || 0);
+        if (y < .28) top = Math.max(top, (y + h) * 100 + 3);
+        if (y > .62) bottom = Math.max(bottom, (1 - y) * 100 + 2);
+      });
+      return {
+        leftPct: clampPct(els.contentLeftPct?.value, 12, 0, 35),
+        rightPct: clampPct(els.contentRightPct?.value, 8, 0, 35),
+        topPct: clampPct(top, 14, 0, 45),
+        bottomPct: clampPct(bottom, 8, 0, 35),
+        fitSource: !!els.fitSourceToContentBox?.checked
+      };
+    }
+
+    function getContentBoxFromControls(items = getLayoutItems()) {
+      const inferred = inferContentBoxFromItems(items);
+      return {
+        leftPct: clampPct(els.contentLeftPct?.value, inferred.leftPct, 0, 35),
+        rightPct: clampPct(els.contentRightPct?.value, inferred.rightPct, 0, 35),
+        topPct: clampPct(els.contentTopPct?.value, inferred.topPct, 0, 45),
+        bottomPct: clampPct(els.contentBottomPct?.value, inferred.bottomPct, 0, 35),
+        fitSource: !!els.fitSourceToContentBox?.checked
+      };
+    }
+
+    function applyContentBoxToControls(box) {
+      const safe = box || inferContentBoxFromItems();
+      els.contentTopPct.value = clampPct(safe.topPct, 14, 0, 45).toFixed(1).replace(/\.0$/, '');
+      els.contentBottomPct.value = clampPct(safe.bottomPct, 8, 0, 35).toFixed(1).replace(/\.0$/, '');
+      els.contentLeftPct.value = clampPct(safe.leftPct, 12, 0, 35).toFixed(1).replace(/\.0$/, '');
+      els.contentRightPct.value = clampPct(safe.rightPct, 8, 0, 35).toFixed(1).replace(/\.0$/, '');
+      els.fitSourceToContentBox.checked = safe.fitSource !== false;
+    }
+
+    els.autoContentBox.addEventListener('click', () => {
+      applyContentBoxToControls(inferContentBoxFromItems());
+      els.exportMsg.textContent = 'Printable content area inferred from current header/footer layers.';
+    });
+
+    function getTemplateSnapshot() {
+      const items = getLayoutItems();
+      return {
+        schema: 'qs-sheet-template-v1',
+        page: { size: 'A4', width: 595.28, height: 841.89 },
+        createdAt: new Date().toISOString(),
+        assets: {
+          svgMarkup: state.svgMarkup || '',
+          svgSourceLabel: state.svgSourceLabel || '',
+          vectorInput: els.vectorInput.value || '',
+          watermarkImageDataUrl: state.watermarkImageDataUrl || '',
+          watermarkImageOriginalType: state.watermarkImageOriginalType || 'png',
+          logoDataUrl: state.logoDataUrl || '',
+          logoOriginalType: state.logoOriginalType || 'png'
+        },
+        controls: {
+          vectorNative: !!els.vectorNative.checked,
+          vectorKeepAspect: !!els.vectorKeepAspect.checked,
+          svgRasterScale: Number(els.svgRasterScale.value || 8),
+          svgStrength: Number(els.svgStrength.value || 1),
+          svgOpacity: Number(els.svgOpacity.value || .35),
+          svgRotate: Number(els.svgRotate.value || 0),
+          watermarkImageOpacity: Number(els.watermarkImageOpacity.value || .18),
+          watermarkImageRotate: Number(els.watermarkImageRotate.value || 0),
+          watermarkImageStrength: Number(els.watermarkImageStrength.value || 1),
+          logoOpacity: Number(els.logoOpacity.value || 1),
+          cropX: Number(els.cropX.value || 50),
+          cropY: Number(els.cropY.value || 50),
+          pageNumEnable: !!els.pageNumEnable.checked,
+          pageNumFormat: els.pageNumFormat.value || 'Page {page} / {total}',
+          pageNumSize: Number(els.pageNumSize.value || 11),
+          pageNumColor: els.pageNumColor.value || '#111827',
+          pageNumOpacity: Number(els.pageNumOpacity.value || .85),
+          pageNumMargin: Number(els.pageNumMargin.value || 22),
+          pageNumBold: !!els.pageNumBold.checked,
+          pageNumItalic: !!els.pageNumItalic.checked,
+          pageNumUnderline: !!els.pageNumUnderline.checked
+        },
+        contentBox: getContentBoxFromControls(items),
+        items
+      };
+    }
+
+    function downloadTemplateJson() {
+      if (!state.pageCssW || !state.pageCssH) return alert('Start a blank A4 layout or load a PDF first.');
+      if (els.pageNumEnable.checked) updatePageNumber();
+      const data = getTemplateSnapshot();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'exam_page_layout.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      els.exportMsg.textContent = 'Layout JSON saved.';
+    }
+
+    async function applyTemplateSnapshot(template) {
+      if (!template || template.schema !== 'qs-sheet-template-v1') throw new Error('Not a QS Studio page layout JSON file.');
+      if (!state.pageCssW || !state.pageCssH) await startBlankA4Template();
+      const controls = template.controls || {};
+      const setValue = (id, value) => { if (els[id]) els[id].value = value; };
+      const setChecked = (id, value) => { if (els[id]) els[id].checked = !!value; };
+      setChecked('vectorNative', controls.vectorNative);
+      setChecked('vectorKeepAspect', controls.vectorKeepAspect !== false);
+      setValue('svgRasterScale', controls.svgRasterScale ?? 8);
+      setValue('svgStrength', controls.svgStrength ?? 1);
+      setValue('svgOpacity', controls.svgOpacity ?? .35);
+      setValue('svgRotate', controls.svgRotate ?? 0);
+      setValue('watermarkImageOpacity', controls.watermarkImageOpacity ?? .18);
+      setValue('watermarkImageRotate', controls.watermarkImageRotate ?? 0);
+      setValue('watermarkImageStrength', controls.watermarkImageStrength ?? 1);
+      setValue('logoOpacity', controls.logoOpacity ?? 1);
+      setValue('cropX', controls.cropX ?? 50);
+      setValue('cropY', controls.cropY ?? 50);
+      setChecked('pageNumEnable', controls.pageNumEnable);
+      setValue('pageNumFormat', controls.pageNumFormat || 'Page {page} / {total}');
+      setValue('pageNumSize', controls.pageNumSize ?? 11);
+      setValue('pageNumColor', controls.pageNumColor || '#111827');
+      setValue('pageNumOpacity', controls.pageNumOpacity ?? .85);
+      setValue('pageNumMargin', controls.pageNumMargin ?? 22);
+      setChecked('pageNumBold', controls.pageNumBold);
+      setChecked('pageNumItalic', controls.pageNumItalic);
+      setChecked('pageNumUnderline', controls.pageNumUnderline);
+      applyContentBoxToControls(template.contentBox || inferContentBoxFromItems(template.items || []));
+
+      const assets = template.assets || {};
+      state.svgMarkup = assets.svgMarkup || '';
+      state.svgSourceLabel = assets.svgSourceLabel || 'layout vector';
+      state.svgNative = nativeVectorFromInput(assets.vectorInput || '');
+      state.watermarkImageDataUrl = assets.watermarkImageDataUrl || '';
+      state.watermarkImageOriginalType = assets.watermarkImageOriginalType || 'png';
+      state.logoDataUrl = assets.logoDataUrl || '';
+      state.logoOriginalType = assets.logoOriginalType || 'png';
+      els.vectorInput.value = assets.vectorInput || state.svgMarkup || '';
+      els.overlay.innerHTML = '';
+      selectItem(null);
+
+      const items = Array.isArray(template.items) ? template.items : [];
+      for (const item of items) {
+        const x = (Number(item.xPct) || 0) * state.pageCssW;
+        const y = (Number(item.yPct) || 0) * state.pageCssH;
+        const w = Math.max(24, (Number(item.wPct) || .1) * state.pageCssW);
+        const h = Math.max(18, (Number(item.hPct) || .05) * state.pageCssH);
+        const node = makeOverlay(item.kind, x, y, w, h);
+        node.style.opacity = String(item.opacity ?? 1);
+        node.style.zIndex = String(item.z || ++state.z);
+        if (item.kind === 'svg' && state.svgMarkup) {
+          node.innerHTML = `<div class="svgInline"></div><div class="handle"></div>`;
+          const holder = node.querySelector('.svgInline');
+          holder.innerHTML = state.svgMarkup;
+          const svgEl = holder.querySelector('svg');
+          if (svgEl) {
+            svgEl.removeAttribute('width');
+            svgEl.removeAttribute('height');
+            svgEl.style.width = '100%';
+            svgEl.style.height = '100%';
+            svgEl.style.overflow = 'visible';
+            svgEl.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+          }
+        } else if (item.kind === 'image' && state.watermarkImageDataUrl) {
+          node.innerHTML = `<img alt="Watermark image"><div class="handle"></div>`;
+          node.querySelector('img').src = state.watermarkImageDataUrl;
+        } else if (item.kind === 'logo' && state.logoDataUrl) {
+          node.innerHTML = `<img alt="Institute logo"><div class="handle"></div>`;
+          node.querySelector('img').src = state.logoDataUrl;
+        } else if (['topText','bottomText','pageNumber'].includes(item.kind)) {
+          if (item.kind === 'topText') els.topText.value = item.text || '';
+          if (item.kind === 'bottomText') els.bottomText.value = item.text || '';
+          if (item.kind === 'pageNumber') node.dataset.format = item.format || controls.pageNumFormat || '{page}';
+          applyTextVisual(node, item.kind === 'pageNumber' ? formatPageNumber(item.format || controls.pageNumFormat, 1, state.pageCount || 1) : (item.text || ''), {
+            size: item.fontPx || 14,
+            color: item.color || '#111827',
+            bold: !!item.bold,
+            italic: !!item.italic,
+            underline: !!item.underline,
+            opacity: item.opacity ?? 1
+          });
+        }
+      }
+      updateSvgVisual();
+      updateWatermarkImageVisual();
+      updateLogoVisual();
+      setStatus(`Layout loaded - ${items.length} layer(s).`);
+      els.exportMsg.textContent = 'Layout JSON loaded. Apply it to a PDF or save it again after edits.';
+    }
+
+    function dataUrlToUint8Array(dataUrl) {
+      const base64 = dataUrl.split(',')[1];
+      const binary = atob(base64);
+      const len = binary.length;
+      const bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    }
+
+    function reinforceCanvasAlpha(canvas, strength = 1) {
+      const amount = Math.max(1, Math.min(4, Number(strength) || 1));
+      if (amount <= 1.01) return canvas;
+      const copy = document.createElement('canvas');
+      copy.width = canvas.width;
+      copy.height = canvas.height;
+      const copyCtx = copy.getContext('2d');
+      copyCtx.drawImage(canvas, 0, 0);
+      const ctx = canvas.getContext('2d');
+      ctx.save();
+      ctx.globalCompositeOperation = 'source-over';
+      const passes = Math.min(8, Math.ceil((amount - 1) * 3));
+      const alpha = Math.min(.38, (amount - 1) / Math.max(1, passes));
+      const offsets = [
+        [0, 0], [1, 0], [-1, 0], [0, 1], [0, -1],
+        [1, 1], [-1, 1], [1, -1], [-1, -1]
+      ];
+      for (let i = 0; i < passes; i++) {
+        const [dx, dy] = offsets[(i + 1) % offsets.length];
+        ctx.globalAlpha = alpha;
+        ctx.drawImage(copy, dx, dy);
+      }
+      ctx.restore();
+      return canvas;
+    }
+
+    async function rasterizeSvgToPng(svgMarkup, outW, outH, opacity = 1, keepAspect = true, strength = 1) {
+      const objectUrl = svgMarkupToObjectUrl(svgMarkup);
+      try {
+        const img = await loadImage(objectUrl);
+        const canvas = document.createElement('canvas');
+        const maxDim = 7200;
+        const down = Math.min(maxDim / Math.max(outW, outH), 1);
+        canvas.width = Math.max(160, Math.round(outW * down));
+        canvas.height = Math.max(160, Math.round(outH * down));
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.globalAlpha = opacity;
+        if (keepAspect) {
+          const iw = img.naturalWidth || getSvgSizeFromMarkup(svgMarkup).w || canvas.width;
+          const ih = img.naturalHeight || getSvgSizeFromMarkup(svgMarkup).h || canvas.height;
+          const sc = Math.min(canvas.width / iw, canvas.height / ih);
+          const dw = iw * sc;
+          const dh = ih * sc;
+          ctx.drawImage(img, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
+        } else {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        }
+        reinforceCanvasAlpha(canvas, strength);
+        return canvas.toDataURL('image/png');
+      } finally {
+        try { URL.revokeObjectURL(objectUrl); } catch (_) {}
+      }
+    }
+
+    async function rasterImageToPng(dataUrl, outW, outH, keepAspect = true, strength = 1) {
+      const img = await loadImage(dataUrl);
+      const maxSide = 7200;
+      const down = Math.min(maxSide / Math.max(outW, outH), 1);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(160, Math.round(outW * down));
+      canvas.height = Math.max(160, Math.round(outH * down));
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      if (keepAspect) {
+        const iw = img.naturalWidth || img.width || canvas.width;
+        const ih = img.naturalHeight || img.height || canvas.height;
+        const sc = Math.min(canvas.width / iw, canvas.height / ih);
+        const dw = iw * sc;
+        const dh = ih * sc;
+        ctx.drawImage(img, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
+      } else {
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      }
+      reinforceCanvasAlpha(canvas, strength);
+      return canvas.toDataURL('image/png');
+    }
+
+    async function cropLogoToPng(outW, outH, cropXPct, cropYPct) {
+      const img = await loadImage(state.logoDataUrl);
+      const ratio = outW / outH;
+      const maxSide = 1400;
+      let canvasW = Math.round(Math.min(maxSide, Math.max(220, outW * 2)));
+      let canvasH = Math.round(canvasW / ratio);
+      if (canvasH > maxSide) {
+        canvasH = maxSide;
+        canvasW = Math.round(canvasH * ratio);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = canvasW;
+      canvas.height = canvasH;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvasW,canvasH);
+
+      const coverScale = Math.max(canvasW / img.naturalWidth, canvasH / img.naturalHeight);
+      const scaledW = img.naturalWidth * coverScale;
+      const scaledH = img.naturalHeight * coverScale;
+      const extraX = Math.max(0, scaledW - canvasW);
+      const extraY = Math.max(0, scaledH - canvasH);
+      const dx = -extraX * (cropXPct / 100);
+      const dy = -extraY * (cropYPct / 100);
+      ctx.drawImage(img, dx, dy, scaledW, scaledH);
+      return canvas.toDataURL('image/png');
+    }
+
+    function hexToRgb01(value) {
+      let hex = String(value || '#111827').trim();
+      if (/^rgb\(/i.test(hex)) {
+        const nums = hex.match(/[\d.]+/g)?.map(Number) || [17, 24, 39];
+        return { r: (nums[0] || 0) / 255, g: (nums[1] || 0) / 255, b: (nums[2] || 0) / 255 };
+      }
+      if (!hex.startsWith('#')) hex = '#111827';
+      if (hex.length === 4) hex = '#' + [...hex.slice(1)].map(ch => ch + ch).join('');
+      const n = Number.parseInt(hex.slice(1, 7), 16);
+      if (!Number.isFinite(n)) return { r: 17/255, g: 24/255, b: 39/255 };
+      return { r: ((n >> 16) & 255) / 255, g: ((n >> 8) & 255) / 255, b: (n & 255) / 255 };
+    }
+
+    function fontForItem(fonts, item) {
+      if (item.bold && item.italic) return fonts.boldItalic;
+      if (item.bold) return fonts.bold;
+      if (item.italic) return fonts.italic;
+      return fonts.regular;
+    }
+
+    function wrapText(text, font, fontSize, maxWidth) {
+      const paragraphs = String(text || '').split(/\n/);
+      const lines = [];
+      for (const para of paragraphs) {
+        const words = para.split(/\s+/).filter(Boolean);
+        if (!words.length) { lines.push(''); continue; }
+        let line = '';
+        for (const word of words) {
+          const test = line ? `${line} ${word}` : word;
+          if (font.widthOfTextAtSize(test, fontSize) <= maxWidth || !line) {
+            line = test;
+          } else {
+            lines.push(line);
+            line = word;
+          }
+        }
+        lines.push(line);
+      }
+      return lines;
+    }
+
+    async function drawTextBox(page, item, fonts) {
+      const pageW = page.getWidth();
+      const pageH = page.getHeight();
+      const x = item.xPct * pageW;
+      const topY = item.yPct * pageH;
+      const w = item.wPct * pageW;
+      const h = item.hPct * pageH;
+      const yBottom = pageH - topY - h;
+      const fontSize = item.fontPx / state.pageCssH * pageH;
+      const font = fontForItem(fonts, item);
+      const pad = Math.max(2, fontSize * 0.25);
+      const lines = wrapText(item.text, font, fontSize, Math.max(4, w - pad * 2));
+      const lineHeight = fontSize * 1.18;
+      const totalH = lines.length * lineHeight;
+      let y = yBottom + h - ((h - totalH) / 2) - fontSize;
+      const c = hexToRgb01(item.color);
+      const color = rgb(c.r, c.g, c.b);
+      for (const line of lines) {
+        const textW = font.widthOfTextAtSize(line, fontSize);
+        let drawX = x + Math.max(pad, (w - textW) / 2);
+        if (item.align === 'left') drawX = x + pad;
+        if (item.align === 'right') drawX = x + Math.max(pad, w - textW - pad);
+        page.drawText(line, {
+          x: drawX,
+          y,
+          size: fontSize,
+          font,
+          color,
+          opacity: item.opacity,
+        });
+        if (item.underline && line) {
+          const underlineY = y - Math.max(1, fontSize * 0.10);
+          page.drawLine({
+            start: { x: drawX, y: underlineY },
+            end: { x: drawX + textW, y: underlineY },
+            thickness: Math.max(0.6, fontSize * 0.055),
+            color,
+            opacity: item.opacity,
+          });
+        }
+        y -= lineHeight;
+        if (y < yBottom) break;
+      }
+    }
+
+
+    function pdfColorFromAny(value, fallback = '#111827') {
+      const v = String(value ?? '').trim();
+      if (!v || v === 'none' || v === 'transparent') return null;
+      const c = hexToRgb01(v || fallback);
+      return rgb(c.r, c.g, c.b);
+    }
+
+    function vectorCanDrawNatively(native) {
+      if (!native || !Array.isArray(native.elements) || !native.elements.length) return false;
+      const supported = new Set(['text','line','rect','circle','ellipse','polygon','polyline']);
+      return native.elements.every(el => supported.has(String(el.type || '').toLowerCase()));
+    }
+
+    function nativeLayout(page, item, native) {
+      const pageW = page.getWidth();
+      const pageH = page.getHeight();
+      const x = item.xPct * pageW;
+      const topY = item.yPct * pageH;
+      const w = item.wPct * pageW;
+      const h = item.hPct * pageH;
+      const y = pageH - topY - h;
+      const vb = native.viewBox || { x: 0, y: 0, w: native.width || 240, h: native.height || 120 };
+      let sx = w / vb.w;
+      let sy = h / vb.h;
+      let ox = 0, oy = 0;
+      if (item.keepAspect !== false) {
+        const sc = Math.min(sx, sy);
+        sx = sc; sy = sc;
+        ox = (w - vb.w * sc) / 2;
+        oy = (h - vb.h * sc) / 2;
+      }
+      return { x, y, w, h, vb, sx, sy, ox, oy, center: { x: x + w / 2, y: y + h / 2 } };
+    }
+
+    function rotatePoint(pt, cx, cy, deg) {
+      if (!deg) return pt;
+      const a = deg * Math.PI / 180;
+      const cos = Math.cos(a), sin = Math.sin(a);
+      const dx = pt.x - cx, dy = pt.y - cy;
+      return { x: cx + dx * cos - dy * sin, y: cy + dx * sin + dy * cos };
+    }
+
+    function svgPointToPdf(layout, native, vx, vy, itemRotateDeg = 0) {
+      let p = { x: Number(vx) || 0, y: Number(vy) || 0 };
+      const rr = native.rootRotate;
+      if (rr && Number.isFinite(rr.cx) && Number.isFinite(rr.cy)) p = rotatePoint(p, rr.cx, rr.cy, rr.deg || 0);
+      const out = {
+        x: layout.x + layout.ox + (p.x - layout.vb.x) * layout.sx,
+        y: layout.y + layout.oy + (layout.vb.y + layout.vb.h - p.y) * layout.sy,
+      };
+      return rotatePoint(out, layout.center.x, layout.center.y, -(itemRotateDeg || 0));
+    }
+
+    function parsePointsList(points) {
+      return String(points || '').trim().split(/[\s,]+/).map(Number).filter(Number.isFinite).reduce((acc, val, idx, arr) => {
+        if (idx % 2 === 0 && Number.isFinite(arr[idx + 1])) acc.push({ x: val, y: arr[idx + 1] });
+        return acc;
+      }, []);
+    }
+
+    function elementOpacity(item, el, kind = 'opacity') {
+      const eo = Number(el[kind] ?? el.opacity ?? 1);
+      return Math.max(0, Math.min(1, (Number.isFinite(eo) ? eo : 1) * (item.opacity ?? 1)));
+    }
+
+    function fontForVectorElement(fonts, el) {
+      const fw = String(el.fontWeight ?? '').toLowerCase();
+      const bold = el.bold === true || fw === 'bold' || Number(el.fontWeight) >= 600;
+      const italic = el.italic === true || /italic|oblique/i.test(String(el.fontStyle ?? ''));
+      if (bold && italic) return fonts.boldItalic;
+      if (bold) return fonts.bold;
+      if (italic) return fonts.italic;
+      return fonts.regular;
+    }
+
+    async function drawNativeVector(page, item, native, fonts) {
+      const layout = nativeLayout(page, item, native);
+      const itemRot = Number(item.rotate || 0);
+      const rootDeg = native.rootRotate?.deg || 0;
+      for (const rawEl of native.elements) {
+        const el = normalizeSvgAttrs(rawEl);
+        const type = String(el.type || '').toLowerCase();
+        const stroke = pdfColorFromAny(el.stroke, '#111827');
+        const fill = pdfColorFromAny(el.fill, '#111827');
+        const strokeWidth = Math.max(0, Number(el.strokeWidth ?? el.sw ?? 1) * ((layout.sx + layout.sy) / 2));
+        const opacity = elementOpacity(item, el);
+
+        if (type === 'text') {
+          const text = String(el.text ?? el.value ?? '');
+          if (!text) continue;
+          const font = fontForVectorElement(fonts, el);
+          const fontSize = Math.max(1, Number(el.fontSize ?? el.fs ?? 18) * ((layout.sx + layout.sy) / 2));
+          let pt = svgPointToPdf(layout, native, el.x ?? 0, el.y ?? 0, itemRot);
+          const ownRot = el._ignoreOwnRotation ? 0 : Number(el.rotation ?? 0);
+          const pdfRot = -(rootDeg + ownRot + itemRot);
+          const textW = font.widthOfTextAtSize(text, fontSize);
+          const anchor = String(el.textAnchor ?? el.anchor ?? '').toLowerCase();
+          if (anchor === 'middle') pt.x -= textW / 2;
+          if (anchor === 'end' || anchor === 'right') pt.x -= textW;
+          const color = fill || stroke || rgb(17/255,24/255,39/255);
+          page.drawText(text, { x: pt.x, y: pt.y, size: fontSize, font, color, opacity, rotate: degrees(pdfRot) });
+          if (el.underline === true || /underline/i.test(String(el.textDecoration ?? ''))) {
+            page.drawLine({
+              start: { x: pt.x, y: pt.y - fontSize * 0.12 },
+              end: { x: pt.x + textW, y: pt.y - fontSize * 0.12 },
+              thickness: Math.max(0.6, fontSize * 0.055), color, opacity, rotate: degrees(pdfRot)
+            });
+          }
+          continue;
+        }
+
+        if (type === 'line') {
+          const a = svgPointToPdf(layout, native, el.x1, el.y1, itemRot);
+          const b = svgPointToPdf(layout, native, el.x2, el.y2, itemRot);
+          page.drawLine({ start: a, end: b, thickness: strokeWidth || 1, color: stroke || fill || rgb(17/255,24/255,39/255), opacity });
+          continue;
+        }
+
+        if (type === 'polyline' || type === 'polygon') {
+          const pts = parsePointsList(el.points).map(p => svgPointToPdf(layout, native, p.x, p.y, itemRot));
+          for (let i = 0; i < pts.length - 1; i++) page.drawLine({ start: pts[i], end: pts[i + 1], thickness: strokeWidth || 1, color: stroke || fill || rgb(17/255,24/255,39/255), opacity });
+          if (type === 'polygon' && pts.length > 2) page.drawLine({ start: pts[pts.length - 1], end: pts[0], thickness: strokeWidth || 1, color: stroke || fill || rgb(17/255,24/255,39/255), opacity });
+          continue;
+        }
+
+        // Rectangles and ellipses are drawn natively when there is no rotation. If a rotation
+        // is requested, fallback raster handles it more faithfully.
+        if (itemRot || rootDeg || Number(el.rotation || 0)) return false;
+        if (type === 'rect') {
+          const x = Number(el.x ?? 0), y = Number(el.y ?? 0), w = Number(el.width ?? el.w ?? 0), h = Number(el.height ?? el.h ?? 0);
+          const pTopLeft = svgPointToPdf(layout, native, x, y, 0);
+          const rw = w * layout.sx, rh = h * layout.sy;
+          page.drawRectangle({ x: pTopLeft.x, y: pTopLeft.y - rh, width: rw, height: rh, color: fill || undefined, borderColor: stroke || undefined, borderWidth: stroke ? strokeWidth : 0, opacity });
+          continue;
+        }
+        if (type === 'circle') {
+          const c = svgPointToPdf(layout, native, el.cx, el.cy, 0);
+          const r = Number(el.r ?? 0) * ((layout.sx + layout.sy) / 2);
+          page.drawCircle({ x: c.x, y: c.y, size: r, color: fill || undefined, borderColor: stroke || undefined, borderWidth: stroke ? strokeWidth : 0, opacity });
+          continue;
+        }
+        if (type === 'ellipse') {
+          const c = svgPointToPdf(layout, native, el.cx, el.cy, 0);
+          page.drawEllipse({ x: c.x, y: c.y, xScale: Number(el.rx ?? 0) * layout.sx, yScale: Number(el.ry ?? 0) * layout.sy, color: fill || undefined, borderColor: stroke || undefined, borderWidth: stroke ? strokeWidth : 0, opacity });
+          continue;
+        }
+      }
+      return true;
+    }
+
+    async function drawImageBox(pdfDoc, page, item, dataUrl, opacity = 1, rotateDeg = 0) {
+      const pageW = page.getWidth();
+      const pageH = page.getHeight();
+      const x = item.xPct * pageW;
+      const topY = item.yPct * pageH;
+      const w = item.wPct * pageW;
+      const h = item.hPct * pageH;
+      const y = pageH - topY - h;
+      const bytes = dataUrlToUint8Array(dataUrl);
+      const image = await pdfDoc.embedPng(bytes);
+
+      if (rotateDeg) {
+        const rad = rotateDeg * Math.PI / 180;
+        const cx = x + w / 2;
+        const cy = y + h / 2;
+        const anchorX = cx - ((w * Math.cos(rad) - h * Math.sin(rad)) / 2);
+        const anchorY = cy - ((w * Math.sin(rad) + h * Math.cos(rad)) / 2);
+        page.drawImage(image, {
+          x: anchorX,
+          y: anchorY,
+          width: w,
+          height: h,
+          opacity,
+          rotate: degrees(rotateDeg),
+          xSkew: degrees(0),
+          ySkew: degrees(0),
+        });
+      } else {
+        page.drawImage(image, { x, y, width: w, height: h, opacity });
+      }
+    }
+
+    els.makePdf.addEventListener('click', async () => {
+      if (!state.pdfBytes) return alert('Upload a PDF first.');
+      const items = getLayoutItems();
+      if (!items.length) return alert('Add at least one watermark/text/logo item.');
+
+      try {
+        setProgress(3);
+        els.exportMsg.textContent = 'Preparing PDF...';
+        let pdfDoc = await PDFDocument.load(state.pdfBytes.slice(0));
+        let pages = pdfDoc.getPages();
+        const contentBox = getContentBoxFromControls(items);
+        if (contentBox.fitSource !== false) {
+          const sourceDoc = pdfDoc;
+          const outDoc = await PDFDocument.create();
+          const sourcePages = sourceDoc.getPages();
+          for (let p = 0; p < sourcePages.length; p++) {
+            const sourcePage = sourcePages[p];
+            const pageW = sourcePage.getWidth();
+            const pageH = sourcePage.getHeight();
+            const outPage = outDoc.addPage([pageW, pageH]);
+            const embedded = await outDoc.embedPage(sourcePage);
+            const left = (contentBox.leftPct / 100) * pageW;
+            const right = (contentBox.rightPct / 100) * pageW;
+            const top = (contentBox.topPct / 100) * pageH;
+            const bottom = (contentBox.bottomPct / 100) * pageH;
+            const boxW = Math.max(24, pageW - left - right);
+            const boxH = Math.max(24, pageH - top - bottom);
+            const scale = Math.min(boxW / pageW, boxH / pageH);
+            const drawW = pageW * scale;
+            const drawH = pageH * scale;
+            outPage.drawPage(embedded, {
+              x: left + (boxW - drawW) / 2,
+              y: bottom + (boxH - drawH) / 2,
+              width: drawW,
+              height: drawH,
+            });
+          }
+          pdfDoc = outDoc;
+          pages = pdfDoc.getPages();
+        }
+        const fonts = {
+          regular: await pdfDoc.embedFont(StandardFonts.Helvetica),
+          bold: await pdfDoc.embedFont(StandardFonts.HelveticaBold),
+          italic: await pdfDoc.embedFont(StandardFonts.HelveticaOblique),
+          boldItalic: await pdfDoc.embedFont(StandardFonts.HelveticaBoldOblique),
+        };
+
+        for (let p = 0; p < pages.length; p++) {
+          const page = pages[p];
+          const pageW = page.getWidth();
+          const pageH = page.getHeight();
+
+          for (const item of items) {
+            const rasterScale = Math.max(3, Math.min(12, Number(els.svgRasterScale.value || 8)));
+            const outW = Math.max(160, item.wPct * pageW * rasterScale);
+            const outH = Math.max(160, item.hPct * pageH * rasterScale);
+
+            if (item.kind === 'svg' && state.svgMarkup) {
+              if (item.nativeVector && state.svgNative && vectorCanDrawNatively(state.svgNative)) {
+                await drawNativeVector(page, item, state.svgNative, fonts);
+              } else {
+                const svgPng = await rasterizeSvgToPng(state.svgMarkup, outW, outH, 1, item.keepAspect, item.strength);
+                await drawImageBox(pdfDoc, page, item, svgPng, item.opacity, item.rotate);
+              }
+            }
+
+            if (item.kind === 'image' && state.watermarkImageDataUrl) {
+              const imagePng = await rasterImageToPng(state.watermarkImageDataUrl, outW, outH, true, item.strength);
+              await drawImageBox(pdfDoc, page, item, imagePng, item.opacity, item.rotate);
+            }
+
+            if (item.kind === 'logo' && state.logoDataUrl) {
+              const logoPng = await cropLogoToPng(outW, outH, item.cropX, item.cropY);
+              await drawImageBox(pdfDoc, page, item, logoPng, item.opacity, 0);
+            }
+
+            if ((item.kind === 'topText' || item.kind === 'bottomText' || item.kind === 'pageNumber') && item.text.trim()) {
+              const textItem = item.kind === 'pageNumber' ? { ...item, text: formatPageNumber(item.format, p + 1, pages.length) } : item;
+              await drawTextBox(page, textItem, fonts);
+            }
+          }
+          setProgress(5 + ((p + 1) / pages.length) * 85);
+          els.exportMsg.textContent = `Stamping page ${p + 1} of ${pages.length}...`;
+          await new Promise(r => setTimeout(r, 0));
+        }
+
+        const out = await pdfDoc.save();
+        const blob = new Blob([out], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = state.pdfName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        setProgress(100);
+        els.exportMsg.textContent = 'Done. Watermarked PDF downloaded.';
+      } catch (err) {
+        console.error(err);
+        els.exportMsg.textContent = 'Export failed. Check console for details.';
+        alert('Export failed. This can happen with encrypted/corrupt PDFs or unsupported images.');
+      }
+    });
+
+    const startupParams = new URLSearchParams(window.location.search || '');
+    if (startupParams.get('mode') === 'template') {
+      window.setTimeout(async () => {
+        if (state.pdfBytes) return;
+        try {
+          await startBlankA4Template();
+          els.exportMsg.textContent = 'Blank A4 page layout ready. Add layers, then save the layout JSON.';
+        } catch (err) {
+          console.error(err);
+        els.exportMsg.textContent = 'Blank A4 layout could not be prepared.';
+        }
+      }, 0);
+    }
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+    <path d="M0,0 L10,5 L0,10 Z" fill="#000"/>
+  </marker>
+</defs>
+<style>
+.L{stroke:#000;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.T{stroke:#000;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;fill:none}
+.t{font-family:Arial,Helvetica,sans-serif;fill:#000;font-size:18px;text-anchor:middle;dominant-baseline:middle}
+.l{font-family:Arial,Helvetica,sans-serif;fill:#000;font-size:18px;text-anchor:middle;dominant-baseline:middle}
+.f{font-family:Arial,Helvetica,sans-serif;fill:#000;font-size:13px;text-anchor:middle;dominant-baseline:middle}
+</style>
+<rect x="1.5" y="1.5" width="253" height="253" rx="10" ry="10" fill="#fff" stroke="#ddd" stroke-width="1.5"/>
+<text class="t" x="128" y="26">P Channel</text>
+<text class="t" x="128" y="48">MOSFET</text>
+
+<circle class="T" cx="118" cy="140" r="52"/>
+
+<path class="L" d="M100 114 V166"/>
+<path class="L" d="M118 104 V176"/>
+
+<!-- S on TOP: long vertical from y=78 DOWN to y=122, then arrow → RIGHT tip at x=136 (P-ch: source→gate reversed = tip toward source) -->
+<path class="L" d="M136 78 V122"/>
+<path class="L" d="M136 122 H118" marker-end="url(#arr)"/>
+<text class="l" x="150" y="72">S</text>
+
+<!-- D on BOTTOM: from channel right at y=158 then down — mirrors S stub -->
+<path class="L" d="M118 158 H136 V210"/>
+<text class="l" x="150" y="216">D</text>
+
+<text class="l" x="20" y="140">G</text>
+<path class="L" d="M34 140 H100"/>
+
+<text class="f" x="128" y="246">P_Channel_MOSFET_17.svg</text>
+</svg>

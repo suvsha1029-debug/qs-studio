@@ -1,0 +1,237 @@
+QS GEN + SVG MAKER DESCRIPTION
+==============================
+
+QS Gen is a browser/Electron-based question paper creation studio. It is designed to build exam-style question banks with rich mathematical text, diagrams, circuit/vector figures, canvas annotations, PDF exports, JSON exports, answer keys, and selectable text paper outputs.
+
+SVG Maker is the companion vector-symbol editor used to create reusable circuit symbols, diagrams, math-text figures, and custom SVG components that can be imported into QS Gen's circuit/editor canvas.
+
+Together, they form a workflow where the user can compose questions, draw or import figures, create custom vector assets, place diagrams inside question frames, and export either image-faithful or selectable text papers.
+
+
+QS GEN WORKFLOW
+===============
+
+QS Gen is the main question bank and paper generation tool.
+
+Typical workflow:
+
+1. Create or edit a question.
+2. Enter metadata such as subject, topic, type, marks, negative marks, and options.
+3. Build the question content using:
+   - normal text
+   - mathematical expressions
+   - Greek/physics/operators
+   - subscript/superscript
+   - fractions, roots, matrices, limits, integrals
+   - figures and diagrams
+   - circuit/vector imports
+4. Use the canvas tools for visual placement:
+   - pen
+   - text
+   - legend
+   - figures
+   - graph
+   - lines, rectangles, and circles
+   - erase
+   - image burn, crop, change, and delete
+   - circuit editor
+   - statement composer
+5. Use the PDF Text Source panel when selectable PDF text needs special text layout.
+6. Preview selectable text using the Selectable Composer Preview.
+7. Export outputs:
+   - Paper JSON
+   - Paper PDF
+   - Text PDF
+   - cleantheam Text PDF
+   - Key JSON
+   - Key PDF
+
+QS Gen has two major PDF philosophies:
+
+- Paper PDF: preserves visual/canvas fidelity using high-resolution flattened images.
+- Text PDF / cleantheam: preserves selectable/searchable text and math where possible.
+
+
+SVG MAKER WORKFLOW
+==================
+
+SVG Maker is used for creating reusable vector diagrams and custom symbols.
+
+Typical workflow:
+
+1. Open SVG Maker.
+2. Draw or compose a custom circuit/vector symbol.
+3. Add elements such as:
+   - lines
+   - circles
+   - terminals
+   - text labels
+   - math text
+   - circuit-like shapes
+   - imported SVG components
+4. Use math/LaTeX text rendering for labels such as:
+   - V_{DD}
+   - V_G
+   - \mu_0 C_{OX}
+   - Greek symbols
+   - physics operators
+   - subscripts/superscripts
+5. Select and move/copy/scale grouped vector components.
+6. Export the symbol as:
+   - SVG
+   - JSON symbol data
+7. Import the SVG/JSON into QS Gen's circuit editor or canvas.
+8. QS Gen preserves the symbol as a vector-like circuit asset where possible, while normal paper PDF can flatten it for visual stability.
+
+SVG Maker acts as the source of truth for custom vector assets.
+
+
+CONNECTION BETWEEN SVG MAKER AND QS GEN
+=======================================
+
+The intended connection is:
+
+1. SVG Maker creates the vector symbol.
+2. The exported SVG/JSON stores:
+   - visual SVG markup
+   - dimensions
+   - source bounds
+   - element positions
+   - ports
+   - editor draft data
+   - anchor/alignment information
+3. QS Gen imports that asset into Circuit Editor or canvas.
+4. The asset can be placed, resized, moved, and exported with the paper/question.
+5. For visual exports, the asset can be flattened into high-resolution PDF imagery.
+6. For selectable/vector-aware paths, SVG markup can be reused where browser/PDF limitations allow.
+
+
+MAIN USAGE AREAS
+================
+
+QS Gen is useful for:
+
+- Technical question paper creation
+- engineering/math/physics question banks
+- circuit diagram question creation
+- MCQ/MSQ/NAT style papers
+- answer key generation
+- reusable bank JSON generation
+- selectable text PDF generation
+- image-faithful paper PDF generation
+- creating mock tests and practice papers
+
+SVG Maker is useful for:
+
+- custom circuit symbols
+- reusable diagram blocks
+- vector schematic components
+- equation-rich labels
+- MOSFET/BJT/passive/source symbols
+- imported SVG cleanup
+- custom symbol libraries for QS Gen
+
+
+PROGRAMMING LANGUAGES
+=====================
+
+The project is primarily built with:
+
+- HTML
+- CSS
+- JavaScript
+
+For the desktop wrapper:
+
+- Electron
+- Node.js
+
+For local regression/testing scripts:
+
+- JavaScript running on Node.js
+
+Some helper/inspection workflows may use:
+
+- Python for PDF/image inspection when needed
+- Poppler tools for rendering PDFs during verification
+
+
+LIBRARIES / STACK
+=================
+
+Core stack:
+
+- Vanilla JavaScript
+- HTML Canvas
+- SVG
+- DOM-based editor UI
+- Electron desktop wrapper
+- Node.js runtime
+
+Math/rendering stack:
+
+- KaTeX for fast math rendering
+- MathJax fallback/preview support in parts of the selectable pipeline
+- Custom LaTeX repair/parsing helpers
+- Custom mixed text/math composer renderer
+
+PDF/export stack:
+
+- jsPDF for image-based/key/paper PDF paths
+- Browser print engine for selectable text PDF
+- Chrome/Electron print-to-PDF behavior
+- High-resolution PNG embedding for stable Paper PDF output
+
+Desktop/package stack:
+
+- Electron
+- electron-builder
+- Node package ecosystem
+
+Testing/stability support:
+
+- Node syntax checks
+- Custom tools/stability-regression.js
+- Poppler/PDF render inspection when comparing output PDFs
+
+
+EXPORT TYPES
+============
+
+QS Gen supports multiple export types:
+
+- Paper JSON: question bank data with image/canvas assets.
+- Key JSON: answer key metadata.
+- Paper PDF: visual fidelity export, mostly image/frame based.
+- Text PDF: selectable text export with rendered math and structured layout.
+- cleantheam: cleaner EC2024-style selectable text export.
+- Key PDF: printable answer key.
+
+
+CURRENT STABILITY FOCUS
+=======================
+
+The software now protects against common breakage areas such as:
+
+- subscript/superscript math eating surrounding prose
+- words like "modulation" being mistaken for mod
+- blank lines collapsing in selectable PDF
+- page breaks starting too close to page top
+- NAT answer blanks appearing in clean theme
+- desktop packaged files drifting away from source files
+
+A regression script was added to catch these issues:
+
+tools/stability-regression.js
+
+Run it with:
+
+node tools/stability-regression.js
+
+
+SUMMARY
+=======
+
+QS Gen is the main authoring/export application. SVG Maker is the vector asset creation tool that feeds reusable diagrams and symbols into QS Gen.
+
+Together they support a workflow for building professional exam papers with rich text, math, diagrams, circuits, reusable symbols, visual exports, selectable-text exports, and answer-key exports.
