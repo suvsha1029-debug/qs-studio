@@ -1,12 +1,20 @@
 ﻿//  EDITOR
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-function loadQ(id){ cur = qs.find(q=>q.id===id)||null; renderSidebar(); renderEditor(); }
+let editorCanvasReadyPromise=Promise.resolve([]);
+
+function waitForEditorCanvasReady(timeoutMs=10000){
+  const timeout=new Promise(resolve=>setTimeout(()=>resolve(false),Math.max(250,Number(timeoutMs)||10000)));
+  return Promise.race([editorCanvasReadyPromise,timeout]);
+}
+
+function loadQ(id){ cur = qs.find(q=>q.id===id)||null; renderSidebar(); return renderEditor(); }
 
 function renderEditor(){
   const ed = document.getElementById('editor');
   if(!cur){
     ed.innerHTML='<div class="empty"><div style="font-size:32px">&#128203;</div><div>Select a question</div></div>';
-    return;
+    editorCanvasReadyPromise=Promise.resolve([]);
+    return editorCanvasReadyPromise;
   }
   const q = cur;
   const isNAT = q.type==='NAT', isMSQ = q.type==='MSQ';
@@ -89,20 +97,19 @@ function renderEditor(){
     <div class="sec-lbl">Question Content</div>
     <div class="canvas-wrap" id="qCanvasWrap">
       <div class="canvas-tools" id="qTools">
-        <button class="tool-btn active" id="toolPen" onclick="setTool('pen','q')">&#9998; Pen</button>
-        <button class="tool-btn" id="toolText" onclick="setTool('text','q')">T Text</button>
+        <button class="tool-btn active" id="toolText" onclick="setTool('text','q')">Text</button>
         <button class="tool-btn" id="toolLegend" onclick="setTool('legend','q')">Aa Legend</button>
-        <button class="tool-btn" id="toolFigure" onclick="setTool('figure','q')">&#128444; Figure</button>
-        <button class="tool-btn" id="toolGraph" onclick="setTool('graph','q')">&#128200; Graph</button>
-        <button class="tool-btn" id="toolLine" onclick="setTool('line','q')">&#9135; Line</button>
-        <button class="tool-btn" id="toolRect" onclick="setTool('rect','q')">&#9633; Rect</button>
-        <button class="tool-btn" id="toolCirc" onclick="setTool('circ','q')">&#9711; Circle</button>
-        <button class="tool-btn" id="toolErase" onclick="setTool('erase','q')">&#9003; Erase</button>
+        <button class="tool-btn" id="toolFigure" onclick="setTool('figure','q')">Figure</button>
+        <button class="tool-btn" id="toolGraph" onclick="setTool('graph','q')">Graph</button>
+        <button class="tool-btn" id="toolLine" onclick="setTool('line','q')">Line</button>
+        <button class="tool-btn" id="toolRect" onclick="setTool('rect','q')">Rect</button>
+        <button class="tool-btn" id="toolCirc" onclick="setTool('circ','q')">Circle</button>
+        <button class="tool-btn" id="toolErase" onclick="setTool('erase','q')">Erase</button>
         <input type="color" id="qColor" value="#111111" title="Color">
         <input type="range" id="qSize" min="1" max="24" value="2" title="Size">
         <span id="qSizeLbl" style="font-size:10px;color:var(--muted)">2px</span>
         <button class="tool-btn" onclick="clearCanvas('q')">Clear</button>
-        <button class="tool-btn" onclick="importImg('q')">&#128247; Import</button>
+        <button class="tool-btn" onclick="importImg('q')">Import</button>
         <button class="tool-btn" onclick="changeFigure('q')">Change Fig</button>
         <button class="tool-btn" onclick="cropFigure('q')">Crop Fig</button>
         <button class="tool-btn" onclick="deleteFigure('q')">Delete Fig</button>
@@ -110,9 +117,8 @@ function renderEditor(){
         <button class="tool-btn" onclick="expandCanvasPane('q')">Expand Pane</button>
         <button class="tool-btn" onclick="contractCanvasPane('q')">Contract Pane</button>
         <button class="tool-btn" onclick="autoAdjustCanvasPane('q')">Auto Adjust</button>
-        <button class="tool-btn" onclick="openMixedComposer('q')">Composer</button>
-        <button class="tool-btn" onclick="insertMathImg('q')">&#8721; Math→Img</button>
-        <button class="tool-btn" onclick="undoCanvas('q')">&#8617; Undo</button>
+        <button class="tool-btn" onclick="openMixedComposer('q')">Hallmark HD Composer</button>
+        <button class="tool-btn" onclick="undoCanvas('q')">Undo</button>
       </div>
       <canvas id="qCanvas" width="640" height="90" style="max-width:100%;margin:0 auto"></canvas>
     </div>
@@ -160,7 +166,7 @@ function renderEditor(){
               <label for="corr${i}" style="cursor:pointer">&#10003; Correct</label>
             </div>
             <button class="tool-btn" onclick="clearCanvas('opt${i}')">Clear</button>
-            <button class="tool-btn" onclick="importImg('opt${i}')">&#128247; Import</button>
+            <button class="tool-btn" onclick="importImg('opt${i}')">Import</button>
             <button class="tool-btn" onclick="changeFigure('opt${i}')">Change Fig</button>
             <button class="tool-btn" onclick="cropFigure('opt${i}')">Crop Fig</button>
             <button class="tool-btn" onclick="deleteFigure('opt${i}')">Delete Fig</button>
@@ -168,15 +174,13 @@ function renderEditor(){
             <button class="tool-btn" onclick="expandCanvasPane('opt${i}')">Expand Pane</button>
             <button class="tool-btn" onclick="contractCanvasPane('opt${i}')">Contract Pane</button>
             <button class="tool-btn" onclick="autoAdjustCanvasPane('opt${i}')">Auto Adjust</button>
-            <button class="tool-btn" onclick="openMixedComposer('opt${i}')">Composer</button>
-            <button class="tool-btn" onclick="insertMathImg('opt${i}')">&#8721; Math</button>
-            <button class="tool-btn" onclick="undoCanvas('opt${i}')">&#8617;</button>
+            <button class="tool-btn" onclick="openMixedComposer('opt${i}')">Hallmark HD Composer</button>
+            <button class="tool-btn" onclick="undoCanvas('opt${i}')">Undo</button>
             <span class="opt-id-row">${opt.oid||genOid(q.qid,i+1)}</span>
           </div>
           <div class="canvas-wrap" id="opt${i}CanvasWrap">
             <div class="canvas-tools" id="opt${i}Tools">
-              <button class="tool-btn active" id="opt${i}toolPen" onclick="setTool('pen','opt${i}')">&#9998;</button>
-              <button class="tool-btn" id="opt${i}toolText" onclick="setTool('text','opt${i}')">T</button>
+              <button class="tool-btn active" id="opt${i}toolText" onclick="setTool('text','opt${i}')">Text</button>
               <button class="tool-btn" id="opt${i}toolLegend" onclick="setTool('legend','opt${i}')">Aa</button>
               <button class="tool-btn" id="opt${i}toolFigure" onclick="setTool('figure','opt${i}')">&#128444;</button>
               <button class="tool-btn" id="opt${i}toolGraph" onclick="setTool('graph','opt${i}')">&#128200;</button>
@@ -208,11 +212,16 @@ function renderEditor(){
   `;
 
   // Init canvases after DOM insertion
-  requestAnimationFrame(()=>{
-    initCanvas('q');
-    if(!isNAT) cur.options.forEach((_,i)=>initCanvas('opt'+i));
+  const expectedQuestion=q;
+  editorCanvasReadyPromise=new Promise(resolve=>requestAnimationFrame(async ()=>{
+    if(cur!==expectedQuestion){ resolve([]); return; }
+    const jobs=[initCanvas('q')];
+    if(!isNAT) expectedQuestion.options.forEach((_,i)=>jobs.push(initCanvas('opt'+i)));
     if(typeof syncPdfSourceFields==='function') syncPdfSourceFields();
-  });
+    const settled=await Promise.allSettled(jobs);
+    resolve(settled);
+  }));
+  return editorCanvasReadyPromise;
 }
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•

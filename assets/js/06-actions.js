@@ -5,6 +5,14 @@ function newQ(){
     showProjectLauncher();
     return;
   }
+  const isFirstPaperQuestion=qs.length===0;
+  const preparationToken=isFirstPaperQuestion && typeof beginPaperPreparation==='function'
+    ? beginPaperPreparation({
+        reason:'first-question',
+        title:'Preparing the first question',
+        detail:'Building the editor canvas and warming the new paper preview...'
+      })
+    : null;
   const idx=qs.length+1;
   const firstSub = subjects[0]?.short || 'EC';
   const q={
@@ -33,6 +41,14 @@ function newQ(){
     correctOptionIds:[]
   };
   qs.push(q); saveLS(); loadQ(q.id); renderPaper();
+  if(isFirstPaperQuestion && typeof preparePaperWorkspace==='function'){
+    preparePaperWorkspace({
+      token:preparationToken,
+      reason:'first-question',
+      title:'Preparing the first question',
+      minVisibleMs:500
+    }).catch(err=>console.error('First-question preparation failed:',err));
+  }
 }
 
 function saveQ(){

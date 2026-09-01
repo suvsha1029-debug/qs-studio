@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const vm = require('vm');
 
 const root = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
@@ -13,6 +14,13 @@ const componentCss = read('assets/css/02-components.css');
 const canvas = read('assets/js/04-canvas-engine.js');
 const exportJs = read('assets/js/08-export.js');
 const circuitJs = read('assets/js/12-circuit-editor.js');
+const stateJs = read('assets/js/01-state.js');
+const editorJs = read('assets/js/03-editor.js');
+const actionsJs = read('assets/js/06-actions.js');
+const previewJs = read('assets/js/07-paper-preview.js');
+const helpersJs = read('assets/js/09-helpers.js');
+const initJs = read('assets/js/10-init.js');
+const persistenceJs = read('assets/js/11-persistence.js');
 const html = read('qs_studio.html');
 const svgMaker = read('svg_symbol_maker.html');
 const sheetPipeline = read('pdf_sheet_template_pipeline.html');
@@ -45,6 +53,150 @@ function functionBody(text, name) {
     }
   }
   return '';
+}
+
+function sourceBetween(text, startMarker, endMarker) {
+  const start=text.indexOf(startMarker);
+  if(start<0) return '';
+  const end=text.indexOf(endMarker,start+startMarker.length);
+  return end<0 ? text.slice(start) : text.slice(start,end);
+}
+
+function loadFunctionsIntoSandbox(source, names, globals={}) {
+  const sandbox={console,Math,Number,String,RegExp,Object,Array,JSON,...globals};
+  vm.createContext(sandbox);
+  const bodies=names.map(name=>functionBody(source,name));
+  if(bodies.some(body=>!body)) throw new Error('Could not load production function into stress sandbox');
+  vm.runInContext(bodies.join('\n'),sandbox);
+  return sandbox;
+}
+
+let composerSizingStressOk=false;
+let composerSizingStressDetail='';
+try{
+  const sizing={
+    console,Math,Number,String,RegExp,Object,Array,JSON,
+    document:{getElementById:()=>null},
+    localStorage:{getItem:()=>null,setItem:()=>{}},
+    MIXED_COMPOSER_TEXT_SIZE_KEY:'test-text-size',
+    MIXED_COMPOSER_MATH_SIZE_KEY:'test-math-size',
+    MIXED_COMPOSER_INNER_MATH_SCALE_KEY:'test-inner-scale',
+    MIXED_COMPOSER_EQUATION_STROKE_KEY:'test-ink',
+    activeComposerKey:null,
+    activeComposerRenderKey:'q',
+    activeComposerRenderContext:null,
+    cur:{questionComposerMathSize:22,questionComposerInnerMathScale:115,options:[]}
+  };
+  vm.createContext(sizing);
+  vm.runInContext(sourceBetween(canvas,'function clampMixedComposerTextSize','function getComposerMainTextSize'),sizing);
+  const formulas=[
+    'x_i^2',
+    '\\frac{a}{b}',
+    '\\frac{1}{1+\\frac{x}{\\sqrt{1+x^2}}}',
+    '\\int_a^b f(x)\\,dx',
+    '\\int_a^b \\int_c^d \\int_e^f f(x)\\,dx\\,dy\\,dz',
+    '\\begin{bmatrix}a&b\\\\c&d\\end{bmatrix}'
+  ];
+  const sizes=[14,16,22,36,52];
+  const innerScales=[90,100,115,150,180];
+  const heights=new Map();
+  for(const size of sizes){
+    sizing.cur.questionComposerMathSize=size;
+    for(const inner of innerScales){
+      sizing.cur.questionComposerInnerMathScale=inner;
+      for(const formula of formulas){
+        const height=sizing.getComposerEquationTargetHeight('q',formula);
+        if(!Number.isFinite(height) || height<16 || height>340) throw new Error(`invalid target ${height} for ${size}/${inner}`);
+        heights.set(`${size}|${inner}|${formula}`,height);
+      }
+    }
+  }
+  for(const formula of formulas){
+    for(const inner of innerScales){
+      let previous=0;
+      for(const size of sizes){
+        const current=heights.get(`${size}|${inner}|${formula}`);
+        if(current<previous) throw new Error(`size selector is non-monotonic for ${formula}`);
+        previous=current;
+      }
+    }
+    for(const size of sizes){
+      let previous=0;
+      for(const inner of innerScales){
+        const current=heights.get(`${size}|${inner}|${formula}`);
+        if(current<previous) throw new Error(`inner scale is non-monotonic for ${formula}`);
+        previous=current;
+      }
+    }
+  }
+  sizing.cur.questionComposerMathSize=14;
+  sizing.cur.questionComposerInnerMathScale=90;
+  const single=heights.get(`14|90|${formulas[3]}`);
+  const repeated=heights.get(`14|90|${formulas[4]}`);
+  if(repeated>30 || repeated>single+2) throw new Error(`Math 14 / Inner 90 integral inflated to ${repeated}px`);
+  const compactLatex=sizing.prepareComposerEquationLatex('\\frac{a}{b}','q');
+  if(!compactLatex.startsWith('\\textstyle ') || !compactLatex.includes('\\tfrac')) throw new Error('Inner 90 did not request compact TeX geometry');
+  sizing.cur.questionComposerInnerMathScale=115;
+  const displayLatex=sizing.prepareComposerEquationLatex('\\frac{a}{b}','q');
+  if(!displayLatex.startsWith('\\displaystyle ') || !displayLatex.includes('\\dfrac')) throw new Error('Inner 115 did not restore display TeX geometry');
+  composerSizingStressOk=true;
+}catch(err){
+  composerSizingStressDetail=String(err?.message||err);
+}
+
+let jsonRoundTripStressOk=false;
+let jsonRoundTripStressDetail='';
+try{
+  const normalizer={console,Math,Number,String,RegExp,Object,Array,JSON,DIFFICULTY_LEVELS:['Easy','Medium','Hard']};
+  vm.createContext(normalizer);
+  vm.runInContext(
+    sourceBetween(stateJs,'function normalizeDifficulty','function normalizeQuestionTopic')+'\n'+
+    sourceBetween(stateJs,'function normalizeQuestionTopic','function normalizeTopicRecord')+'\n'+
+    sourceBetween(stateJs,'function normalizeFigureCropRecord','qs = qs.map(normalizeQuestion);'),
+    normalizer
+  );
+  const sourceSvg='<svg viewBox="0 0 40 20"><path d="M1 10H39" stroke="#111" stroke-width="2.4"/></svg>';
+  const raster='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB';
+  let record={
+    qid:'Q-STRESS',topic:'Signals',difficulty:'Hard',questionComposerHTML:'<div>\\(x^2\\)</div>',
+    questionComposerMathSize:14,questionComposerInnerMathScale:90,questionComposerEquationInk:'bold',
+    questionRenderMode:'source',questionImage:raster,renderChecksum:'sha256:test',
+    questionFigures:[{src:'data:image/svg+xml,'+encodeURIComponent(sourceSvg),sourceSvg,circuitScene:{version:3,wires:[{x1:0,y1:10,x2:40,y2:10}]},styleManifest:{schema:'qs-studio-style-preservation/v1'},x:3,y:4,w:40,h:20,crop:{l:.75,r:.75,t:.1,b:.1},customVectorMetadata:{stable:true}}],
+    options:[{oid:'O1',composerHTML:'<div>A</div>',composerMathSize:14,composerInnerMathScale:90,renderMode:'source',image:raster,unknownOptionMetadata:'keep-me',figures:[]}]
+  };
+  for(let i=0;i<100;i++) record=normalizer.normalizeQuestion(JSON.parse(JSON.stringify(record)));
+  const fig=record.questionFigures[0];
+  if(record.questionComposerHTML!=='<div>\\(x^2\\)</div>' || record.questionComposerMathSize!==14 || record.questionComposerInnerMathScale!==90) throw new Error('composer source/settings changed');
+  if(record.questionImage!==raster || record.renderChecksum!=='sha256:test') throw new Error('lossless raster or unknown question metadata changed');
+  if(fig.sourceSvg!==sourceSvg || fig.circuitScene?.version!==3 || fig.styleManifest?.schema!=='qs-studio-style-preservation/v1') throw new Error('editable vector source changed');
+  if(fig.customVectorMetadata?.stable!==true || record.options[0].unknownOptionMetadata!=='keep-me') throw new Error('forward-compatible metadata was dropped');
+  if(fig.crop.l+fig.crop.r>0.9600001 || fig.crop.t+fig.crop.b>0.9600001) throw new Error('normalized crop removed the entire figure');
+  jsonRoundTripStressOk=true;
+}catch(err){
+  jsonRoundTripStressDetail=String(err?.message||err);
+}
+
+let exportClampStressOk=false;
+let exportClampStressDetail='';
+try{
+  const limiter=loadFunctionsIntoSandbox(canvas,['clampExportSurfaceSize']);
+  let seed=0x51f15e;
+  for(let i=0;i<25000;i++){
+    seed=(Math.imul(seed,1664525)+1013904223)>>>0;
+    const width=16+(seed%200000);
+    seed=(Math.imul(seed,1664525)+1013904223)>>>0;
+    const height=16+(seed%200000);
+    const out=limiter.clampExportSurfaceSize(width,height);
+    if(out.width<1 || out.height<1 || out.width>9000 || out.height>9000 || out.width*out.height>36000000) throw new Error(`limit exceeded by ${width}x${height} -> ${out.width}x${out.height}`);
+    if(out.width>8 && out.height>8){
+      const ratioError=Math.abs(Math.log((out.width/out.height)/(width/height)));
+      const quantizationTolerance=Math.max(.003,1/Math.min(out.width,out.height));
+      if(ratioError>quantizationTolerance) throw new Error(`aspect ratio drifted for ${width}x${height}`);
+    }
+  }
+  exportClampStressOk=true;
+}catch(err){
+  exportClampStressDetail=String(err?.message||err);
 }
 
 check(
@@ -155,25 +307,24 @@ check(
 );
 
 check(
-  'canvas composer gives all nested equation assets generous breathing space',
+  'nested equations keep breathing space without count-based integral inflation',
   includesAll(canvas, [
     'function getComposerLatexTallness',
     'function getComposerLatexFractionDepth',
-    'const rootCount=(source.match(/\\\\sqrt',
-    'const scriptCount=(source.match(/[_^]\\s*(?:\\{|\\\\|[A-Za-z0-9+\\-=()])/g)||[]).length;',
-    'const bigOpScriptCount=(source.match(/\\\\(?:sum|prod|coprod|int|iint|iiint|oint|lim)\\b(?:\\s*[_^]\\s*(?:\\{|\\\\|[A-Za-z0-9+\\-=()]))+/g)||[]).length;',
-    'const complexScriptCount=(source.match(/[_^]\\s*\\{[^{}]*(?:\\\\(?:frac|dfrac|tfrac|sqrt|sum|prod|int|iint|iiint|oint|lim|left|right)|[{}])[\\s\\S]*?\\}/g)||[]).length;',
     'function getComposerEquationVerticalPadding',
-    'if(tall.rootCount>0) multiplier+=Math.min(.36, tall.rootCount*.14);',
-    'if(tall.bigOpCount>0) multiplier+=Math.min(.44, tall.bigOpCount*.16);',
-    'if(tall.complexScriptCount>0) multiplier+=Math.min(.54, tall.complexScriptCount*.28);',
-    'const minNested=tall.fracDepth>1 ? Math.round(mathSize*3.25) : base;',
-    'const minComplex=(tall.fracCount || tall.rootCount || tall.bigOpCount || tall.bigDelimiterCount || tall.complexScriptCount)',
+    'let structureFactor=1;',
+    'if(tall.fracDepth>0) structureFactor+=Math.min(.24, tall.fracDepth*.10);',
+    'if(tall.bigOpScriptCount>0) structureFactor+=.08;',
+    'structureFactor=Math.min(1.38, structureFactor);',
+    'const matrixFactor=1 + Math.max(0,matrixRows-1)*.72;',
     'const verticalPad=getComposerEquationVerticalPadding(activeComposerRenderKey, preparedLatex, targetH);',
     'const assetH=mathH + verticalPad*2;',
-    'eqCtx.drawImage(rawImg, 0, verticalPad*2, eqCanvas.width, mathH*2);'
-  ]),
-  'nested fractions, roots, integrals, sums, limits, and complex exponents must not be compressed on canvas'
+    'verticalPad*equationScale,',
+    'mathH*equationScale,'
+  ]) &&
+    !functionBody(canvas, 'getComposerEquationTargetHeight').includes('integralCount*') &&
+    !functionBody(canvas, 'getComposerEquationTargetHeight').includes('bigOpCount*'),
+  'repeated horizontal integrals must affect width, not explode Math 14 glyph height'
 );
 
 check(
@@ -181,20 +332,23 @@ check(
   includesAll(canvas, [
     'function isComposerCompactInlineLatex',
     "out='\\\\textstyle '+out;",
-    "if(isComposerCompactInlineLatex(latex)) return Math.max(18, Math.min(46, Math.round(mathSize*1.28)));",
+    'const innerFactor=readMixedComposerInnerMathScale(key || activeComposerRenderKey)/100;',
+    'if(isComposerCompactInlineLatex(latex)) return Math.max(16, Math.min(64, Math.round(mathSize*1.24*innerFactor)));',
     "if(isComposerCompactInlineLatex(latex)) return Math.max(2, Math.round(targetHeight*.045));",
-    "if(/^\\\\(?:bar|overline|hat|vec|dot|ddot|tilde|overrightarrow|overleftarrow)\\s*\\{[^{}\\n]{1,18}\\}$/.test(source))"
+    "if(/^\\\\(?:bar|overline|hat|vec|dot|ddot|tilde|overrightarrow|overleftarrow)\\s*\\{[^{}\\n]{1,18}\\}$/.test(source))",
+    "out=out.replace(/\\\\(?:dfrac|frac|tfrac)\\b/g,'\\\\tfrac');"
   ]),
   'x_bar/X_bar/y_bar and simple root/script atoms must not inflate like full display equations'
 );
 
 check(
-  'composer apply crops empty horizontal surface space without removing vertical layout',
+  'composer apply crops only empty outer surface space',
   includesAll(canvas, [
     'function getComposerApplySourceScale',
-    'function getComposerSurfaceHorizontalInkCrop',
+    'function getComposerSurfaceInkCrop',
     'function prepareComposerSurfaceForCanvasApply',
-    'return { source:canvas, sx, sy:0, sw:Math.max(1,right-sx), sh:height, scale };',
+    'const padYPx=Math.max(3, Math.round(6*scale));',
+    'return { source:canvas, sx, sy, sw:Math.max(1,right-sx), sh:Math.max(1,bottom-sy), scale };',
     'const preparedSource=prepareComposerSurfaceForCanvasApply(source, key);',
     'const srcW=preparedSource.logicalWidth||Math.max(200, cv.width-pad*2);',
     'const srcH=preparedSource.logicalHeight||baseHeight;',
@@ -211,8 +365,11 @@ check(
   'question canvas source sync uses the same prepared composer surface path',
   includesAll(canvas, [
     'async function composeSourceSurfaceWithCanvasFigures',
+    "const hasOwn=name=>Object.prototype.hasOwnProperty.call(opts,name);",
+    "const frameWidth=Math.max(1, Number(opts.frameWidth)||Number(cv?.width)||(key==='q' ? 640 : 500));",
+    "const liveFigures=hasOwn('figures') ? (Array.isArray(opts.figures) ? opts.figures : []) : getFigureStore(key);",
     "const preparedSource=(typeof prepareComposerSurfaceForCanvasApply==='function')",
-    'const srcW=preparedSource.logicalWidth||Math.max(200, cv.width-pad*2);',
+    'const srcW=preparedSource.logicalWidth||Math.max(200, frameWidth-pad*2);',
     'const srcH=preparedSource.logicalHeight||getBaseCanvasHeight(key);',
     'preparedSource.source,',
     'preparedSource.sx,',
@@ -227,7 +384,7 @@ check(
   'source composer frames do not fall back to stale bitmap canvas export',
   includesAll(canvas, [
     "console.warn('Source composer export sync failed; keeping source frame instead of bitmap fallback:', key, err);",
-    'if(!allowBitmapFallback || composerHtml) return;'
+    'if(!allowBitmapFallback || composerHtml) return false;'
   ])
 );
 
@@ -241,10 +398,10 @@ check(
   ]) &&
     includesAll(exportJs, [
       'function getUniquePdfVectorFigures',
-      'pdfFiguresSharePlacement(prev,fig) || pdfFiguresOverlapMeaningfully(prev,fig)',
-      'getUniquePdfVectorFigures(figures).forEach(fig=>'
-    ]),
-  'simple PDF export must not draw both old and replacement vector figures'
+      'pdfFiguresSharePlacement(prev,fig) || pdfFiguresOverlapMeaningfully(prev,fig)'
+    ]) &&
+    !functionBody(exportJs, 'drawImageRow').includes('drawPdfVectorFigureOverlays('),
+  'simple PDF export must not draw a second approximate vector copy over the lossless frame'
 );
 
 check(
@@ -315,13 +472,56 @@ check(
 );
 
 check(
-  'exam UI wording is generic and circuit figure panel is not mojibake',
-  canvas.includes('exam-paper text/equation print') &&
+  'Hallmark HD wording is restored and circuit figure panel is not mojibake',
+  canvas.includes('Hallmark HD renders text and equations once at final resolution') &&
     circuitJs.includes("title:'Circuit Figure Panel'") &&
     circuitJs.includes("b.textContent='Circuit Fig'") &&
     !circuitJs.includes("b.textContent='â") &&
     !circuitJs.includes('Place components â'),
-  'visible UI should avoid exam-specific branding and mojibake circuit labels'
+  'composer should identify the Hallmark HD renderer and circuit labels must remain readable'
+);
+
+check(
+  'only legacy Pen and Math-to-Image canvas paths are removed',
+  !canvas.includes('function insertMathImg') &&
+    !canvas.includes("tool:'pen'") &&
+    !canvas.includes("state.tool==='pen'") &&
+    !read('assets/js/03-editor.js').includes("setTool('pen'") &&
+    !read('assets/js/03-editor.js').includes('Math→Img') &&
+    includesAll(read('assets/js/03-editor.js'), [
+      'Hallmark HD Composer',
+      "setTool('figure','q')",
+      "setTool('graph','q')",
+      "setTool('line','q')",
+      "setTool('rect','q')",
+      "setTool('circ','q')",
+      "setTool('erase','q')",
+      "changeFigure('q')",
+      "cropFigure('q')",
+      "deleteFigure('q')",
+      "burnFiguresIntoCanvas('q')",
+      "expandCanvasPane('q')",
+      "contractCanvasPane('q')",
+      "autoAdjustCanvasPane('q')",
+      "clearCanvas('q')",
+      "importImg('q')",
+      "undoCanvas('q')"
+    ]),
+  'all canvas controls except Pen and prompt-based Math-to-Image must remain visible'
+);
+
+check(
+  'Hallmark HD is the only composer canvas profile',
+  includesAll(canvas, [
+    "function clampMixedComposerRenderProfile(value){\n  return 'hallmark';",
+    "function readMixedComposerRenderProfile(key=''){\n  return 'hallmark';",
+    'class="composer-profile-badge"',
+    '>Hallmark HD</span>'
+  ]) &&
+    !canvas.includes('getMixedComposerRenderProfileOptionsHTML') &&
+    !canvas.includes('updateMixedComposerRenderProfile') &&
+    !canvas.includes('mixedComposerRenderProfile'),
+  'old saved Official paper choices must not downgrade Hallmark HD rendering'
 );
 
 check(
@@ -796,22 +996,514 @@ check(
 );
 
 check(
-  'equation ink selector changes the final high-DPI equation asset',
+  'Hallmark ink levels produce distinct final-DPI text and equation weights',
   includesAll(canvas, [
-    'function applyEquationInkToAssetCanvas',
+    'function drawEquationAssetWithInk',
+    'function drawComposerTextWithInk',
     'const equationInk=readMixedComposerEquationStroke(activeComposerRenderKey);',
-    'applyEquationInkToAssetCanvas(eqCanvas, equationInk, renderProfile);',
-    "if(ink==='extra') return { radius:2, strength:.72 };"
+    'drawEquationAssetWithInk(',
+    "if(ink==='regular') return { opacity:1, spread:.16, passes:5, fontWeight:500, ruleScale:1, textSpread:0, textPasses:1 };",
+    "if(ink==='bold') return { opacity:1, spread:.32, passes:5, fontWeight:650, ruleScale:1.35, textSpread:.08, textPasses:5 };",
+    "return { opacity:1, spread:.54, passes:9, fontWeight:800, ruleScale:1.72, textSpread:.18, textPasses:9 };",
+    'for(const [dx,dy] of offsets)',
+    'drawComposerTextWithInk(ctx,item.text,textX,textY);',
+    'ctx.lineWidth=getHallmarkRuleWidth(variant===\'small\'?1.15:1.5);'
   ]) &&
-    !canvas.includes('hardenEquationAssetCanvas(eqCanvas'),
-  'equation ink must remain equation-only and must not restore destructive posterization'
+    !canvas.includes('applyEquationInkToAssetCanvas') &&
+    !canvas.includes('hardenComposerRowSurface') &&
+    !canvas.includes('renderComposerRowSurface'),
+  'Fine, Light, Regular, Bold, and Extra bold must remain visibly separate without pixel mutation passes'
 );
 
 check(
   'equation ink visibly updates editable nested equation controls',
   componentCss.includes('--composer-ui-font-weight:800') &&
+    componentCss.includes('.mixed-composer-editor .structure-input,.mixed-composer-editor .frac-input,.mixed-composer-editor .structure-main') &&
     componentCss.includes('font-weight:var(--composer-ui-font-weight,400)!important'),
   'Bold and Extra bold must affect equation glyphs, not only widget borders'
+);
+
+check(
+  'ordinary composer prose renders directly on the final high-DPI surface',
+  includesAll(canvas, [
+    'function drawComposerBitmapText',
+    'function drawComposerTextWithInk',
+    'const scale=Math.max(1, getMixedComposerRenderScale());',
+    "ctx.textRendering='geometricPrecision';",
+    "if('fontKerning' in ctx) ctx.fontKerning='normal';",
+    'drawComposerTextWithInk(ctx,item.text,textX,textY);'
+  ]) &&
+    !canvas.includes('buildCanvasTextBitmap(') &&
+    !canvas.includes('strokeCanvasText(') &&
+    !functionBody(canvas, 'drawComposerTextWithInk').includes('strokeText(') &&
+    functionBody(canvas, 'getComposerFont').includes('const inkWeight=getComposerEquationInkProfile') &&
+    functionBody(canvas, 'getComposerFont').includes('const weight=style?.bold ? Math.max(700,inkWeight) : inkWeight;'),
+  'normal letters must be weighted directly on the final surface, never pre-rasterized or resampled row-by-row'
+);
+
+check(
+  'composer equations rasterize from vector exactly once at their selected size',
+  includesAll(canvas, [
+    'async function renderTexToSvgImage(tex)',
+    'vector=await renderTexToSvgImage(preparedLatex);',
+    "const rawImg=vector.img;",
+    "URL.revokeObjectURL(vector.url);",
+    "Rasterize MathJax's SVG once, directly at the final Hallmark HD size."
+  ]) &&
+    !canvas.includes('renderTexToDataUrl(preparedLatex, getMixedComposerRenderScale())'),
+  'lower Math sizes must not pass through an intermediate PNG that introduces folded or wrinkled glyph edges'
+);
+
+check(
+  'composer waits for stable font metrics before measuring small text',
+  functionBody(canvas, 'renderMixedComposerCanvasQueuedWork').includes('if(document.fonts?.ready) await document.fonts.ready;'),
+  'late font swaps must not cramp or wrinkle small alphabetic text after layout'
+);
+
+check(
+  'concurrent frame restores cannot leak size or ink settings across canvases',
+  includesAll(canvas, [
+    'let mixedComposerRenderQueue=Promise.resolve();',
+    'let activeComposerRenderContext=null;',
+    'function captureMixedComposerRenderContext',
+    'const snapshot=renderContext',
+    'const run=()=>renderMixedComposerCanvasQueuedWork(root,key,snapshot);',
+    'const pending=mixedComposerRenderQueue.then(run,run);',
+    'mixedComposerRenderQueue=pending.catch(()=>{});',
+    'activeComposerRenderContext=renderContext || captureMixedComposerRenderContext(activeComposerRenderKey);',
+    'activeComposerRenderContext=prevComposerRenderContext;'
+  ]) &&
+    functionBody(canvas, 'captureMixedComposerRenderContext').includes('Object.freeze') &&
+    includesAll(functionBody(canvas, 'isMixedComposerControlContextVisible'),[
+      "const modal=document.getElementById('appModal');",
+      "!modal.classList.contains('hidden')",
+      "document.getElementById('mixedComposerEditor')"
+    ]) &&
+    (canvas.match(/isMixedComposerControlContextVisible\(key\)/g)||[]).length>=4 &&
+    (canvas.match(/activeComposerRenderContext\?\.key===frameKey/g)||[]).length>=4,
+  'async q/option renders must retain their own text size, math size, inner scale, and Hallmark ink level'
+);
+
+check(
+  'Composer Apply atomically snapshots DOM and selectors before asynchronous rendering',
+  includesAll(sourceBetween(canvas,'const runApply=async ()=>','if(applyBtn) applyBtn.onclick=runApply;'),[
+    'const targetQuestion=cur;',
+    "const targetCanvas=document.getElementById(key+'Canvas');",
+    'const ownsApplyTarget=()=>isCanvasRenderTargetCurrent(key,targetQuestion,targetCanvas)',
+    'const sourceHTML=editorEl.innerHTML;',
+    'const renderRoot=editorEl.cloneNode(true);',
+    'const renderContext=captureMixedComposerRenderContext(key);',
+    'const plainText=getMixedComposerPlainText(renderRoot);',
+    'renderMixedComposerCanvas(renderRoot, key, renderContext)',
+    'const composerSize=renderContext.textSize;',
+    'targetQuestion.questionComposerHTML=sourceHTML;',
+    'targetQuestion.options[idx].composerHTML=sourceHTML;',
+    'expectedQuestion:targetQuestion,',
+    'expectedCanvas:targetCanvas',
+    'if(applied===false || !ownsApplyTarget())'
+  ]) && includesAll(canvas,[
+    "control.dataset.applyWasDisabled=control.disabled ? '1' : '0';",
+    "composerEditor.setAttribute('contenteditable','false');",
+    "document.getElementById('appModalClose')",
+    ".modal-actions button:not(.composer-apply-btn)"
+  ]),
+  'queued rendering must not pair one bitmap with later live HTML/settings or commit into a newly selected question'
+);
+
+check(
+  'composer sizing and restore paths preserve glyph aspect ratio',
+  includesAll(functionBody(canvas, 'restoreCanvasFromDataUrl'), [
+    'const aspectHeight=Math.max(1,Math.round(srcH*(cv.width/Math.max(1,srcW))));',
+    'ctx.drawImage(img,0,0,cv.width,aspectHeight);'
+  ]) &&
+    !canvas.includes('const drawW=Math.max(60, Math.round(srcW*drawScale));') &&
+    !canvas.includes("const drawH=Math.max(key==='q' ? 28 : 18, Math.round(srcH*drawScale));") &&
+    (canvas.match(/const drawW=Math\.max\(1, srcW\*drawScale\);/g)||[]).length>=2 &&
+    (canvas.match(/const drawH=Math\.max\(1, srcH\*drawScale\);/g)||[]).length>=2 &&
+    includesAll(canvas,[
+      'const mathW=Math.max(1, naturalW*scale);',
+      'const mathH=Math.max(1, naturalH*scale);',
+      'const horizontalPad=Math.max(0,(16-mathW)/2);',
+      'horizontalPad*equationScale,',
+      'mathW*equationScale,',
+      'width:eqCanvas.width/equationScale,',
+      'height:eqCanvas.height/equationScale'
+    ]) &&
+    includesAll(functionBody(canvas, 'renderTexToDataUrl'),[
+      'const naturalW=Math.max(1, Number(img.naturalWidth||img.width)||320);',
+      'const naturalH=Math.max(1, Number(img.naturalHeight||img.height)||120);',
+      'const padX=Math.max(0,(32-naturalW)/2);',
+      'const padY=Math.max(0,(32-naturalH)/2);',
+      'ctx.drawImage(img,padX,padY,naturalW,naturalH);'
+    ]) &&
+    !functionBody(canvas, 'renderMixedComposerCanvasQueuedWork').includes('const mathH=Math.max(18, naturalH*scale);'),
+  'minimum canvas footprints must add whitespace instead of independently stretching narrow or short glyph surfaces'
+);
+
+check(
+  'question and option canvas content uses consistent top-left alignment',
+  (canvas.match(/const drawY=pad;/g)||[]).length>=2 &&
+    functionBody(canvas, 'getFixedTextPlacement').includes('const startY=16;') &&
+    functionBody(canvas, 'getFixedTextPlacement').includes('const needed=Math.max(baseHeight, startY+textH+16);') &&
+    functionBody(canvas, 'makeViewerCanvasImage').includes('const drawY=0;') &&
+    functionBody(exportJs, 'dataUrlToViewerImage').includes('const drawY=0;') &&
+    canvas.includes("'Top-left aligned'") &&
+    !canvas.includes("const drawY=key==='q' ? pad : Math.max(pad, Math.round((targetH-drawH)/2));") &&
+    !functionBody(canvas, 'getFixedTextPlacement').includes('(cv.height-textH)/2'),
+  'option content and fixed text must not be vertically centered while question content is top-aligned'
+);
+
+check(
+  'canvas surface is left-pinned and clipped inside its blue frame',
+  componentCss.includes('.canvas-wrap{position:relative;border:2px solid #174b7c') &&
+    componentCss.includes('overflow:hidden;min-height:96px') &&
+    componentCss.includes('-webkit-user-select:none;margin:0!important}') &&
+    componentCss.includes('.canvas-wrap:has(>.canvas-imagebox),.canvas-wrap:has(>.canvas-textbox){overflow:visible}') &&
+    componentCss.includes('.canvas-wrap{border-color:#174b7c;box-shadow:none;overflow:hidden}'),
+  'inline margin:auto must not center the real canvas and overlays must not leak beyond the frame border'
+);
+
+check(
+  'restored text blocks return to one-click Composer editing',
+  includesAll(functionBody(canvas, 'initCanvas'), [
+    "if(composerHtml) state.tool='text';",
+    'setTool(state.tool,key);',
+    'function onWrapTextClick(e)',
+    "if(e.target!==wrap || (e.button!==undefined && e.button!==0)) return;",
+    "state.tool='text';",
+    "openMixedComposer(key);",
+    "wrap.addEventListener('pointerdown',wrap._textBlockPointerDown);"
+  ]) &&
+    includesAll(functionBody(canvas, 'openCanvasTextBox'), [
+      "if(mode==='text'){",
+      'openMixedComposer(key);'
+    ]),
+  'the visible Text state and internal tool state must agree after a frame rerender'
+);
+
+check(
+  'source-backed composer resizing uses one exact display-density downsample',
+  includesAll(canvas, [
+    'function renderComposerSourceOverlay(key, preparedSource, placement)',
+    "overlay.className='composer-source-overlay';",
+    "if(clean==='bitmap') clearComposerSourceOverlay(key);",
+    'const cssScaleX=metrics.width/Math.max(1,metrics.cv.width);',
+    'const displayDensity=Math.max(1, Math.min(3, Number(window.devicePixelRatio)||1));',
+    'overlay.width=Math.max(1, Math.round(displayW*displayDensity));',
+    'overlay.height=Math.max(1, Math.round(displayH*displayDensity));',
+    "ctx.imageSmoothingQuality='high';",
+    'renderComposerSourceOverlay(key, preparedSource, {'
+  ]) &&
+    componentCss.includes('.composer-source-overlay{position:absolute;pointer-events:none;z-index:7'),
+  'small text/math must not leave a 12x backing surface to uncontrolled browser zoom filtering'
+);
+
+check(
+  'Composer outer-margin crop preserves intentional leading blank figure rows',
+  includesAll(canvas,[
+    'canvas.dataset.composerOuterMargin=String(outerMargin);',
+    'const structuralMargin=Number(source?.dataset?.composerOuterMargin);',
+    'Number.isFinite(structuralMargin) && structuralMargin>=0',
+    'Math.max(0,Math.min(minY,Math.round(structuralMargin*scale)))'
+  ]),
+  'top alignment may remove renderer padding, but not authored blank Composer rows'
+);
+
+check(
+  'strict export composition falls back instead of silently dropping failed figures',
+  includesAll(sourceBetween(canvas,'async function drawFigureListOnCanvas','async function drawStoredFiguresOnCanvas'),[
+    'const failures=[];',
+    'if(opts.strict && failures.length)',
+    'throw new Error(`Could not render ${failures.length} of ${list.length} canvas figure(s)'
+  ]) &&
+    includesAll(sourceBetween(canvas,'async function composeSourceSurfaceWithCanvasFigures','function paintSurfaceToEditorCanvas'),[
+      'const strictFigures=opts.strictFigures===true;',
+      '{strict:strictFigures}',
+      "if(strictFigures) throw new Error('Burned figure layer did not draw: '"
+    ]) &&
+    includesAll(sourceBetween(exportJs,'async function buildExportAssetsForQuestionRecord','function exportYield'),[
+      'strictFigures:true',
+      'if(!isUsableRasterDataUrl(full) || !isUsableRasterDataUrl(viewer))',
+      "throw new Error('Canvas serialization returned an unusable raster image.');"
+    ]) &&
+    sourceBetween(canvas,'async function syncCanvasAssetForKeyAsync','async function syncCurrentEditorCanvasAssetsForExportAsync').includes('{strictFigures:true}'),
+  'an invalid live/burned figure must select the complete stored raster fallback'
+);
+
+check(
+  'sourceSvg-only circuit records remain visible across canvas, burn, preview, and export paths',
+  includesAll(functionBody(canvas, 'getFigureDisplaySource'),[
+    "const src=String(fig?.src||'').trim();",
+    "const svg=String(fig?.sourceSvg||'').trim();",
+    "svgTextToDataUrl(svg)"
+  ]) &&
+    (canvas.match(/filter\(hasRenderableFigureSource\)/g)||[]).length>=4 &&
+    includesAll(functionBody(canvas, 'renderFigureOverlays'),[
+      'getFigureDisplaySource(fig)',
+      'isEditableVectorCircuitFigure(fig)'
+    ]) &&
+    functionBody(canvas, 'cloneFigureForBurn').includes('...fig,'),
+  'editable SVG/circuit source must not disappear merely because its cached data URL is absent'
+);
+
+check(
+  'v4 project import accepts canonical and snake-case project names',
+  persistenceJs.includes("examName = String(data.examName || '').trim() || String(data.project_name || '').trim();") &&
+    stateJs.includes("String(data.examName || '').trim() || String(data.project_name || '').trim(),"),
+  'writer and reader must agree on project_name interoperability'
+);
+
+check(
+  'Paper JSON preserves burned-layer geometry and validates raster payloads',
+  includesAll(exportJs,[
+    'function isUsableRasterDataUrl(value)',
+    'burned_figure_scale: Math.max(1, Number(o.burnedFigureScale)||1),',
+    'question_burned_figure_scale: Math.max(1, Number(q.questionBurnedFigureScale)||1),',
+    'raster_present:rasterUsable,',
+    "raster_lossless:rasterUsable && rasterMime==='image/png'"
+  ]),
+  'empty data URLs must not be marked complete, and raster-only burned figures need their logical scale'
+);
+
+check(
+  'figure crop limits agree across editor state, canvas, and PDF vector metadata',
+  includesAll(functionBody(stateJs, 'normalizeFigureCropRecord'),['Math.min(.95','if(total<=.96)']) &&
+    includesAll(functionBody(canvas, 'getFigureCrop'),['Math.min(.95','if(total<=.96)']) &&
+    includesAll(functionBody(exportJs, 'drawSvgFigureVectorOverlay'),['Math.min(.95','Math.max(.04']),
+  'crop values must not jump when the same figure moves between UI, project JSON, and export'
+);
+
+check(
+  'Math selector stress matrix prevents Math 14 / Inner 90 integral inflation',
+  composerSizingStressOk,
+  composerSizingStressDetail
+);
+
+check(
+  '100-cycle project JSON round trip preserves Hallmark, raster, SVG, and circuit sources',
+  jsonRoundTripStressOk,
+  jsonRoundTripStressDetail
+);
+
+check(
+  '25,000 export sizes obey edge, pixel-budget, and aspect-ratio limits',
+  exportClampStressOk,
+  exportClampStressDetail
+);
+
+check(
+  'Paper and project JSON declare lossless source-first quality metadata',
+  includesAll(exportJs,[
+    'const buildComposerRenderSource=',
+    'question_render_source:buildComposerRenderSource',
+    'render_source:buildComposerRenderSource',
+    'const rasterComplete=allRenderSources.length>0 && allRenderSources.every(source=>source.raster_present);',
+    'const rasterLossless=rasterComplete && allRenderSources.every(source=>source.raster_lossless);',
+    'composer_source_records:composerSourceRecords',
+    'editable_vector_records:editableVectorRecords',
+    'editable_scene:fig.circuitScene || null'
+  ]) && includesAll(persistenceJs,[
+    '_version: 4',
+    '_quality: {',
+    'const rasterLossless=rasterComplete && frameRecords.every',
+    'composer_source_records:composerSourceRecords',
+    'editable_vector_records:editableVectorRecords',
+    'asset_sync_status:assetSyncStatus'
+  ]),
+  'export/import quality manifests or editable sources are missing'
+);
+
+check(
+  'Paper JSON and PDF prefer the same full-resolution question and option assets',
+  includesAll(sourceBetween(exportJs, 'async function exportPaperJSON', 'async function exportPaperPDFTextOnly'),[
+    "buildExportAssetsForAllQuestions(qs, 'JSON image assets')",
+    'question_image: assets.questionImage || assets.questionViewerImage',
+    "const fullImage = optAsset.full || o.image || '';"
+  ]) && includesAll(sourceBetween(exportJs, 'async function exportPaperPDFTextOnly', 'async function exportPaperPDF(){'),[
+    'assets=await buildExportAssetsForQuestionRecord(q)',
+    '[assets.questionImage, q.questionImage, assets.questionViewerImage',
+    '[optAsset.full, opt?.image, optAsset.viewer'
+  ]),
+  'both formats must select the shared Hallmark full image before any viewer-resolution fallback'
+);
+
+check(
+  'record export renders off-screen source with explicit immutable geometry and figures',
+  includesAll(sourceBetween(exportJs,'async function buildExportAssetsForQuestionRecord','function exportYield'),[
+    'const renderContext=renderContextFor(key,record,option);',
+    'renderMixedComposerCanvas(host, key, renderContext)',
+    'frameWidth:renderContext.frameWidth',
+    'figures:Array.isArray(figures) ? figures : []',
+    'burnedFigures:Array.isArray(burnedFigures) ? burnedFigures : []'
+  ]) &&
+    !sourceBetween(exportJs,'async function buildExportAssetsForQuestionRecord','function exportYield').includes('cur=') &&
+    includesAll(sourceBetween(canvas,'async function composeSourceSurfaceWithCanvasFigures','function setCanvasRenderModeForKey'),[
+      "const frameWidth=Math.max(1, Number(opts.frameWidth)||Number(cv?.width)||(key==='q' ? 640 : 500));",
+      "const liveFigures=hasOwn('figures') ? (Array.isArray(opts.figures) ? opts.figures : []) : getFigureStore(key);"
+    ]),
+  'export must not depend on whichever editor record happens to be mounted in the DOM'
+);
+
+check(
+  'PDF scan proxy finds bounds only and final PNG samples the original once',
+  includesAll(functionBody(exportJs, 'getPdfImageInfo'),[
+    'const scanScale=Math.min(',
+    'tctx.drawImage(img,0,0,trimCanvas.width,trimCanvas.height);',
+    'const sourceMinX=Math.max(0,Math.floor(minX/scanScale)-padSource);',
+    'makePdfEmbedImage(img, pointW, pointH, kind, {x:sourceMinX,y:sourceMinY,w:sourceCropW,h:sourceCropH})'
+  ]) && includesAll(functionBody(exportJs, 'makePdfEmbedImage'),[
+    'octx.drawImage(sourceCanvas,sx,sy,sw,sh,0,0,targetW,targetH);',
+    "return {dataUrl:safeCanvasDataUrl(out, 'image/png'), fmt:'PNG'};"
+  ]) && !functionBody(exportJs, 'makePdfEmbedImage').includes('trimCanvas'),
+  'final PDF rows must not use the low-resolution scan proxy as their image source'
+);
+
+check(
+  'circuit export keeps precise single-pass strokes and editable SVG metadata',
+  includesAll(circuitJs,[
+    'stroke-width="3.2"',
+    "_cBoostStrokeMarkup(c.sym.svgFn(false), 1.85, 5.9)",
+    'preserveAspectRatio="xMinYMin meet"',
+    'shape-rendering="geometricPrecision"',
+    'text-rendering="geometricPrecision"',
+    'sourceSvg:svgStr',
+    'circuitScene:scene'
+  ]) &&
+    !functionBody(exportJs, 'drawImageRow').includes('drawPdfVectorFigureOverlays('),
+  'circuit strokes must not be over-thickened or painted twice in simple PDF export'
+);
+
+check(
+  'canvas ink uses one captured pointer stream and stays visible while drawing',
+  includesAll(functionBody(canvas, 'initCanvas'), [
+    "cv.setPointerCapture?.(e.pointerId);",
+    'markFrameAsBitmap(key);',
+    "typeof e.getCoalescedEvents==='function'",
+    "ctx.strokeStyle=tool==='erase' ? '#fff' : getColor();",
+    "cv.addEventListener('pointercancel',cv._pointerCancel);",
+    "cv.addEventListener('lostpointercapture',cv._pointerCancel);",
+    'if(snapshot) ctx.putImageData(snapshot,0,0);'
+  ]) &&
+    !functionBody(canvas, 'initCanvas').includes("cv.addEventListener('touchstart'") &&
+    !functionBody(canvas, 'initCanvas').includes("cv.addEventListener('mousedown'") &&
+    componentCss.includes('.canvas-wrap>canvas,.canvas-wrap canvas.draw-canvas{display:block;cursor:crosshair;touch-action:none'),
+  'drawing must not duplicate touch/mouse input, disappear under source overlays, or terminate when the pointer leaves the canvas'
+);
+
+check(
+  'full-screen paper buffer is accessible, translucent, and locks interaction only while active',
+  includesAll(html,[
+    'id="paperLoadOverlay"',
+    'role="status"',
+    'aria-live="polite"',
+    'class="paper-preparing"',
+    'id="paperLoadProgress"'
+  ]) && includesAll(componentCss,[
+    'body.paper-preparing{overflow:hidden}',
+    '.paper-load-overlay{',
+    'z-index:30000',
+    'backdrop-filter:blur(15px)',
+    '.paper-load-overlay.is-active',
+    '@media (prefers-reduced-motion:reduce)'
+  ]),
+  'the preparation UI must be visible before startup JS and remain accessible without replacing app dialogs'
+);
+
+check(
+  'paper preparation waits for real resources and always has a bounded release',
+  includesAll(sourceBetween(helpersJs,'async function preparePaperWorkspace','function imgPDFHeight'),[
+    "renderPaper(true)",
+    "waitForEditorCanvasReady(9000)",
+    "waitForCanvasResourceTasks(9000)",
+    "hydratePaperLazyImages({eager:true})",
+    "settleWorkspaceImages('#editor img',4200)",
+    'waitForStablePaperLayout()',
+    'paperPreparationTimeout(work,hardTimeoutMs,false)',
+    'finishPaperPreparation(token'
+  ]) && includesAll(sourceBetween(helpersJs,'function beginPaperPreparation','async function finishPaperPreparation'),[
+    "shell.setAttribute('inert','')",
+    "document.body.classList.add('paper-preparing')",
+    'paperPreparationHardTimer=setTimeout'
+  ]) && includesAll(sourceBetween(helpersJs,'async function finishPaperPreparation','async function warmPaperFonts'),[
+    "shell.removeAttribute('inert')",
+    "document.body.classList.remove('paper-preparing')",
+    "overlay.setAttribute('aria-hidden','true')"
+  ]),
+  'the overlay must track fonts/canvases/previews/layout and release even when one resource is broken'
+);
+
+check(
+  'paper preview supports eager bounded decode of every viewer-sized image',
+  includesAll(sourceBetween(previewJs,'async function hydratePaperLazyImages','let _paperRenderQueued'),[
+    'options?.eager===true',
+    'paperLazyObserver.disconnect()',
+    'Math.min(12,imgs.length)',
+    'await Promise.all(workers)',
+    'failed++'
+  ]) && includesAll(functionBody(previewJs,'settlePaperPreviewImage'),[
+    "img.loading='eager'",
+    "img.removeAttribute('data-src')",
+    "img.decode()",
+    "img.dataset.paperLoadState=ok?'ready':'failed'"
+  ]),
+  'initial/open preparation must hydrate all small viewer assets so scrolling does not trigger late image work'
+);
+
+check(
+  'editor and canvas restoration expose terminal readiness promises',
+  includesAll(editorJs,[
+    'let editorCanvasReadyPromise=Promise.resolve([]);',
+    'function waitForEditorCanvasReady',
+    'const settled=await Promise.allSettled(jobs);',
+    'return editorCanvasReadyPromise;'
+  ]) && includesAll(canvas,[
+    'const canvasResourceTasks = new Set();',
+    'function trackCanvasResourceTask',
+    'async function waitForCanvasResourceTasks',
+    'img.onerror=()=>finish(false);',
+    'return trackCanvasResourceTask(task,expectedQuestion);',
+    "new Error('Image load timed out')"
+  ]),
+  'broken or slow canvas images must settle rather than leaving the paper buffer hung forever'
+);
+
+check(
+  'startup, imported banks, fresh projects, and first questions use the paper buffer',
+  includesAll(initJs,['initializeQsStudio','beginPaperPreparation','bootstrapProjectState({preparationToken:token})']) &&
+    includesAll(persistenceJs,[
+      "reason:'open-bank'",
+      'await _afterLoad',
+      "reason:'new-project'",
+      "reason:'fresh-project'",
+      'options.preparationToken'
+    ]) && includesAll(actionsJs,["reason:'first-question'",'preparePaperWorkspace({']),
+  'all requested paper entry points must warm resources before interaction is released'
+);
+
+const projectSaveOnceBody=functionBody(persistenceJs,'_saveToFileOnce');
+const projectSaveBody=functionBody(persistenceJs,'saveToFile');
+check(
+  'background and denied project saves can never trigger a download',
+  includesAll(projectSaveBody,[
+    'if(silent && (_autoSaveSuppression || !_fileHandle || !_fileHandleWritable)) return false;',
+    'if(_saveInProgress) return _saveInProgress;'
+  ]) && includesAll(projectSaveOnceBody,[
+    "if(!_fileHandle){",
+    "if(err?.name!=='AbortError' && !silent)",
+    'Nothing was downloaded.',
+    'return false;'
+  ]) && !projectSaveOnceBody.includes('dlBlob(') &&
+    includesAll(functionBody(persistenceJs,'_queueAutoSave'),['_fileHandleWritable','_saveInProgress','_autoSaveSuppression']) &&
+    includesAll(functionBody(persistenceJs,'_scheduleAutoSave'),['_fileHandleWritable','_saveInProgress','_autoSaveSuppression']),
+  'Save All may write an approved handle, but autosave/permission failures must never fall through to Downloads'
+);
+
+check(
+  'only explicitly labelled symbol export controls download files',
+  functionBody(svgMaker,'saveSymbolToLibrary').includes('Nothing was downloaded; use Export Symbol JSON') &&
+    !functionBody(svgMaker,'saveSymbolToLibrary').includes('downloadSymbolJson()') &&
+    html.includes("runExportJob('Paper JSON'") && html.includes("runExportJob('Key JSON'") && html.includes('onclick="exportOnePNG()"'),
+  'Save to Library must not silently convert itself into a download action'
 );
 
 check(

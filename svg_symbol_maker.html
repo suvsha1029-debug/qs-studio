@@ -1480,7 +1480,7 @@ function downloadSymbolJson(){const payload=symbolPayload();syncSymbolToSharedCi
 async function saveSymbolToLibrary(){
   const payload=symbolPayload();
   syncSymbolToSharedCircuitLibrary(payload);
-  if(!window.showDirectoryPicker){downloadSymbolJson();setStatus('Folder save is unavailable here. Symbol JSON downloaded instead.');return;}
+  if(!window.showDirectoryPicker){setStatus('Direct folder save is unavailable. Nothing was downloaded; use Export Symbol JSON only when you want a download.');return false;}
   try{
     if(!libraryRootHandle){libraryRootHandle=await window.showDirectoryPicker({mode:'readwrite'});}
     const permission=await libraryRootHandle.queryPermission?.({mode:'readwrite'});

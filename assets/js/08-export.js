@@ -24,7 +24,7 @@ async function dataUrlToViewerImage(dataUrl, key){
         const srcW=img.naturalWidth||img.width||targetW;
         const srcH=img.naturalHeight||img.height||minH;
         const drawH=Math.round(srcH * (targetW / Math.max(1, srcW)));
-        const drawY=key==='q' ? 0 : Math.max(0, Math.round((targetH-drawH)/2));
+        const drawY=0;
         ctx.drawImage(img,0,0,srcW,srcH,0,drawY,targetW,drawH);
         resolve(out.toDataURL('image/png'));
       }catch(_){
@@ -44,6 +44,12 @@ function safeCanvasDataUrl(canvas, type='image/png', quality){
     console.warn('Canvas export skipped:', err);
     return '';
   }
+}
+
+function isUsableRasterDataUrl(value){
+  const dataUrl=String(value||'').trim();
+  const match=dataUrl.match(/^data:image\/(?:png|jpe?g|webp);base64,([a-z0-9+/]+={0,2})$/i);
+  return !!(match && match[1].length>=32);
 }
 
 function buildHighResExportDataUrlFromSurface(surface, key){
@@ -369,48 +375,73 @@ function buildTopicAwareOptionAliases(q, index){
 }
 
 async function buildExportAssetsForQuestionRecord(q){
-  const prevCur=(typeof cur!=='undefined') ? cur : null;
-  try{
-    cur=q;
-    async function buildForKey(key, html, fullFallback, viewerFallback, renderMode){
+    const renderContextFor=(key,record,option=false)=>({
+      key,
+      textSize:clampSelectableComposerTextSize(option ? record?.composerTextSize : record?.questionComposerTextSize),
+      mathSize:clampSelectableComposerMathSize(option ? record?.composerMathSize : record?.questionComposerMathSize),
+      innerMathScale:clampSelectableComposerInnerScale(option ? record?.composerInnerMathScale : record?.questionComposerInnerMathScale),
+      equationInk:typeof clampMixedComposerEquationStroke==='function'
+        ? clampMixedComposerEquationStroke(option ? record?.composerEquationInk : record?.questionComposerEquationInk)
+        : String((option ? record?.composerEquationInk : record?.questionComposerEquationInk)||'light'),
+      renderProfile:'hallmark',
+      frameWidth:key==='q' ? 640 : 500
+    });
+    async function buildForKey(key, record, option, html, fullFallback, viewerFallback, renderMode, figures, burnedFigures, burnedImage, burnedScale){
       const safeHtml=String(html||'').trim();
       const shouldRenderSource=renderMode==='source' || (!renderMode && safeHtml);
       if(shouldRenderSource && safeHtml && typeof renderMixedComposerCanvas==='function'){
         try{
           const host=document.createElement('div');
           host.innerHTML=safeHtml;
-          let surface=await renderMixedComposerCanvas(host, key);
-          if(typeof getBurnedFigureImage==='function' && typeof composeSourceSurfaceWithCanvasFigures==='function' && (getBurnedFigureImage(key) || getFigureStore(key).length)){
-            surface=await composeSourceSurfaceWithCanvasFigures(surface, key);
-          }else if(typeof flattenCanvasSurfaceWithFigures==='function'){
-            surface=await flattenCanvasSurfaceWithFigures(surface, key);
+          const renderContext=renderContextFor(key,record,option);
+          let surface=await renderMixedComposerCanvas(host, key, renderContext);
+          if(typeof composeSourceSurfaceWithCanvasFigures==='function' && ((figures||[]).length || (burnedFigures||[]).length || burnedImage)){
+            surface=await composeSourceSurfaceWithCanvasFigures(surface, key, {
+              frameWidth:renderContext.frameWidth,
+              frameHeight:key==='q' ? 90 : 46,
+              figures:Array.isArray(figures) ? figures : [],
+              burnedFigures:Array.isArray(burnedFigures) ? burnedFigures : [],
+              burnedImage:burnedImage || '',
+              burnedScale:Math.max(1,Number(burnedScale)||1),
+              strictFigures:true
+            });
           }
-          return {
-            full: buildHighResExportDataUrlFromSurface(surface, key),
-            viewer: safeCanvasDataUrl(makeViewerCanvasImage(surface, key), 'image/png')
-          };
-        }catch(_){ }
+          const full=buildHighResExportDataUrlFromSurface(surface, key);
+          const viewer=safeCanvasDataUrl(makeViewerCanvasImage(surface, key), 'image/png');
+          if(!isUsableRasterDataUrl(full) || !isUsableRasterDataUrl(viewer)){
+            throw new Error('Canvas serialization returned an unusable raster image.');
+          }
+          return { full, viewer, renderStatus:'source-rendered' };
+        }catch(err){
+          console.warn('Source export render failed; using stored lossless fallback:', key, err);
+        }
       }
-      const full=fullFallback || viewerFallback || '';
-      const viewer=viewerFallback || (full ? await dataUrlToViewerImage(full, key) : '');
-      return { full, viewer };
+      const storedFull=fullFallback || viewerFallback || '';
+      const full=isUsableRasterDataUrl(storedFull) ? storedFull : '';
+      const storedViewer=viewerFallback || (full ? await dataUrlToViewerImage(full, key) : '');
+      const viewer=isUsableRasterDataUrl(storedViewer) ? storedViewer : '';
+      return { full, viewer, renderStatus:(full || viewer) ? 'stored-fallback' : 'missing' };
     }
-    const questionAssets=await buildForKey('q', q.questionComposerHTML, q.questionImage, q.questionViewerImage, q.questionRenderMode);
+    const questionAssets=await buildForKey(
+      'q',q,false,q.questionComposerHTML,q.questionImage,q.questionViewerImage,q.questionRenderMode,
+      q.questionFigures,q.questionBurnedFigures,q.questionBurnedFigureImage,q.questionBurnedFigureScale
+    );
     const optionAssets=[];
     if(Array.isArray(q.options)){
       for(let j=0; j<q.options.length; j++){
         const opt=q.options[j] || {};
-        optionAssets.push(await buildForKey('opt'+j, opt.composerHTML, opt.image, opt.viewerImage, opt.renderMode));
+        optionAssets.push(await buildForKey(
+          'opt'+j,opt,true,opt.composerHTML,opt.image,opt.viewerImage,opt.renderMode,
+          opt.figures,opt.burnedFigures,opt.burnedFigureImage,opt.burnedFigureScale
+        ));
       }
     }
     return {
       questionImage: questionAssets.full,
       questionViewerImage: questionAssets.viewer,
+      questionRenderStatus: questionAssets.renderStatus,
       optionAssets
     };
-  } finally {
-    cur=prevCur;
-  }
 }
 
 function exportYield(){
@@ -492,6 +523,31 @@ async function exportPaperJSON(){
       editable_scene:fig.circuitScene || null
     };
   }).filter(Boolean);
+  const buildComposerRenderSource=(record,option=false,asset={})=>{
+    const html=String((option ? record?.composerHTML : record?.questionComposerHTML) || '');
+    const raster=String(asset?.full || asset?.image || '');
+    const rasterUsable=isUsableRasterDataUrl(raster);
+    const mimeMatch=raster.match(/^data:(image\/[a-z0-9.+-]+)[;,]/i);
+    const rasterMime=mimeMatch ? mimeMatch[1].toLowerCase() : '';
+    const renderStatus=String(asset?.renderStatus || (raster ? 'stored-fallback' : 'missing'));
+    return {
+      schema:'hallmark-source-v1',
+      renderer:'hallmark-hd',
+      render_mode:String((option ? record?.renderMode : record?.questionRenderMode) || (html.trim() ? 'source' : 'bitmap')),
+      composer_html:html,
+      text_size:clampSelectableComposerTextSize(option ? record?.composerTextSize : record?.questionComposerTextSize),
+      math_size:clampSelectableComposerMathSize(option ? record?.composerMathSize : record?.questionComposerMathSize),
+      inner_math_scale:clampSelectableComposerInnerScale(option ? record?.composerInnerMathScale : record?.questionComposerInnerMathScale),
+      equation_ink:typeof clampMixedComposerEquationStroke==='function'
+        ? clampMixedComposerEquationStroke(option ? record?.composerEquationInk : record?.questionComposerEquationInk)
+        : String((option ? record?.composerEquationInk : record?.questionComposerEquationInk)||'light'),
+      composer_source_present:!!html.trim(),
+      raster_present:rasterUsable,
+      raster_format:rasterMime,
+      raster_lossless:rasterUsable && rasterMime==='image/png',
+      render_status:renderStatus
+    };
+  };
   const questions = await Promise.all(qs.map(async (q,i)=>{
     const sm=getSubjectMeta(q.subject);
     const exportIdentity=buildExportQuestionIdentity(q, i);
@@ -510,7 +566,9 @@ async function exportPaperJSON(){
           vector_figures: cloneVectorFigureSet(o.figures),
           burned_vector_figures: cloneVectorFigureSet(o.burnedFigures),
           burned_figure_image: String(o.burnedFigureImage || ''),
-          selectable_text: typeof getOptionPdfSourceText==='function' ? getOptionPdfSourceText(o) : ''
+          burned_figure_scale: Math.max(1, Number(o.burnedFigureScale)||1),
+          selectable_text: typeof getOptionPdfSourceText==='function' ? getOptionPdfSourceText(o) : '',
+          render_source:buildComposerRenderSource(o,true,optAsset)
         };
       }));
     }
@@ -538,6 +596,8 @@ async function exportPaperJSON(){
       question_vector_figures: cloneVectorFigureSet(q.questionFigures),
       question_burned_vector_figures: cloneVectorFigureSet(q.questionBurnedFigures),
       question_burned_figure_image: String(q.questionBurnedFigureImage || ''),
+      question_burned_figure_scale: Math.max(1, Number(q.questionBurnedFigureScale)||1),
+      question_render_source:buildComposerRenderSource(q,false,{full:assets.questionImage || assets.questionViewerImage || '',renderStatus:assets.questionRenderStatus}),
       option_ids: exportIdentity.optionIds,
       source_option_ids: exportIdentity.sourceOptionIds,
       legacy_option_ids: exportIdentity.sourceOptionIds,
@@ -548,6 +608,23 @@ async function exportPaperJSON(){
       chosen_option_id: null
     };
   }));
+  const allRenderSources=questions.flatMap(question=>[
+    question.question_render_source,
+    ...Object.values(question.options || {}).map(option=>option?.render_source).filter(Boolean)
+  ]).filter(Boolean);
+  const rasterComplete=allRenderSources.length>0 && allRenderSources.every(source=>source.raster_present);
+  const rasterLossless=rasterComplete && allRenderSources.every(source=>source.raster_lossless);
+  const composerSourceRecords=allRenderSources.filter(source=>source.composer_source_present).length;
+  const renderStatusCounts=allRenderSources.reduce((counts,source)=>{
+    const status=['source-rendered','stored-fallback','missing'].includes(source.render_status) ? source.render_status : 'stored-fallback';
+    counts[status]=(counts[status]||0)+1;
+    return counts;
+  },{'source-rendered':0,'stored-fallback':0,missing:0});
+  const editableVectorRecords=questions.reduce((count,question)=>{
+    const questionVectors=(question.question_vector_figures||[]).length+(question.question_burned_vector_figures||[]).length;
+    const optionVectors=Object.values(question.options||{}).reduce((sum,option)=>sum+(option?.vector_figures||[]).length+(option?.burned_vector_figures||[]).length,0);
+    return count+questionVectors+optionVectors;
+  },0);
   const out={
     type: 'QUESTION_PAPER',
     export_schema_version: 'strict-v2',
@@ -555,6 +632,14 @@ async function exportPaperJSON(){
     legacy_export_upgrade_applied: legacyUpgradeApplied,
     generated_by: 'QS Studio',
     generated_only_at_export: true,
+    render_quality:{
+      schema:'hallmark-source-v1',
+      raster_complete:rasterComplete,
+      raster_lossless:rasterLossless,
+      composer_source_records:composerSourceRecords,
+      editable_vector_records:editableVectorRecords,
+      render_status_counts:renderStatusCounts
+    },
     paper_created_by: 'QS Studio',
     license_origin: 'export-session',
     nat_evaluation_rule: 'inclusive-range-or-exact-with-sign-flex-range',
@@ -572,7 +657,7 @@ async function exportPaperJSON(){
     classification: buildQuestionClassificationSummary(qs),
     exported_at: new Date().toISOString(),
     total_questions: qs.length,
-    note: 'ANSWER KEY IS NOT INCLUDED. JSON includes high-quality frame PNG assets, viewer variants, and source SVG vector layers where figures were imported as SVG.',
+    note: 'ANSWER KEY IS NOT INCLUDED. JSON includes frame assets with per-record fidelity metadata, Hallmark composer source/settings, viewer variants, and editable SVG/vector layers.',
     questions
   };
   dlBlob(JSON.stringify(out,null,2),identity.names.paperJSON,'application/json');
@@ -925,12 +1010,12 @@ async function exportPaperPDFTextOnly(watermark={}){
     return scale>=2 ? scale : 1;
   }
 
-  const PDF_EMBED_PX_PER_POINT={q:2.45,opt:2.25};
-  const PDF_EMBED_MAX_WIDTH={q:1700,opt:1200};
+  const PDF_EMBED_PX_PER_POINT={q:3.2,opt:3.0};
+  const PDF_EMBED_MAX_WIDTH={q:2400,opt:1800};
   const PDF_SCAN_MAX_EDGE=2600;
   const PDF_SCAN_MAX_PIXELS=7000000;
 
-  function makePdfEmbedImage(sourceCanvas, pointW, pointH, kind='q'){
+  function makePdfEmbedImage(sourceCanvas, pointW, pointH, kind='q', crop=null){
     if(!sourceCanvas || !pointW || !pointH) return null;
     const pxPerPoint=PDF_EMBED_PX_PER_POINT[kind] || PDF_EMBED_PX_PER_POINT.q;
     const maxW=PDF_EMBED_MAX_WIDTH[kind] || PDF_EMBED_MAX_WIDTH.q;
@@ -945,7 +1030,15 @@ async function exportPaperPDFTextOnly(watermark={}){
     octx.imageSmoothingQuality='high';
     octx.fillStyle='#fff';
     octx.fillRect(0,0,targetW,targetH);
-    octx.drawImage(sourceCanvas,0,0,sourceCanvas.width,sourceCanvas.height,0,0,targetW,targetH);
+    const sourceW=sourceCanvas.naturalWidth||sourceCanvas.width||1;
+    const sourceH=sourceCanvas.naturalHeight||sourceCanvas.height||1;
+    const sx=Math.max(0,Number(crop?.x)||0);
+    const sy=Math.max(0,Number(crop?.y)||0);
+    const sw=Math.max(1,Math.min(sourceW-sx,Number(crop?.w)||sourceW));
+    const sh=Math.max(1,Math.min(sourceH-sy,Number(crop?.h)||sourceH));
+    // The scan proxy is only for finding bounds. Always sample the original
+    // Hallmark surface directly into the final PNG so export has one resize.
+    octx.drawImage(sourceCanvas,sx,sy,sw,sh,0,0,targetW,targetH);
     return {dataUrl:safeCanvasDataUrl(out, 'image/png'), fmt:'PNG'};
   }
 
@@ -966,11 +1059,12 @@ async function exportPaperPDFTextOnly(watermark={}){
         PDF_SCAN_MAX_EDGE/Math.max(1,srcH),
         Math.sqrt(PDF_SCAN_MAX_PIXELS/Math.max(1,srcW*srcH))
       );
-      const effectiveLayoutScale=Math.max(0.001, layoutScale*scanScale);
       const trimCanvas=document.createElement('canvas');
       trimCanvas.width=Math.max(1, Math.round(srcW*scanScale));
       trimCanvas.height=Math.max(1, Math.round(srcH*scanScale));
       const tctx=trimCanvas.getContext('2d');
+      tctx.imageSmoothingEnabled=true;
+      tctx.imageSmoothingQuality='high';
       tctx.fillStyle='#fff';
       tctx.fillRect(0,0,trimCanvas.width,trimCanvas.height);
       tctx.drawImage(img,0,0,trimCanvas.width,trimCanvas.height);
@@ -989,39 +1083,32 @@ async function exportPaperPDFTextOnly(watermark={}){
         }
       }
       if(maxX>=minX && maxY>=minY){
-        const pad=Math.max(1, Math.round((kind==='opt' ? 4 : 6) * effectiveLayoutScale));
-        minX=Math.max(0,minX-pad);
-        minY=Math.max(0,minY-pad);
-        maxX=Math.min(trimCanvas.width-1,maxX+pad);
-        maxY=Math.min(trimCanvas.height-1,maxY+pad);
-        const cw=Math.max(1,maxX-minX+1);
-        const ch=Math.max(1,maxY-minY+1);
-        const cropped=document.createElement('canvas');
-        cropped.width=cw;
-        cropped.height=ch;
-        const cctx=cropped.getContext('2d');
-        cctx.fillStyle='#fff';
-        cctx.fillRect(0,0,cw,ch);
-        cctx.drawImage(trimCanvas,minX,minY,cw,ch,0,0,cw,ch);
-        const pointW=(cw/effectiveLayoutScale)*PDF_CANVAS_POINT_SCALE;
-        const pointH=(ch/effectiveLayoutScale)*PDF_CANVAS_POINT_SCALE;
-        const packed=makePdfEmbedImage(cropped, pointW, pointH, kind);
+        const padSource=Math.max(1, Math.round((kind==='opt' ? 4 : 6)*layoutScale));
+        const sourceMinX=Math.max(0,Math.floor(minX/scanScale)-padSource);
+        const sourceMinY=Math.max(0,Math.floor(minY/scanScale)-padSource);
+        const sourceMaxX=Math.min(srcW,Math.ceil((maxX+1)/scanScale)+padSource);
+        const sourceMaxY=Math.min(srcH,Math.ceil((maxY+1)/scanScale)+padSource);
+        const sourceCropW=Math.max(1,sourceMaxX-sourceMinX);
+        const sourceCropH=Math.max(1,sourceMaxY-sourceMinY);
+        const pointW=(sourceCropW/layoutScale)*PDF_CANVAS_POINT_SCALE;
+        const pointH=(sourceCropH/layoutScale)*PDF_CANVAS_POINT_SCALE;
+        const packed=makePdfEmbedImage(img, pointW, pointH, kind, {x:sourceMinX,y:sourceMinY,w:sourceCropW,h:sourceCropH});
         return {
-          dataUrl: packed?.dataUrl || safeCanvasDataUrl(cropped, 'image/png'),
+          dataUrl: packed?.dataUrl || dataUrl,
           w: pointW,
           h: pointH,
           fmt: packed?.fmt || 'PNG',
           kind,
-          cropLogicalX: minX/effectiveLayoutScale,
-          cropLogicalY: minY/effectiveLayoutScale,
+          cropLogicalX: sourceMinX/layoutScale,
+          cropLogicalY: sourceMinY/layoutScale,
           logicalToPoint: PDF_CANVAS_POINT_SCALE,
           sourceDataUrl: dataUrl,
           sourceFmt: getPdfSourceFormat(dataUrl)
         };
       }
-      const pointW=(trimCanvas.width/effectiveLayoutScale)*PDF_CANVAS_POINT_SCALE;
-      const pointH=(trimCanvas.height/effectiveLayoutScale)*PDF_CANVAS_POINT_SCALE;
-      const packed=makePdfEmbedImage(trimCanvas, pointW, pointH, kind);
+      const pointW=(srcW/layoutScale)*PDF_CANVAS_POINT_SCALE;
+      const pointH=(srcH/layoutScale)*PDF_CANVAS_POINT_SCALE;
+      const packed=makePdfEmbedImage(img, pointW, pointH, kind);
       return {
         dataUrl: packed?.dataUrl || dataUrl,
         w: pointW,
@@ -1338,10 +1425,10 @@ async function exportPaperPDFTextOnly(watermark={}){
     const targetH=(+fig.h||vbH)*pointScale;
     if(originX+targetW<imgX || originY+targetH<imgY || originX>imgX+fitted.w || originY>imgY+fitted.h) return false;
     const crop=fig.crop || {};
-    const cropL=Math.max(0, Math.min(.8, +crop.l||0));
-    const cropT=Math.max(0, Math.min(.8, +crop.t||0));
-    const visibleW=Math.max(.05, 1-cropL-Math.max(0, Math.min(.8, +crop.r||0)));
-    const visibleH=Math.max(.05, 1-cropT-Math.max(0, Math.min(.8, +crop.b||0)));
+    const cropL=Math.max(0, Math.min(.95, +crop.l||0));
+    const cropT=Math.max(0, Math.min(.95, +crop.t||0));
+    const visibleW=Math.max(.04, 1-cropL-Math.max(0, Math.min(.95, +crop.r||0)));
+    const visibleH=Math.max(.04, 1-cropT-Math.max(0, Math.min(.95, +crop.b||0)));
     const svgScale=Math.min(targetW/Math.max(1,vbW*visibleW), targetH/Math.max(1,vbH*visibleH));
     const base=makePdfSvgMatrix();
     const matrix=base
@@ -1426,7 +1513,10 @@ async function exportPaperPDFTextOnly(watermark={}){
       }
     }
     if(embedded){
-      drawPdfVectorFigureOverlays(vectorFigures, info, imgX, imgY, fitted);
+      // The lossless frame already contains every placed circuit/SVG. Drawing
+      // the approximate jsPDF path overlay here a second time produced doubled,
+      // misaligned strokes and visible vector "noise". Selectable export and
+      // Paper JSON retain the original SVG separately for true vector use.
       if(qMeta){
         drawQuestionInfoLine(qMeta, imgX, imgY + fitted.h + 13);
       }
@@ -1995,9 +2085,9 @@ function getSelectablePaperFrameTypography(record, option=false){
   const mathSize=clampSelectableComposerMathSize(option ? record?.composerMathSize : record?.questionComposerMathSize);
   const innerScale=clampSelectableComposerInnerScale(option ? record?.composerInnerMathScale : record?.questionComposerInnerMathScale);
   const line=Math.max(1.38, (textSize+8)/textSize);
-  const mathEm=Math.max(.65, Math.min(2.6, mathSize/Math.max(1,textSize)));
-  const innerEm=Math.max(.7, Math.min(1.35, innerScale/115));
-  const nestedFracEm=Math.max(.68, Math.min(1.16, .86*innerEm));
+  const innerEm=Math.max(.7, Math.min(1.8, innerScale/100));
+  const mathEm=Math.max(.58, Math.min(3.2, (mathSize/Math.max(1,textSize))*innerEm));
+  const nestedFracEm=.86;
   return {textSize, mathSize, innerScale, line, mathEm, innerEm, nestedFracEm};
 }
 
@@ -2035,9 +2125,14 @@ function prepareSelectablePaperLatexSource(source, record=null, option=false){
   let out=String(source||'').trim();
   if(!out) return '';
   const innerScale=getSelectablePaperFrameTypography(record || {}, option).innerScale;
+  out=out.replace(/^\\(?:displaystyle|textstyle|scriptstyle|scriptscriptstyle)\b\s*/,'');
+  if(innerScale<=100){
+    out=out.replace(/\\(?:dfrac|frac|tfrac)\b/g,'\\tfrac');
+    return '\\textstyle '+out;
+  }
   if(innerScale>=105) out=out.replace(/\\tfrac/g,'\\frac');
   if(innerScale>=115) out=out.replace(/\\frac/g,'\\dfrac');
-  return out;
+  return '\\displaystyle '+out;
 }
 
 function renderSelectablePaperSourceHTML(source, record=null, option=false){

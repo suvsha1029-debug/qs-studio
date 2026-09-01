@@ -6,15 +6,30 @@
 <title>QS Studio</title>
 <link rel="icon" type="image/png" sizes="256x256" href="assets/brand/favicon.png">
 <link rel="shortcut icon" href="assets/brand/favicon.ico">
-<script src="assets/js/mathjax-config.js?v=mathstruct3"></script>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script defer src="assets/js/mathjax-config.js?v=mathstruct3"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 <link rel="stylesheet" href="assets/vendor/katex/katex.min.css?v=katex1">
-<script src="assets/vendor/katex/katex.min.js?v=katex1"></script>
+<script defer src="assets/vendor/katex/katex.min.js?v=katex1"></script>
 <link rel="stylesheet" href="assets/css/00-base.css?v=txtsize63">
 <link rel="stylesheet" href="assets/css/01-themes.css?v=topicmeta1">
-<link rel="stylesheet" href="assets/css/02-components.css?v=equationink1">
+<link rel="stylesheet" href="assets/css/02-components.css?v=paperbuffer1">
 </head>
-<body>
+<body class="paper-preparing" aria-busy="true">
+
+<div class="paper-load-overlay is-active" id="paperLoadOverlay" role="status" aria-live="polite" aria-atomic="true" aria-busy="true" aria-hidden="false">
+  <div class="paper-load-card">
+    <div class="paper-load-visual" aria-hidden="true">
+      <span class="paper-load-sheet sheet-back"></span>
+      <span class="paper-load-sheet sheet-mid"></span>
+      <span class="paper-load-sheet sheet-front"><i></i><i></i><i></i><i></i></span>
+    </div>
+    <div class="paper-load-kicker">QUESTION PAPER BUFFER</div>
+    <div class="paper-load-title" id="paperLoadTitle">Preparing your workspace</div>
+    <div class="paper-load-detail" id="paperLoadDetail">Loading fonts, equations, canvas ink, and paper previews...</div>
+    <div class="paper-load-progress" aria-hidden="true"><span id="paperLoadProgress"></span></div>
+    <div class="paper-load-foot" id="paperLoadFoot">Please wait&mdash;the paper will open when it is ready to scroll.</div>
+  </div>
+</div>
 
 <div class="shell">
 
@@ -140,20 +155,20 @@
 <!-- hidden rendering canvases -->
 <canvas id="xcanvas"></canvas>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="assets/js/00-constants.js"></script>
-<script src="assets/js/01-state.js?v=selectablesync2"></script>
+<script src="assets/js/01-state.js?v=qualityjson2"></script>
 <script src="assets/js/02-sidebar.js?v=topiclist1"></script>
-<script src="assets/js/03-editor.js?v=topiclist1"></script>
-<script src="assets/js/04-canvas-engine.js?v=equationink1"></script>
+<script src="assets/js/03-editor.js?v=canvascontrols4"></script>
+<script src="assets/js/04-canvas-engine.js?v=hallmarkink8"></script>
 <script src="assets/js/05-field-updaters.js?v=selectablesync2"></script>
-<script src="assets/js/06-actions.js?v=topiclist1"></script>
-<script src="assets/js/07-paper-preview.js?v=brandclean1"></script>
-<script src="assets/js/08-export.js?v=katexselectable10"></script>
-<script src="assets/js/09-helpers.js?v=cleanraster1"></script>
-<script src="assets/js/11-persistence.js?v=topiclist1"></script>
-<script src="assets/js/10-init.js?v=bootstrap1"></script>
-<script src="assets/js/12-circuit-editor.js?v=customsymbols29"></script>
+<script src="assets/js/06-actions.js?v=paperbuffer1"></script>
+<script src="assets/js/07-paper-preview.js?v=paperbuffer1"></script>
+<script src="assets/js/08-export.js?v=qualityexport2"></script>
+<script src="assets/js/09-helpers.js?v=paperbuffer1"></script>
+<script src="assets/js/11-persistence.js?v=nodownload1"></script>
+<script src="assets/js/10-init.js?v=paperbuffer1"></script>
+<script src="assets/js/12-circuit-editor.js?v=vectorquality2"></script>
 </body>
 </html>
 

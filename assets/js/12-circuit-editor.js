@@ -2864,24 +2864,24 @@ function cEdApply(){
   const vh=y1-y0+PAD*2;
 
   const wSVG=_cWires.map(w=>
-    `<path d="${_cWirePath(w)}" fill="none" stroke="#111" stroke-width="4.1" stroke-linecap="round" stroke-linejoin="round"/>`
+    `<path d="${_cWirePath(w)}" fill="none" stroke="#111" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>`
   ).join('');
   const nSVG=_cConnectionNodes().map(n=>
-    `<circle cx="${n.x}" cy="${n.y}" r="3.6" fill="#111" stroke="#fff" stroke-width="0.7"/>`
+    `<circle cx="${n.x}" cy="${n.y}" r="3.2" fill="#111" stroke="#fff" stroke-width="0.65"/>`
   ).join('');
   const cSVG=_cComps.map(c=>{
     const nameSvg=_cCompTextExportSvg(c,'name');
     const legendSvg=_cCompTextExportSvg(c,'legend');
-    // Maker SVGs already have deliberate stroke widths. Never run them through the
-    // generic circuit thickener or their arrows and thin internal details distort.
+    // Match the editor's built-in-symbol stroke transform exactly. A different
+    // export multiplier makes component bodies jump thinner/thicker beside wires.
     const symSvg=c.sym.group==='Custom'
       ? c.sym.svgFn(false,c.uid)
-      : _cBoostStrokeMarkup(c.sym.svgFn(false), 2.05, 7.35);
+      : _cBoostStrokeMarkup(c.sym.svgFn(false), 1.85, 5.9);
     return `<g transform="translate(${c.x},${c.y}) rotate(${c.rot}) scale(${_cCompScale(c)})">${symSvg}${c.sym.sourceSvgInner ? '' : _cCustomTextSvg(c)}${nameSvg}${legendSvg}</g>`;
   }).join('');
   const tSVG=_cTexts.map(t=>_cFreeTextExportSvg(t)).join('');
 
-  const svgStr=`<svg xmlns="http://www.w3.org/2000/svg" width="${vw}" height="${vh}" viewBox="${vx} ${vy} ${vw} ${vh}">
+  const svgStr=`<svg xmlns="http://www.w3.org/2000/svg" width="${vw}" height="${vh}" viewBox="${vx} ${vy} ${vw} ${vh}" preserveAspectRatio="xMinYMin meet" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" color-rendering="optimizeQuality">
     <rect width="100%" height="100%" fill="#fff"/>
     ${wSVG}${nSVG}${cSVG}${tSVG}
   </svg>`;

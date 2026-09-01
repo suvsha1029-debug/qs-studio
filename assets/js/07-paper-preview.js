@@ -49,20 +49,81 @@ function renderPaperNow(){
 }
 
 let paperLazyObserver = null;
-function hydratePaperLazyImages(){
+function settlePaperPreviewImage(img, timeoutMs=5000){
+  if(!img) return Promise.resolve(false);
+  const pendingSrc=String(img.dataset?.src||'');
+  img.loading='eager';
+  img.decoding='async';
+  return new Promise(resolve=>{
+    let settled=false;
+    const finish=async ok=>{
+      if(settled) return;
+      settled=true;
+      clearTimeout(timer);
+      img.removeEventListener('load',onLoad);
+      img.removeEventListener('error',onError);
+      if(ok && typeof img.decode==='function'){
+        try{
+          await Promise.race([
+            img.decode(),
+            new Promise(done=>setTimeout(done,Math.min(450,timeoutMs)))
+          ]);
+        }catch(_){ }
+      }
+      img.dataset.paperLoadState=ok?'ready':'failed';
+      resolve(ok);
+    };
+    const onLoad=()=>finish(true);
+    const onError=()=>finish(false);
+    const timer=setTimeout(()=>finish(false),Math.max(300,timeoutMs));
+    img.addEventListener('load',onLoad,{once:true});
+    img.addEventListener('error',onError,{once:true});
+    if(pendingSrc){
+      img.src=pendingSrc;
+      img.removeAttribute('data-src');
+    }
+    if(img.complete) finish(img.naturalWidth>0);
+  });
+}
+
+async function hydratePaperLazyImages(options={}){
+  const eager=options===true || options?.eager===true;
   const imgs=[...document.querySelectorAll('#paperBody img[data-src]')];
   if(!imgs.length){
     if(paperLazyObserver) paperLazyObserver.disconnect();
-    return;
+    return {total:0,loaded:0,failed:0};
   }
   const loadImg=img=>{
-    if(!img || !img.dataset?.src) return;
-    img.src=img.dataset.src;
-    img.removeAttribute('data-src');
+    if(!img || (!img.dataset?.src && !img.getAttribute('src'))) return Promise.resolve(false);
+    return settlePaperPreviewImage(img,5000);
   };
+  if(eager){
+    if(paperLazyObserver) paperLazyObserver.disconnect();
+    // Prime every viewer asset at once so the browser can schedule decoding in
+    // parallel. Workers below only bound the heavier decode/terminal waits.
+    imgs.forEach(img=>{
+      const src=String(img.dataset?.src||'');
+      img.loading='eager';
+      img.decoding='async';
+      if(src){
+        img.src=src;
+        img.removeAttribute('data-src');
+      }
+    });
+    let cursor=0, loaded=0, failed=0;
+    const workers=Array.from({length:Math.min(12,imgs.length)},async ()=>{
+      while(cursor<imgs.length){
+        const img=imgs[cursor++];
+        if(await loadImg(img)) loaded++;
+        else failed++;
+      }
+    });
+    await Promise.all(workers);
+    return {total:imgs.length,loaded,failed};
+  }
   if(!('IntersectionObserver' in window)){
-    imgs.forEach(loadImg);
-    return;
+    const settled=await Promise.all(imgs.map(loadImg));
+    return {total:imgs.length,loaded:settled.filter(Boolean).length,failed:settled.filter(value=>!value).length};
   }
   if(paperLazyObserver) paperLazyObserver.disconnect();
   paperLazyObserver = new IntersectionObserver(entries=>{
@@ -74,6 +135,7 @@ function hydratePaperLazyImages(){
     });
   }, { root:document.getElementById('paperScroll'), rootMargin:'420px 0px' });
   imgs.forEach(img=>paperLazyObserver.observe(img));
+  return {total:imgs.length,loaded:0,failed:0,deferred:true};
 }
 
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•

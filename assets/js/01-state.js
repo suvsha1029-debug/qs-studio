@@ -102,7 +102,7 @@ function deriveLegacyBankUid(payload){
     const data=payload && typeof payload==='object' ? payload : {};
     const list=Array.isArray(data.qs) ? data.qs : [];
     const signature=[
-      String(data.examName || data.project_name || '').trim(),
+      String(data.examName || '').trim() || String(data.project_name || '').trim(),
       list.length,
       list.map((q, index)=>[
         String(q?.qid || '').trim(),
@@ -250,15 +250,52 @@ function setAppTheme(theme='normal'){
   });
 }
 
+function normalizeFigureCropRecord(value){
+  const raw=value && typeof value==='object' ? value : {};
+  const clamp=value=>Math.max(0,Math.min(.95,Number.isFinite(+value) ? +value : 0));
+  let l=clamp(raw.l),r=clamp(raw.r),t=clamp(raw.t),b=clamp(raw.b);
+  const fitPair=(first,second)=>{
+    const total=first+second;
+    if(total<=.96) return [first,second];
+    const scale=.96/Math.max(.0001,total);
+    return [first*scale,second*scale];
+  };
+  [l,r]=fitPair(l,r);
+  [t,b]=fitPair(t,b);
+  return {l,t,r,b};
+}
+
+function normalizeFigureRecord(value){
+  if(!value || typeof value!=='object') return null;
+  const raw={...value};
+  const finite=(candidate,fallback=0)=>Number.isFinite(+candidate) ? +candidate : fallback;
+  const width=Math.max(1,finite(raw.w,finite(raw.displayWidth,finite(raw.naturalWidth,1))));
+  const height=Math.max(1,finite(raw.h,finite(raw.displayHeight,finite(raw.naturalHeight,1))));
+  return {
+    ...raw,
+    src:String(raw.src||''),
+    x:finite(raw.x),
+    y:finite(raw.y),
+    w:width,
+    h:height,
+    crop:normalizeFigureCropRecord(raw.crop)
+  };
+}
+
+function normalizeFigureList(value){
+  return (Array.isArray(value) ? value : []).map(normalizeFigureRecord).filter(Boolean);
+}
+
 function normalizeOption(opt){
   return {
+    ...opt,
     oid: opt?.oid || '',
     image: opt?.image || '',
     baseImage: opt?.baseImage || '',
     viewerImage: opt?.viewerImage || '',
     burnedFigureImage: opt?.burnedFigureImage || '',
     burnedFigureScale: Math.max(1, +(opt?.burnedFigureScale || opt?.burnedFigureImageScale || 1)),
-    burnedFigures: Array.isArray(opt?.burnedFigures) ? opt.burnedFigures : [],
+    burnedFigures: normalizeFigureList(opt?.burnedFigures),
     text: opt?.text || '',
     pdfText: opt?.pdfText || '',
     pdfTextManual: !!opt?.pdfTextManual,
@@ -269,7 +306,7 @@ function normalizeOption(opt){
     composerEquationInk: opt?.composerEquationInk || '',
     composerRenderProfile: opt?.composerRenderProfile || '',
     renderMode: opt?.renderMode || ((opt?.composerHTML||'').trim() ? 'source' : 'bitmap'),
-    figures: Array.isArray(opt?.figures) ? opt.figures : [],
+    figures: normalizeFigureList(opt?.figures),
     legends: Array.isArray(opt?.legends) ? opt.legends : [],
     correct: !!opt?.correct
   };
@@ -285,14 +322,19 @@ function normalizeQuestion(q){
     difficulty: normalizeDifficulty(q?.difficulty || q?.difficultyLevel || q?.level),
     questionText: q?.questionText || '',
     questionComposerHTML: q?.questionComposerHTML || '',
+    questionComposerTextSize: q?.questionComposerTextSize || 20,
+    questionComposerMathSize: q?.questionComposerMathSize || 22,
+    questionComposerInnerMathScale: q?.questionComposerInnerMathScale || 115,
+    questionComposerEquationInk: q?.questionComposerEquationInk || '',
+    questionComposerRenderProfile: q?.questionComposerRenderProfile || '',
     questionRenderMode: q?.questionRenderMode || ((q?.questionComposerHTML||'').trim() ? 'source' : 'bitmap'),
     questionImage: q?.questionImage || '',
     questionBaseImage: q?.questionBaseImage || '',
     questionViewerImage: q?.questionViewerImage || '',
     questionBurnedFigureImage: q?.questionBurnedFigureImage || '',
     questionBurnedFigureScale: Math.max(1, +(q?.questionBurnedFigureScale || q?.questionBurnedFigureImageScale || 1)),
-    questionBurnedFigures: Array.isArray(q?.questionBurnedFigures) ? q.questionBurnedFigures : [],
-    questionFigures: Array.isArray(q?.questionFigures) ? q.questionFigures : [],
+    questionBurnedFigures: normalizeFigureList(q?.questionBurnedFigures),
+    questionFigures: normalizeFigureList(q?.questionFigures),
     questionLegends: Array.isArray(q?.questionLegends) ? q.questionLegends : [],
     natAnswer: q?.natAnswer || '',
     correctOptionIds: Array.isArray(q?.correctOptionIds) ? q.correctOptionIds : [],

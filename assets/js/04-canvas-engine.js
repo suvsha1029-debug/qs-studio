@@ -2,9 +2,45 @@
 // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 const canvasState = {};   // key â†’ { tool, history[], redoStack[] }
 const EXPORT_IMAGE_SCALE = 4;
+const canvasResourceTasks = new Set();
+
+function trackCanvasResourceTask(promise, ownerQuestion=cur){
+  const task=Promise.resolve(promise);
+  const record={task,ownerQuestion};
+  canvasResourceTasks.add(record);
+  task.then(
+    ()=>canvasResourceTasks.delete(record),
+    ()=>canvasResourceTasks.delete(record)
+  );
+  return task;
+}
+
+async function waitForCanvasResourceTasks(timeoutMs=10000){
+  const targetQuestion=cur;
+  const deadline=Date.now()+Math.max(250,Number(timeoutMs)||10000);
+  const relevantTasks=()=>[...canvasResourceTasks]
+    .filter(record=>record.ownerQuestion===targetQuestion)
+    .map(record=>record.task);
+  let snapshot=relevantTasks();
+  while(snapshot.length && Date.now()<deadline){
+    const remaining=Math.max(1,deadline-Date.now());
+    await Promise.race([
+      Promise.allSettled(snapshot),
+      new Promise(resolve=>setTimeout(resolve,remaining))
+    ]);
+    snapshot=relevantTasks();
+  }
+  return relevantTasks().length===0;
+}
 
 function getBaseCanvasHeight(key){
   return key==='q' ? 90 : 46;
+}
+
+function isCanvasRenderTargetCurrent(key, expectedQuestion=null, expectedCanvas=null){
+  if(expectedQuestion && cur!==expectedQuestion) return false;
+  if(expectedCanvas && document.getElementById(key+'Canvas')!==expectedCanvas) return false;
+  return true;
 }
 
 function getCanvasHeightForSavedImage(cv, img, key){
@@ -37,40 +73,79 @@ function getCanvasHeightForSavedImage(cv, img, key){
 
 function restoreCanvasFromDataUrl(key, dataUrl, afterRestore){
   const cv=document.getElementById(key+'Canvas');
-  if(!cv || !dataUrl) return;
-  const img=new Image();
-  img.onload=()=>{
-    // Height from base-image ink content
-    let h=getCanvasHeightForSavedImage(cv, img, key);
-    // Also ensure canvas is tall enough to show all stored figures
-    const figs=getFigureStore(key);
-    if(figs.length || getBurnedFigureStore(key).length){
-      const figBottom=getAllStoredFigureBottom(key);
-      if(figBottom>0) h=Math.max(h, figBottom + (key==='q' ? 14 : 10));
-    }
-    setCanvasHeightPreserve(key, h);
-    const ctx=cv.getContext('2d');
-    ctx.clearRect(0,0,cv.width,cv.height);
-    ctx.fillStyle='#fff';
-    ctx.fillRect(0,0,cv.width,cv.height);
-    ctx.drawImage(img,0,0,cv.width,cv.height);
-    if(typeof afterRestore==='function') afterRestore();
-  };
-  img.src=dataUrl;
+  if(!cv || !dataUrl) return Promise.resolve(false);
+  const expectedQuestion=cur;
+  const task=new Promise(resolve=>{
+    const img=new Image();
+    let settled=false;
+    const finish=value=>{
+      if(settled) return;
+      settled=true;
+      clearTimeout(timer);
+      img.onload=null;
+      img.onerror=null;
+      resolve(value);
+    };
+    const timer=setTimeout(()=>finish(false),8000);
+    img.onload=()=>{
+      if(settled || !isCanvasRenderTargetCurrent(key,expectedQuestion,cv)){
+        finish(false);
+        return;
+      }
+      try{
+        // Height from base-image ink content
+        let h=getCanvasHeightForSavedImage(cv, img, key);
+        // Also ensure canvas is tall enough to show all stored figures
+        const figs=getFigureStore(key);
+        if(figs.length || getBurnedFigureStore(key).length){
+          const figBottom=getAllStoredFigureBottom(key);
+          if(figBottom>0) h=Math.max(h, figBottom + (key==='q' ? 14 : 10));
+        }
+        setCanvasHeightPreserve(key, h);
+        const ctx=cv.getContext('2d');
+        ctx.clearRect(0,0,cv.width,cv.height);
+        ctx.fillStyle='#fff';
+        ctx.fillRect(0,0,cv.width,cv.height);
+        const srcW=img.naturalWidth||img.width||cv.width||1;
+        const srcH=img.naturalHeight||img.height||cv.height||1;
+        const aspectHeight=Math.max(1,Math.round(srcH*(cv.width/Math.max(1,srcW))));
+        // Preserve the saved bitmap's aspect ratio. The canvas may be shorter
+        // after blank trimming or taller for figures; neither should deform ink.
+        ctx.drawImage(img,0,0,cv.width,aspectHeight);
+        if(typeof afterRestore==='function') afterRestore();
+        finish(true);
+      }catch(err){
+        console.warn('Canvas image restore failed:',key,err);
+        finish(false);
+      }
+    };
+    img.onerror=()=>finish(false);
+    try{ img.src=dataUrl; }catch(_){ finish(false); }
+  });
+  return trackCanvasResourceTask(task,expectedQuestion);
 }
 
 function restoreCanvasFromComposerHTML(key, html, onFallback){
   const safeHtml=String(html||'').trim();
   if(!safeHtml) return Promise.resolve(false);
+  const expectedQuestion=cur;
+  const expectedCanvas=document.getElementById(key+'Canvas');
   const host=document.createElement('div');
   host.innerHTML=safeHtml;
-  return renderMixedComposerCanvas(host, key)
-    .then(surface=>applyMixedComposerSurfaceToCanvas(key, surface))
-    .then(()=>true)
-    .catch(err=>{
-      if(typeof onFallback==='function') onFallback(err);
+  const renderContext=captureMixedComposerRenderContext(key);
+  const task=renderMixedComposerCanvas(host, key, renderContext)
+    .then(surface=>{
+      if(!isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas)) return false;
+      return applyMixedComposerSurfaceToCanvas(key, surface, {expectedQuestion,expectedCanvas});
+    })
+    .then(applied=>applied!==false)
+    .catch(async err=>{
+      if(isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas) && typeof onFallback==='function'){
+        try{ return !!(await onFallback(err)); }catch(_){ return false; }
+      }
       return false;
     });
+  return trackCanvasResourceTask(task,expectedQuestion);
 }
 
 
@@ -88,6 +163,7 @@ function getFrameRenderMode(key){
 function setFrameRenderMode(key, mode){
   if(!cur) return;
   const clean=mode==='source' ? 'source' : 'bitmap';
+  if(clean==='bitmap') clearComposerSourceOverlay(key);
   if(key==='q'){
     cur.questionRenderMode=clean;
     return;
@@ -121,6 +197,7 @@ function isFrameBitmapDirty(key){
 }
 
 function markFrameAsBitmap(key){
+  clearComposerSourceOverlay(key);
   setFrameRenderMode(key, 'bitmap');
   setFrameBitmapDirty(key, true);
 }
@@ -162,20 +239,26 @@ function getImageFitSize(img, maxWidth, maxHeight){
 
 function initCanvas(key){
   const cv = document.getElementById(key+'Canvas');
-  if(!cv) return;
-  if(!canvasState[key]) canvasState[key] = { tool:'pen', history:[], redo:[] };
+  const wrap = document.getElementById(key+'CanvasWrap');
+  if(!cv || !wrap) return Promise.resolve(false);
+  if(!canvasState[key]) canvasState[key] = { tool:'text', history:[], redo:[] };
   const state = canvasState[key];
 
   // Fill white background
   const ctx = cv.getContext('2d');
   // Prefer composer HTML source over stored bitmap cache when available.
   const composerHtml = (typeof getComposerSourceHTML==='function') ? String(getComposerSourceHTML(key)||'').trim() : '';
+  // A restored text block is directly editable: keep the real tool state in
+  // sync with the visibly active Text button so one canvas click opens it.
+  if(composerHtml) state.tool='text';
+  setTool(state.tool,key);
   const stored = getStoredBaseImg(key);
   const renderMode = getFrameRenderMode(key);
+  let restoreReady;
   if(renderMode==='source' && composerHtml){
-    restoreCanvasFromComposerHTML(key, composerHtml, ()=>{
+    restoreReady=restoreCanvasFromComposerHTML(key, composerHtml, ()=>{
       if(stored){
-        restoreCanvasFromDataUrl(key, stored, ()=>{
+        return restoreCanvasFromDataUrl(key, stored, ()=>{
           pushHistory(key);
           renderFigureOverlays(key);
         });
@@ -184,10 +267,11 @@ function initCanvas(key){
         ctx.fillRect(0,0,cv.width,cv.height);
         if(state.history.length===0) pushHistory(key);
         renderFigureOverlays(key);
+        return true;
       }
     });
   } else if(stored){
-    restoreCanvasFromDataUrl(key, stored, ()=>{
+    restoreReady=restoreCanvasFromDataUrl(key, stored, ()=>{
       pushHistory(key);
       renderFigureOverlays(key);
     });
@@ -196,6 +280,7 @@ function initCanvas(key){
     ctx.fillRect(0,0,cv.width,cv.height);
     if(state.history.length===0) pushHistory(key);
     renderFigureOverlays(key);
+    restoreReady=Promise.resolve(true);
   }
 
   // Size slider
@@ -203,86 +288,133 @@ function initCanvas(key){
   const sizeLbl = document.getElementById(key+'SizeLbl');
   if(sizeEl&&sizeLbl) sizeEl.oninput=()=>sizeLbl.textContent=sizeEl.value+'px';
 
-  // Drawing events
-  let drawing=false, startX=0, startY=0, snapshot=null;
+  // Drawing events. A single captured Pointer Events stream avoids duplicate
+  // mouse/touch gestures and keeps a stroke alive outside the canvas bounds.
+  let drawing=false, activePointerId=null, startX=0, startY=0, lastX=0, lastY=0, snapshot=null;
 
   function getXY(e){
     const r = cv.getBoundingClientRect();
     const scaleX = cv.width/r.width, scaleY = cv.height/r.height;
-    if(e.touches){
-      return [(e.touches[0].clientX-r.left)*scaleX,(e.touches[0].clientY-r.top)*scaleY];
-    }
     return [(e.clientX-r.left)*scaleX,(e.clientY-r.top)*scaleY];
   }
 
   function getColor(){ return document.getElementById(key+'Color')?.value||'#111'; }
   function getSize(){ return +(document.getElementById(key+'Size')?.value||2); }
 
+  function drawFreehandPoint(x,y,previousX,previousY,tool){
+    ctx.save();
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+    ctx.beginPath();
+    ctx.moveTo(previousX,previousY);
+    ctx.lineTo(x,y);
+    if(x===previousX && y===previousY) ctx.lineTo(x+.01,y+.01);
+    ctx.strokeStyle=tool==='erase' ? '#fff' : getColor();
+    ctx.lineWidth=tool==='erase' ? getSize()*6 : getSize();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawCurrentTool(x,y){
+    const t=state.tool;
+    if(t==='erase'){
+      drawFreehandPoint(x,y,lastX,lastY,t);
+      lastX=x; lastY=y;
+      return;
+    }
+    ctx.putImageData(snapshot,0,0);
+    ctx.save();
+    ctx.strokeStyle=getColor();
+    ctx.lineWidth=getSize();
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+    ctx.beginPath();
+    if(t==='line'){ ctx.moveTo(startX,startY); ctx.lineTo(x,y); ctx.stroke(); }
+    else if(t==='rect'){ ctx.strokeRect(startX,startY,x-startX,y-startY); }
+    else if(t==='circ'){
+      const rx=Math.abs(x-startX)/2, ry=Math.abs(y-startY)/2;
+      const cx=(startX+x)/2, cy=(startY+y)/2;
+      if(rx>0 || ry>0){ ctx.ellipse(cx,cy,Math.max(rx,.01),Math.max(ry,.01),0,0,Math.PI*2); ctx.stroke(); }
+    }
+    ctx.restore();
+  }
+
   function onDown(e){
+    if(e.button!==undefined && e.button!==0) return;
+    if(drawing) return;
     e.preventDefault();
-    drawing=true;
-    const [x,y]=getXY(e); startX=x; startY=y;
+    const [x,y]=getXY(e); startX=x; startY=y; lastX=x; lastY=y;
     const rect=cv.getBoundingClientRect();
-    const clientX=e.touches?e.touches[0].clientX:e.clientX;
-    const clientY=e.touches?e.touches[0].clientY:e.clientY;
-    const boxX=clientX-rect.left;
-    const boxY=clientY-rect.top;
-    snapshot=ctx.getImageData(0,0,cv.width,cv.height);
+    const boxX=e.clientX-rect.left;
+    const boxY=e.clientY-rect.top;
     if(state.tool==='text' || state.tool==='legend'){
       openCanvasTextBox(key,boxX,boxY,x,y);
-      drawing=false;
     } else if(state.tool==='figure'){
       placeFigureAtPoint(key,x,y);
-      drawing=false;
     } else if(state.tool==='graph'){
       placeGraphAtPoint(key,y);
-      drawing=false;
+    } else {
+      drawing=true;
+      activePointerId=e.pointerId;
+      cv.setPointerCapture?.(e.pointerId);
+      // The source preview is above the bitmap canvas; remove it before the
+      // first mark so live ink is never hidden under the preview layer.
+      markFrameAsBitmap(key);
+      snapshot=ctx.getImageData(0,0,cv.width,cv.height);
+      if(state.tool==='erase') drawCurrentTool(x,y);
     }
   }
   function onMove(e){
-    if(!drawing) return; e.preventDefault();
-    const [x,y]=getXY(e);
-    const t=state.tool;
-    ctx.lineCap='round'; ctx.lineJoin='round';
-    if(t==='pen'){
-      ctx.beginPath(); ctx.moveTo(startX,startY); ctx.lineTo(x,y);
-      ctx.strokeStyle=getColor(); ctx.lineWidth=getSize();
-      ctx.stroke(); startX=x; startY=y;
-    } else if(t==='erase'){
-      ctx.beginPath(); ctx.arc(x,y,getSize()*3,0,Math.PI*2);
-      ctx.fillStyle='#fff'; ctx.fill();
-    } else {
-      ctx.putImageData(snapshot,0,0);
-      ctx.strokeStyle=getColor(); ctx.lineWidth=getSize();
-      ctx.beginPath();
-      if(t==='line'){ ctx.moveTo(startX,startY); ctx.lineTo(x,y); ctx.stroke(); }
-      else if(t==='rect'){ ctx.strokeRect(startX,startY,x-startX,y-startY); }
-      else if(t==='circ'){
-        const rx=Math.abs(x-startX)/2, ry=Math.abs(y-startY)/2;
-        const cx=(startX+x)/2, cy=(startY+y)/2;
-        ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2); ctx.stroke();
-      }
-    }
+    if(!drawing || e.pointerId!==activePointerId) return;
+    e.preventDefault();
+    const events=typeof e.getCoalescedEvents==='function' ? e.getCoalescedEvents() : [e];
+    (events.length ? events : [e]).forEach(sample=>{
+      const [x,y]=getXY(sample);
+      drawCurrentTool(x,y);
+    });
   }
   function onUp(e){
-    if(!drawing) return; drawing=false;
-    if(state.tool!=='text') markFrameAsBitmap(key);
+    if(!drawing || e.pointerId!==activePointerId) return;
+    e.preventDefault();
+    const [x,y]=getXY(e);
+    if(state.tool!=='erase') drawCurrentTool(x,y);
+    drawing=false;
+    try{ cv.releasePointerCapture?.(activePointerId); }catch(_){ }
+    activePointerId=null;
     pushHistory(key); saveCanvasToQ(key); renderPaper();
   }
+  function onCancel(e){
+    if(!drawing || e.pointerId!==activePointerId) return;
+    if(snapshot) ctx.putImageData(snapshot,0,0);
+    drawing=false;
+    activePointerId=null;
+  }
 
-  cv.removeEventListener('mousedown',cv._down); cv.removeEventListener('mousemove',cv._move);
-  cv.removeEventListener('mouseup',cv._up); cv.removeEventListener('mouseleave',cv._up);
-  cv.removeEventListener('touchstart',cv._tdown); cv.removeEventListener('touchmove',cv._tmove);
-  cv.removeEventListener('touchend',cv._tup);
-  cv._down=onDown; cv._move=onMove; cv._up=onUp;
-  cv._tdown=onDown; cv._tmove=onMove; cv._tup=onUp;
-  cv.addEventListener('mousedown',cv._down);
-  cv.addEventListener('mousemove',cv._move);
-  cv.addEventListener('mouseup',cv._up);
-  cv.addEventListener('mouseleave',cv._up);
-  cv.addEventListener('touchstart',cv._tdown,{passive:false});
-  cv.addEventListener('touchmove',cv._tmove,{passive:false});
-  cv.addEventListener('touchend',cv._tup);
+  cv.removeEventListener('pointerdown',cv._pointerDown);
+  cv.removeEventListener('pointermove',cv._pointerMove);
+  cv.removeEventListener('pointerup',cv._pointerUp);
+  cv.removeEventListener('pointercancel',cv._pointerCancel);
+  cv.removeEventListener('lostpointercapture',cv._pointerCancel);
+  cv._pointerDown=onDown; cv._pointerMove=onMove; cv._pointerUp=onUp; cv._pointerCancel=onCancel;
+  cv.addEventListener('pointerdown',cv._pointerDown);
+  cv.addEventListener('pointermove',cv._pointerMove);
+  cv.addEventListener('pointerup',cv._pointerUp);
+  cv.addEventListener('pointercancel',cv._pointerCancel);
+  cv.addEventListener('lostpointercapture',cv._pointerCancel);
+
+  function onWrapTextClick(e){
+    if(e.target!==wrap || (e.button!==undefined && e.button!==0)) return;
+    const sourceHtml=(typeof getComposerSourceHTML==='function') ? String(getComposerSourceHTML(key)||'').trim() : '';
+    if(!sourceHtml) return;
+    e.preventDefault();
+    state.tool='text';
+    setTool('text',key);
+    openMixedComposer(key);
+  }
+  wrap.removeEventListener('pointerdown',wrap._textBlockPointerDown);
+  wrap._textBlockPointerDown=onWrapTextClick;
+  wrap.addEventListener('pointerdown',wrap._textBlockPointerDown);
+  return restoreReady;
 }
 
 function setTool(tool, key){
@@ -290,7 +422,7 @@ function setTool(tool, key){
   canvasState[key].tool = tool;
   if(tool!=='text' && tool!=='legend') closeCanvasTextBox(key);
   const prefix = key==='q'?'tool':key+'tool';
-  ['Pen','Text','Legend','Figure','Graph','Line','Rect','Circ','Erase'].forEach(t=>{
+  ['Text','Legend','Figure','Graph','Line','Rect','Circ','Erase'].forEach(t=>{
     const b = document.getElementById(prefix+t);
     if(b) b.classList.toggle('active', tool===t.toLowerCase());
   });
@@ -300,7 +432,9 @@ function pushHistory(key){
   const cv = document.getElementById(key+'Canvas');
   if(!cv||!canvasState[key]) return;
   const st = canvasState[key];
-  st.history.push(cv.toDataURL());
+  const image=cv.toDataURL();
+  if(st.history[st.history.length-1]===image) return;
+  st.history.push(image);
   while(st.history.length>10) st.history.shift();
   st.redo=[];
 }
@@ -444,6 +578,7 @@ function getBurnedFigureStore(key){
 
 function cloneFigureForBurn(fig){
   return {
+    ...fig,
     src:fig?.src || '',
     x:Math.round(Number(fig?.x)||0),
     y:Math.round(Number(fig?.y)||0),
@@ -501,13 +636,62 @@ function getCanvasOverlayMetrics(key){
   };
 }
 
+function clearComposerSourceOverlay(key){
+  const wrap=document.getElementById(key+'CanvasWrap');
+  wrap?.querySelector('.composer-source-overlay')?.remove();
+}
+
+function renderComposerSourceOverlay(key, preparedSource, placement){
+  const metrics=getCanvasOverlayMetrics(key);
+  if(!metrics || !preparedSource?.source) return;
+  clearComposerSourceOverlay(key);
+  const overlay=document.createElement('canvas');
+  overlay.className='composer-source-overlay';
+  const cssScaleX=metrics.width/Math.max(1,metrics.cv.width);
+  const cssScaleY=metrics.height/Math.max(1,metrics.cv.height);
+  const displayW=Math.max(1, placement.width*cssScaleX);
+  const displayH=Math.max(1, placement.height*cssScaleY);
+  // Downsample once, explicitly, to the screen's real backing resolution.
+  // Leaving a 12x canvas for CSS/GPU filtering produced unstable thin stems at
+  // Windows zoom levels such as 125%. The untouched 12x source is still used
+  // for JSON/PDF export; this smaller canvas is presentation-only.
+  const displayDensity=Math.max(1, Math.min(3, Number(window.devicePixelRatio)||1));
+  overlay.width=Math.max(1, Math.round(displayW*displayDensity));
+  overlay.height=Math.max(1, Math.round(displayH*displayDensity));
+  overlay.style.left=(metrics.left + placement.x*cssScaleX)+'px';
+  overlay.style.top=(metrics.top + placement.y*cssScaleY)+'px';
+  overlay.style.width=displayW+'px';
+  overlay.style.height=displayH+'px';
+  const ctx=overlay.getContext('2d');
+  ctx.imageSmoothingEnabled=true;
+  ctx.imageSmoothingQuality='high';
+  ctx.clearRect(0,0,overlay.width,overlay.height);
+  ctx.drawImage(
+    preparedSource.source,
+    preparedSource.sx,
+    preparedSource.sy,
+    preparedSource.sw,
+    preparedSource.sh,
+    0,
+    0,
+    overlay.width,
+    overlay.height
+  );
+  metrics.wrap.appendChild(overlay);
+}
+
 function getFigureCrop(fig){
-  return {
-    l:Math.max(0, Math.min(0.8, +(fig?.crop?.l||0))),
-    t:Math.max(0, Math.min(0.8, +(fig?.crop?.t||0))),
-    r:Math.max(0, Math.min(0.8, +(fig?.crop?.r||0))),
-    b:Math.max(0, Math.min(0.8, +(fig?.crop?.b||0)))
+  const clamp=value=>Math.max(0,Math.min(.95,Number.isFinite(+value) ? +value : 0));
+  const fitPair=(first,second)=>{
+    const total=first+second;
+    if(total<=.96) return [first,second];
+    const ratio=.96/Math.max(.0001,total);
+    return [first*ratio,second*ratio];
   };
+  let l=clamp(fig?.crop?.l),r=clamp(fig?.crop?.r),t=clamp(fig?.crop?.t),b=clamp(fig?.crop?.b);
+  [l,r]=fitPair(l,r);
+  [t,b]=fitPair(t,b);
+  return {l,t,r,b};
 }
 
 function getStoredFigureBottom(key){
@@ -538,30 +722,47 @@ function getSurfaceLogicalMetrics(surface, key){
   return { logicalW, logicalH, scale };
 }
 
+function getFigureDisplaySource(fig){
+  const src=String(fig?.src||'').trim();
+  if(src) return src;
+  const svg=String(fig?.sourceSvg||'').trim();
+  return svg && typeof svgTextToDataUrl==='function' ? svgTextToDataUrl(svg) : '';
+}
+
+function hasRenderableFigureSource(fig){
+  return !!getFigureDisplaySource(fig);
+}
+
 function getExistingFigureImageElement(wrap, fig){
-  if(!wrap || !fig?.src) return null;
+  if(!wrap || !fig) return null;
+  const source=getFigureDisplaySource(fig);
+  if(!source) return null;
   return [...(wrap.querySelectorAll('.figure-item img')||[])]
-    .find(node=>node.getAttribute('src')===fig.src) || null;
+    .find(node=>node.getAttribute('src')===source || (fig.src && node.getAttribute('src')===fig.src)) || null;
 }
 
 async function getFigureImageForCanvasExport(fig, wrap){
   const existing=getExistingFigureImageElement(wrap, fig);
   if(existing && (existing.complete || existing.naturalWidth)) return existing;
-  if(fig?.src && typeof loadImg==='function') return await loadImg(fig.src);
+  const source=getFigureDisplaySource(fig);
+  if(source && typeof loadImg==='function') return await loadImg(source);
   return existing;
 }
 
-async function drawFigureListOnCanvas(ctx, key, figs, scale=1){
+async function drawFigureListOnCanvas(ctx, key, figs, scale=1, opts={}){
   const wrap=document.getElementById(key+'CanvasWrap');
-  const list=(Array.isArray(figs) ? figs : []).filter(fig=>fig && fig.src);
+  const list=(Array.isArray(figs) ? figs : []).filter(Boolean);
+  const failures=[];
+  let drawn=0;
   const prevSmooth=ctx.imageSmoothingEnabled;
   const prevQuality=ctx.imageSmoothingQuality;
   ctx.imageSmoothingEnabled=true;
   ctx.imageSmoothingQuality='high';
-  for(const fig of list){
+  for(let index=0; index<list.length; index++){
+    const fig=list[index];
     try{
       const img=await getFigureImageForCanvasExport(fig, wrap);
-      if(!img) continue;
+      if(!img) throw new Error('image did not load');
       const crop=getFigureCrop(fig);
       const srcW=img.naturalWidth||img.width||fig.w||1;
       const srcH=img.naturalHeight||img.height||fig.h||1;
@@ -573,11 +774,19 @@ async function drawFigureListOnCanvas(ctx, key, figs, scale=1){
       const dy=Math.round((Number(fig.y)||0)*scale);
       const dw=Math.round(Math.max(1, Number(fig.w)||1)*scale);
       const dh=Math.round(Math.max(1, Number(fig.h)||1)*scale);
-      if(sw>0 && sh>0 && dw>0 && dh>0) ctx.drawImage(img,sx,sy,sw,sh,dx,dy,dw,dh);
-    }catch(_){ }
+      if(!(sw>0 && sh>0 && dw>0 && dh>0)) throw new Error('figure crop has no visible area');
+      ctx.drawImage(img,sx,sy,sw,sh,dx,dy,dw,dh);
+      drawn++;
+    }catch(err){
+      failures.push({index,error:String(err?.message||err||'figure draw failed')});
+    }
   }
   ctx.imageSmoothingEnabled=prevSmooth;
   try{ ctx.imageSmoothingQuality=prevQuality; }catch(_){ }
+  if(opts.strict && failures.length){
+    throw new Error(`Could not render ${failures.length} of ${list.length} canvas figure(s): ${failures.map(item=>item.index+1).join(', ')}`);
+  }
+  return {requested:list.length,drawn,failures};
 }
 
 async function drawStoredFiguresOnCanvas(ctx, key, scale=1){
@@ -587,13 +796,14 @@ async function drawStoredFiguresOnCanvas(ctx, key, scale=1){
 function drawFigureListFromLoadedDom(ctx, key, figs, selector, scale=1){
   const wrap=document.getElementById(key+'CanvasWrap');
   const imgs=[...(wrap?.querySelectorAll(selector)||[])];
-  const list=(Array.isArray(figs) ? figs : []).filter(fig=>fig && fig.src);
+  const list=(Array.isArray(figs) ? figs : []).filter(hasRenderableFigureSource);
   const prevSmooth=ctx.imageSmoothingEnabled;
   const prevQuality=ctx.imageSmoothingQuality;
   ctx.imageSmoothingEnabled=true;
   ctx.imageSmoothingQuality='high';
   list.forEach(fig=>{
-    const img=imgs.find(node=>node.getAttribute('src')===fig.src);
+    const source=getFigureDisplaySource(fig);
+    const img=imgs.find(node=>node.getAttribute('src')===source);
     if(!img || (!img.complete && !img.naturalWidth)) return;
     const crop=getFigureCrop(fig);
     const srcW=img.naturalWidth||img.width||fig.w||1;
@@ -615,7 +825,7 @@ function drawFigureListFromLoadedDom(ctx, key, figs, selector, scale=1){
 }
 
 async function drawBurnedFigureLayerOnCanvas(ctx, key, scale=1){
-  const burned=getBurnedFigureStore(key).filter(fig=>fig && fig.src);
+  const burned=getBurnedFigureStore(key).filter(hasRenderableFigureSource);
   if(burned.length){
     await drawFigureListOnCanvas(ctx, key, burned, scale);
     return true;
@@ -684,15 +894,19 @@ function removeBurnedFiguresMatchingLiveFigure(key, liveFigure){
 }
 
 function isEditableVectorCircuitFigure(fig){
-  return fig?.kind==='circuit-svg' && !!fig?.circuitScene && /^data:image\/svg\+xml/i.test(String(fig?.src||''));
+  return fig?.kind==='circuit-svg' && !!fig?.circuitScene && !!getFigureDisplaySource(fig);
 }
 
-async function updateBurnedFigureLayerFromCurrentFigures(key){
+async function updateBurnedFigureLayerFromCurrentFigures(key, opts={}){
   const cv=document.getElementById(key+'Canvas');
   if(!cv) return '';
+  const expectedQuestion=opts.expectedQuestion || cur;
+  const expectedCanvas=opts.expectedCanvas || cv;
+  const ownsTarget=()=>isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas);
+  if(!ownsTarget()) return '';
   ensureCanvasHeightForFigures(key);
   const burned=getBurnedFigureStore(key);
-  const liveFigures=getFigureStore(key).filter(fig=>fig && fig.src).map(cloneFigureForBurn);
+  const liveFigures=getFigureStore(key).filter(hasRenderableFigureSource).map(cloneFigureForBurn);
   if(liveFigures.length){
     // A later burn replaces the prior figure only where it truly covers it.
     // This preserves independent placed figures and never touches the text bitmap.
@@ -709,13 +923,14 @@ async function updateBurnedFigureLayerFromCurrentFigures(key){
   lctx.clearRect(0,0,layer.width,layer.height);
   if(burned.length) await drawFigureListOnCanvas(lctx, key, burned, layerScale);
   else await drawBurnedFigureLayerOnCanvas(lctx, key, layerScale);
+  if(!ownsTarget()) return '';
   const dataUrl=layer.toDataURL('image/png');
   setBurnedFigureImage(key, dataUrl, layerScale);
   return dataUrl;
 }
 
 async function flattenCanvasSurfaceWithFigures(surface, key){
-  const figs=getFigureStore(key).filter(fig=>fig && fig.src);
+  const figs=getFigureStore(key).filter(hasRenderableFigureSource);
   if(!surface || !figs.length) return surface;
   const metrics=getSurfaceLogicalMetrics(surface, key);
   const logicalW=Math.max(metrics.logicalW, getStoredFigureRight(key)+12);
@@ -737,34 +952,44 @@ async function flattenCanvasSurfaceWithFigures(surface, key){
 
 async function composeSourceSurfaceWithCanvasFigures(source, key, opts={}){
   const cv=document.getElementById(key+'Canvas');
-  if(!cv || !source) return source;
+  if(!source) return source;
   const includeLiveFigures=opts.includeLiveFigures!==false;
   const includeBurnedLayer=opts.includeBurnedLayer!==false;
+  const strictFigures=opts.strictFigures===true;
+  const hasOwn=name=>Object.prototype.hasOwnProperty.call(opts,name);
+  const frameWidth=Math.max(1, Number(opts.frameWidth)||Number(cv?.width)||(key==='q' ? 640 : 500));
+  const frameHeight=Math.max(getBaseCanvasHeight(key), Number(opts.frameHeight)||Number(cv?.height)||getBaseCanvasHeight(key));
+  const liveFigures=hasOwn('figures') ? (Array.isArray(opts.figures) ? opts.figures : []) : getFigureStore(key);
+  const burnedFigures=hasOwn('burnedFigures') ? (Array.isArray(opts.burnedFigures) ? opts.burnedFigures : []) : getBurnedFigureStore(key);
+  const burnedLayer=hasOwn('burnedImage') ? String(opts.burnedImage||'') : getBurnedFigureImage(key);
+  const burnedLayerScale=Math.max(1, Number(hasOwn('burnedScale') ? opts.burnedScale : getBurnedFigureScale(key))||1);
+  const figureBottom=list=>(Array.isArray(list) ? list : []).reduce((bottom,fig)=>Math.max(bottom,(+fig?.y||0)+Math.max(0,+fig?.h||0)),0);
   const pad=key==='q' ? 8 : 4;
   const sourceScale=Math.max(2, typeof getCanvasIntrinsicScale==='function' ? getCanvasIntrinsicScale(source) : 2);
   const preparedSource=(typeof prepareComposerSurfaceForCanvasApply==='function')
     ? prepareComposerSurfaceForCanvasApply(source, key)
-    : {source, sx:0, sy:0, sw:source.naturalWidth||source.width||Math.max(200, cv.width-pad*2), sh:source.naturalHeight||source.height||getBaseCanvasHeight(key), logicalWidth:source.naturalWidth||source.width||Math.max(200, cv.width-pad*2), logicalHeight:source.naturalHeight||source.height||getBaseCanvasHeight(key)};
-  const srcW=preparedSource.logicalWidth||Math.max(200, cv.width-pad*2);
+    : {source, sx:0, sy:0, sw:source.naturalWidth||source.width||Math.max(200, frameWidth-pad*2), sh:source.naturalHeight||source.height||getBaseCanvasHeight(key), logicalWidth:source.naturalWidth||source.width||Math.max(200, frameWidth-pad*2), logicalHeight:source.naturalHeight||source.height||getBaseCanvasHeight(key)};
+  const srcW=preparedSource.logicalWidth||Math.max(200, frameWidth-pad*2);
   const srcH=preparedSource.logicalHeight||getBaseCanvasHeight(key);
-  const maxDrawW=Math.max(180, cv.width-pad*2);
+  const maxDrawW=Math.max(180, frameWidth-pad*2);
   const drawScale=Math.min(1, maxDrawW/Math.max(1,srcW));
-  const drawW=Math.max(60, Math.round(srcW*drawScale));
-  const drawH=Math.max(key==='q' ? 28 : 18, Math.round(srcH*drawScale));
+  const drawW=Math.max(1, srcW*drawScale);
+  const drawH=Math.max(1, srcH*drawScale);
   let layerH=0;
-  const burnedLayer=getBurnedFigureImage(key);
   if(includeBurnedLayer && burnedLayer){
     try{
       const layerImg=await loadImg(burnedLayer);
-      layerH=(layerImg.naturalHeight||layerImg.height||0)/getBurnedFigureScale(key);
-    }catch(_){ }
+      layerH=(layerImg.naturalHeight||layerImg.height||0)/burnedLayerScale;
+    }catch(err){
+      if(strictFigures && !burnedFigures.length) throw new Error('Burned figure layer did not load: '+String(err?.message||err));
+    }
   }
-  if(includeBurnedLayer) layerH=Math.max(layerH, getBurnedFigureBottom(key));
-  const targetH=Math.max(getBaseCanvasHeight(key), cv.height, layerH, drawH+pad*2, includeLiveFigures ? getStoredFigureBottom(key)+12 : 0);
+  if(includeBurnedLayer) layerH=Math.max(layerH, figureBottom(burnedFigures));
+  const targetH=Math.ceil(Math.max(getBaseCanvasHeight(key), frameHeight, layerH, drawH+pad*2, includeLiveFigures ? figureBottom(liveFigures)+12 : 0));
   const out=document.createElement('canvas');
-  out.width=Math.max(1, Math.round(cv.width*sourceScale));
+  out.width=Math.max(1, Math.round(frameWidth*sourceScale));
   out.height=Math.max(1, Math.round(targetH*sourceScale));
-  out.style.width=cv.width+'px';
+  out.style.width=frameWidth+'px';
   out.style.height=targetH+'px';
   const ctx=out.getContext('2d');
   ctx.imageSmoothingEnabled=true;
@@ -772,7 +997,7 @@ async function composeSourceSurfaceWithCanvasFigures(source, key, opts={}){
   ctx.fillStyle='#fff';
   ctx.fillRect(0,0,out.width,out.height);
   const drawX=pad;
-  const drawY=key==='q' ? pad : Math.max(pad, Math.round((targetH-drawH)/2));
+  const drawY=pad;
   ctx.drawImage(
     preparedSource.source,
     preparedSource.sx,
@@ -784,8 +1009,19 @@ async function composeSourceSurfaceWithCanvasFigures(source, key, opts={}){
     drawW*sourceScale,
     drawH*sourceScale
   );
-  if(includeBurnedLayer) await drawBurnedFigureLayerOnCanvas(ctx, key, sourceScale);
-  if(includeLiveFigures) await drawStoredFiguresOnCanvas(ctx, key, sourceScale);
+  if(includeBurnedLayer){
+    if(burnedFigures.length){
+      await drawFigureListOnCanvas(ctx, key, burnedFigures, sourceScale, {strict:strictFigures});
+    }else if(burnedLayer){
+      try{
+        const layerImg=await loadImg(burnedLayer);
+        ctx.drawImage(layerImg,0,0,(layerImg.naturalWidth||layerImg.width||1)/burnedLayerScale*sourceScale,(layerImg.naturalHeight||layerImg.height||1)/burnedLayerScale*sourceScale);
+      }catch(err){
+        if(strictFigures) throw new Error('Burned figure layer did not draw: '+String(err?.message||err));
+      }
+    }
+  }
+  if(includeLiveFigures) await drawFigureListOnCanvas(ctx, key, liveFigures, sourceScale, {strict:strictFigures});
   return out;
 }
 
@@ -827,28 +1063,44 @@ function saveHighResSurfaceAsBitmapFrame(key, surface){
   storeCanvasImagesForKey(key, baseDataUrl, fullDataUrl, viewerDataUrl);
 }
 
-async function burnBitmapFigureOverlaysIntoCanvas(key){
+async function burnBitmapFigureOverlaysIntoCanvas(key, opts={}){
   const cv=document.getElementById(key+'Canvas');
   if(!cv) throw new Error('Target canvas was not found.');
+  const expectedQuestion=opts.expectedQuestion || cur;
+  const expectedCanvas=opts.expectedCanvas || cv;
+  const ownsTarget=()=>isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas);
+  if(!ownsTarget()) return false;
   ensureCanvasHeightForFigures(key);
-  await updateBurnedFigureLayerFromCurrentFigures(key);
+  await updateBurnedFigureLayerFromCurrentFigures(key, {expectedQuestion,expectedCanvas});
+  if(!ownsTarget()) return false;
   const ctx=cv.getContext('2d');
   await drawStoredFiguresOnCanvas(ctx, key, 1);
+  if(!ownsTarget()) return false;
   clearFigureOverlayState(key);
   markFrameAsBitmap(key);
   saveCanvasToQ(key);
   setFrameBitmapDirty(key, false);
+  return true;
 }
 
-async function burnSourceFigureOverlaysIntoCanvas(key){
+async function burnSourceFigureOverlaysIntoCanvas(key, opts={}){
+  const cv=document.getElementById(key+'Canvas');
+  const expectedQuestion=opts.expectedQuestion || cur;
+  const expectedCanvas=opts.expectedCanvas || cv;
+  const ownsTarget=()=>isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas);
+  if(!cv || !ownsTarget()) return false;
   const html=String((typeof getComposerSourceHTML==='function' ? getComposerSourceHTML(key) : '')||'').trim();
   if(!html || typeof renderMixedComposerCanvas!=='function') return false;
   const host=document.createElement('div');
   host.innerHTML=html;
-  const source=await renderMixedComposerCanvas(host, key);
-  await updateBurnedFigureLayerFromCurrentFigures(key);
+  const renderContext=captureMixedComposerRenderContext(key);
+  const source=await renderMixedComposerCanvas(host, key, renderContext);
+  if(!ownsTarget()) return false;
+  await updateBurnedFigureLayerFromCurrentFigures(key, {expectedQuestion,expectedCanvas});
+  if(!ownsTarget()) return false;
   clearFigureOverlayState(key);
   const surface=await composeSourceSurfaceWithCanvasFigures(source, key, { includeLiveFigures:false, includeBurnedLayer:true });
+  if(!ownsTarget()) return false;
   markFrameAsBitmap(key);
   saveHighResSurfaceAsBitmapFrame(key, surface);
   setFrameBitmapDirty(key, false);
@@ -856,6 +1108,10 @@ async function burnSourceFigureOverlaysIntoCanvas(key){
 }
 
 async function burnFiguresIntoCanvas(key){
+  const expectedQuestion=cur;
+  const expectedCanvas=document.getElementById(key+'Canvas');
+  const ownsTarget=()=>isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas);
+  if(!expectedQuestion || !expectedCanvas || !ownsTarget()) return;
   const figs=getFigureStore(key);
   if(!figs.length){
     toast('No imported figure to burn');
@@ -877,16 +1133,18 @@ async function burnFiguresIntoCanvas(key){
     const useSource=(typeof getFrameRenderMode==='function' && getFrameRenderMode(key)==='source') || isSourceBackedFrame(key);
     let burned=false;
     if(useSource){
-      try{ burned=await burnSourceFigureOverlaysIntoCanvas(key); }
+      try{ burned=await burnSourceFigureOverlaysIntoCanvas(key, {expectedQuestion,expectedCanvas}); }
       catch(_){ burned=false; }
     }
-    if(!burned) await burnBitmapFigureOverlaysIntoCanvas(key);
+    if(!ownsTarget()) return;
+    if(!burned) burned=await burnBitmapFigureOverlaysIntoCanvas(key, {expectedQuestion,expectedCanvas});
+    if(!burned || !ownsTarget()) return;
     pushHistory(key);
     saveLS();
     renderPaper();
     toast('Imported figure burned into canvas');
   }catch(err){
-    showNotice(err?.message || 'Could not burn the imported figure into this canvas.', 'Burn Figure');
+    if(ownsTarget()) showNotice(err?.message || 'Could not burn the imported figure into this canvas.', 'Burn Figure');
   }finally{
     if(activeBtn?.tagName==='BUTTON'){
       activeBtn.disabled=false;
@@ -896,11 +1154,17 @@ async function burnFiguresIntoCanvas(key){
 }
 
 function persistFigureOverlayChange(key){
+  const expectedQuestion=cur;
+  const expectedCanvas=document.getElementById(key+'Canvas');
+  const ownsTarget=()=>isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas);
+  if(!expectedQuestion || !expectedCanvas || !ownsTarget()) return;
   if(ensureSourceBackedFrame(key) && typeof syncCanvasAssetForKeyAsync==='function'){
-    syncCanvasAssetForKeyAsync(key, { allowBitmapFallback:false }).then(()=>{
+    syncCanvasAssetForKeyAsync(key, { allowBitmapFallback:false, expectedQuestion, expectedCanvas }).then(synced=>{
+      if(synced===false || !ownsTarget()) return;
       saveLS();
       renderPaper();
     }).catch(()=>{
+      if(!ownsTarget()) return;
       saveCanvasToQ(key);
       renderPaper();
     });
@@ -937,7 +1201,7 @@ function renderBurnedFigureOverlays(key){
   if(!metrics) return;
   let host=metrics.wrap.querySelector('.burned-figure-overlay');
   if(host) host.remove();
-  const burned=getBurnedFigureStore(key).filter(fig=>fig && fig.src);
+  const burned=getBurnedFigureStore(key).filter(hasRenderableFigureSource);
   if(!burned.length) return;
   host=document.createElement('div');
   host.className='burned-figure-overlay';
@@ -953,7 +1217,7 @@ function renderBurnedFigureOverlays(key){
     item.style.top=(fig.y/metrics.scaleY)+'px';
     item.style.width=(fig.w/metrics.scaleX)+'px';
     item.style.height=(fig.h/metrics.scaleY)+'px';
-    item.innerHTML=`<img src="${fig.src}" alt="">`;
+    item.innerHTML=`<img src="${getFigureDisplaySource(fig)}" alt="">`;
     applyCropToFigureElement(item, fig);
     host.appendChild(item);
   });
@@ -994,7 +1258,7 @@ function renderFigureOverlays(key){
     item.style.top=(fig.y/metrics.scaleY)+'px';
     item.style.width=(fig.w/metrics.scaleX)+'px';
     item.style.height=(fig.h/metrics.scaleY)+'px';
-    item.innerHTML=`<img src="${fig.src}" alt="">
+    item.innerHTML=`<img src="${getFigureDisplaySource(fig)}" alt="">
       <span class="figure-handle nw"></span><span class="figure-handle ne"></span><span class="figure-handle sw"></span><span class="figure-handle se"></span>
       ${cropMode?`<div class="figure-crop-box" style="left:${crop.l*100}%;top:${crop.t*100}%;width:${Math.max(5,(1-crop.l-crop.r)*100)}%;height:${Math.max(5,(1-crop.t-crop.b)*100)}%">
         <span class="figure-crop-handle cnw"></span><span class="figure-crop-handle cne"></span><span class="figure-crop-handle csw"></span><span class="figure-crop-handle cse"></span>
@@ -1188,20 +1452,6 @@ function appendFigureMarker(key){
   }
 }
 
-function insertMathImg(key){
-  const sym=prompt('Type math expression (Unicode symbols supported):', 'Î± + Î² = Î³');
-  if(!sym) return;
-  const cv=document.getElementById(key+'Canvas');
-  if(!cv) return;
-  const ctx=cv.getContext('2d');
-  const color=document.getElementById(key+'Color')?.value||'#111';
-  const size=(+(document.getElementById(key+'Size')?.value||2))*5+10;
-  ctx.fillStyle=color;
-  ctx.font=`${size}px "Times New Roman",serif`;
-  ctx.fillText(sym, 10, Math.min(size+10, cv.height-10));
-  pushHistory(key); saveCanvasToQ(key); renderPaper();
-}
-
 function autoGrowTextBox(el){
   if(!el) return;
   el.style.height='auto';
@@ -1298,12 +1548,12 @@ function getFixedTextPlacement(key, text, font, lineHeight){
   if(!cv) return { startX:16, startY:16, textH:0 };
   const ctx=cv.getContext('2d');
   const startX=16;
+  const startY=16;
   const maxWidth=cv.width-startX-12;
   const textH=measureCanvasText(ctx,text,maxWidth,font,lineHeight);
   const baseHeight=getBaseCanvasHeight(key);
-  const needed=Math.max(baseHeight, textH+(key==='q' ? 24 : 14));
+  const needed=Math.max(baseHeight, startY+textH+16);
   resizeCanvasPreserve(key, needed);
-  const startY=key==='q' ? 16 : Math.max(16, Math.round((cv.height-textH)/2));
   return { startX, startY, textH };
 }
 
@@ -2070,7 +2320,7 @@ function getLatexCategories(){
   return Object.keys(getLatexCatalog());
 }
 
-async function renderTexToDataUrl(tex){
+async function renderTexToSvgImage(tex){
   const mj=await waitForMathJaxReady();
   if(!mj?.tex2svgPromise) throw new Error('MathJax is still loading');
   const node=await mj.tex2svgPromise(tex, { display:true });
@@ -2083,28 +2333,55 @@ async function renderTexToDataUrl(tex){
   const blob=new Blob([svgText], { type:'image/svg+xml;charset=utf-8' });
   const url=URL.createObjectURL(blob);
   try{
-    const img=await loadImg(url);
-    const canvas=document.createElement('canvas');
-    const naturalW=Math.max(32, Math.ceil(img.width||img.naturalWidth||320));
-    const naturalH=Math.max(32, Math.ceil(img.height||img.naturalHeight||120));
-    canvas.width=Math.round(naturalW*EXPORT_IMAGE_SCALE);
-    canvas.height=Math.round(naturalH*EXPORT_IMAGE_SCALE);
-    const ctx=canvas.getContext('2d');
-    ctx.imageSmoothingEnabled=true;
-    ctx.imageSmoothingQuality='high';
-    ctx.scale(EXPORT_IMAGE_SCALE, EXPORT_IMAGE_SCALE);
-    ctx.fillStyle='#fff';
-    ctx.fillRect(0,0,naturalW,naturalH);
-    ctx.drawImage(img,0,0,naturalW,naturalH);
-    return canvas.toDataURL('image/png');
-  } finally {
+    return { img:await loadImg(url), url };
+  }catch(err){
     URL.revokeObjectURL(url);
+    throw err;
   }
 }
 
+async function renderTexToDataUrl(tex, requestedScale=EXPORT_IMAGE_SCALE){
+  const vector=await renderTexToSvgImage(tex);
+  try{
+    const img=vector.img;
+    const canvas=document.createElement('canvas');
+    const naturalW=Math.max(1, Number(img.naturalWidth||img.width)||320);
+    const naturalH=Math.max(1, Number(img.naturalHeight||img.height)||120);
+    const padX=Math.max(0,(32-naturalW)/2);
+    const padY=Math.max(0,(32-naturalH)/2);
+    const logicalW=naturalW+padX*2;
+    const logicalH=naturalH+padY*2;
+    const rasterScale=Math.max(1, Math.min(16, Number(requestedScale)||EXPORT_IMAGE_SCALE));
+    canvas.width=Math.round(logicalW*rasterScale);
+    canvas.height=Math.round(logicalH*rasterScale);
+    const ctx=canvas.getContext('2d');
+    ctx.imageSmoothingEnabled=true;
+    ctx.imageSmoothingQuality='high';
+    ctx.scale(rasterScale, rasterScale);
+    ctx.clearRect(0,0,logicalW,logicalH);
+    ctx.drawImage(img,padX,padY,naturalW,naturalH);
+    return canvas.toDataURL('image/png');
+  } finally {
+    URL.revokeObjectURL(vector.url);
+  }
+}
+
+let sharedMathJaxReadyPromise=null;
+let sharedMathJaxFailureAt=0;
+
 function waitForMathJaxReady(timeoutMs=7000){
+  const alreadyReady=window.MathJax;
+  if(alreadyReady?.tex2svgPromise){
+    return alreadyReady.startup?.promise
+      ? Promise.resolve(alreadyReady.startup.promise).then(()=>alreadyReady)
+      : Promise.resolve(alreadyReady);
+  }
+  if(sharedMathJaxReadyPromise) return sharedMathJaxReadyPromise;
+  if(sharedMathJaxFailureAt && Date.now()-sharedMathJaxFailureAt<12000){
+    return Promise.reject(new Error('MathJax is unavailable'));
+  }
   const started=Date.now();
-  return new Promise((resolve,reject)=>{
+  sharedMathJaxReadyPromise=new Promise((resolve,reject)=>{
     const check=()=>{
       const mj=window.MathJax;
       if(mj?.tex2svgPromise){
@@ -2123,14 +2400,27 @@ function waitForMathJaxReady(timeoutMs=7000){
       setTimeout(check,80);
     };
     check();
+  }).then(mj=>{
+    sharedMathJaxReadyPromise=Promise.resolve(mj);
+    return mj;
+  }).catch(err=>{
+    sharedMathJaxReadyPromise=null;
+    sharedMathJaxFailureAt=Date.now();
+    throw err;
   });
+  return sharedMathJaxReadyPromise;
 }
 
-function placeRenderedEquationImage(key, dataUrl){
+function placeRenderedEquationImage(key, dataUrl, opts={}){
+  const expectedQuestion=opts.expectedQuestion || cur;
+  const expectedCanvas=opts.expectedCanvas || document.getElementById(key+'Canvas');
   loadImg(dataUrl).then(img=>{
+    if(!isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas)) return;
     openImagePlacementBox(key, img, { mode:'insert' });
   }).catch(()=>{
-    showNotice('Equation image could not be placed.', 'Equation');
+    if(isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas)){
+      showNotice('Equation image could not be placed.', 'Equation');
+    }
   });
 }
 
@@ -4295,7 +4585,6 @@ const MIXED_COMPOSER_TEXT_SIZE_KEY='qgen_mixed_composer_text_size_v1';
 const MIXED_COMPOSER_MATH_SIZE_KEY='qgen_mixed_composer_math_size_v1';
 const MIXED_COMPOSER_INNER_MATH_SCALE_KEY='qgen_mixed_composer_inner_math_scale_v1';
 const MIXED_COMPOSER_EQUATION_STROKE_KEY='qgen_mixed_composer_equation_stroke_v1';
-const MIXED_COMPOSER_RENDER_PROFILE_KEY='qgen_mixed_composer_render_profile_v1';
 (function ensurePdfLinkedPreviewStyles(){
   if(document.getElementById('pdfLinkedPreviewStyles')) return;
   const st=document.createElement('style');
@@ -4349,6 +4638,7 @@ const MIXED_COMPOSER_RENDER_PROFILE_KEY='qgen_mixed_composer_render_profile_v1';
   document.head.appendChild(st);
 })();
 let activeComposerRenderKey='';
+let activeComposerRenderContext=null;
 
 function clampMixedComposerTextSize(value){
   const n=Math.round(Number(value)||20);
@@ -4371,7 +4661,7 @@ function clampMixedComposerEquationStroke(value){
 }
 
 function clampMixedComposerRenderProfile(value){
-  return value==='official' ? 'official' : 'hallmark';
+  return 'hallmark';
 }
 
 function getStoredComposerTextSizeForKey(key){
@@ -4404,28 +4694,45 @@ function getStoredComposerInnerMathScaleForKey(key){
   return 0;
 }
 
-function readMixedComposerTextSize(key=''){
+function isMixedComposerControlContextVisible(key=''){
+  const modal=document.getElementById('appModal');
+  const editor=document.getElementById('mixedComposerEditor');
+  return !!(
+    modal &&
+    !modal.classList.contains('hidden') &&
+    editor &&
+    (!key || key===activeComposerKey)
+  );
+}
+
+function readMixedComposerTextSize(key='', ignoreRenderContext=false){
+  const frameKey=key || activeComposerRenderKey;
+  if(!ignoreRenderContext && activeComposerRenderContext?.key===frameKey) return activeComposerRenderContext.textSize;
   const dom=document.getElementById('mixedComposerTextSize');
-  if(dom && dom.value) return clampMixedComposerTextSize(dom.value);
-  const stored=getStoredComposerTextSizeForKey(key || activeComposerRenderKey);
+  if(dom && dom.value && isMixedComposerControlContextVisible(key)) return clampMixedComposerTextSize(dom.value);
+  const stored=getStoredComposerTextSizeForKey(frameKey);
   if(stored) return stored;
   try{ const ls=localStorage.getItem(MIXED_COMPOSER_TEXT_SIZE_KEY); if(ls) return clampMixedComposerTextSize(ls); }catch(_){ }
   return 20;
 }
 
-function readMixedComposerMathSize(key=''){
+function readMixedComposerMathSize(key='', ignoreRenderContext=false){
+  const frameKey=key || activeComposerRenderKey;
+  if(!ignoreRenderContext && activeComposerRenderContext?.key===frameKey) return activeComposerRenderContext.mathSize;
   const dom=document.getElementById('mixedComposerMathSize');
-  if(dom && dom.value) return clampMixedComposerMathSize(dom.value);
-  const stored=getStoredComposerMathSizeForKey(key || activeComposerRenderKey);
+  if(dom && dom.value && isMixedComposerControlContextVisible(key)) return clampMixedComposerMathSize(dom.value);
+  const stored=getStoredComposerMathSizeForKey(frameKey);
   if(stored) return stored;
   try{ const ls=localStorage.getItem(MIXED_COMPOSER_MATH_SIZE_KEY); if(ls) return clampMixedComposerMathSize(ls); }catch(_){ }
   return 22;
 }
 
-function readMixedComposerInnerMathScale(key=''){
+function readMixedComposerInnerMathScale(key='', ignoreRenderContext=false){
+  const frameKey=key || activeComposerRenderKey;
+  if(!ignoreRenderContext && activeComposerRenderContext?.key===frameKey) return activeComposerRenderContext.innerMathScale;
   const dom=document.getElementById('mixedComposerInnerMathScale');
-  if(dom && dom.value) return clampMixedComposerInnerMathScale(dom.value);
-  const stored=getStoredComposerInnerMathScaleForKey(key || activeComposerRenderKey);
+  if(dom && dom.value && isMixedComposerControlContextVisible(key)) return clampMixedComposerInnerMathScale(dom.value);
+  const stored=getStoredComposerInnerMathScaleForKey(frameKey);
   if(stored) return stored;
   try{ const ls=localStorage.getItem(MIXED_COMPOSER_INNER_MATH_SCALE_KEY); if(ls) return clampMixedComposerInnerMathScale(ls); }catch(_){ }
   return 115;
@@ -4455,32 +4762,34 @@ function getStoredComposerEquationStrokeForKey(key=''){
   return ['fine','light','regular','bold','extra','strong'].includes(stored) ? clampMixedComposerEquationStroke(stored) : '';
 }
 
-function getStoredComposerRenderProfileForKey(key=''){
-  if(!cur || !key) return '';
-  const stored=key==='q' ? cur.questionComposerRenderProfile : (key.startsWith('opt') ? cur.options?.[+key.slice(3)]?.composerRenderProfile : '');
-  return ['hallmark','official'].includes(stored) ? clampMixedComposerRenderProfile(stored) : '';
-}
-
 function readMixedComposerRenderProfile(key=''){
-  const dom=document.getElementById('mixedComposerRenderProfile');
-  if(dom && dom.value) return clampMixedComposerRenderProfile(dom.value);
-  const frameKey=key || activeComposerRenderKey;
-  const stored=getStoredComposerRenderProfileForKey(frameKey);
-  if(stored) return stored;
-  if(frameKey && cur) return 'hallmark';
-  try{ return clampMixedComposerRenderProfile(localStorage.getItem(MIXED_COMPOSER_RENDER_PROFILE_KEY)); }catch(_){ }
   return 'hallmark';
 }
 
-function readMixedComposerEquationStroke(key=''){
-  const dom=document.getElementById('mixedComposerEquationStroke');
-  if(dom && dom.value) return clampMixedComposerEquationStroke(dom.value);
+function readMixedComposerEquationStroke(key='', ignoreRenderContext=false){
   const frameKey=key || activeComposerRenderKey;
+  if(!ignoreRenderContext && activeComposerRenderContext?.key===frameKey) return activeComposerRenderContext.equationInk;
+  const dom=document.getElementById('mixedComposerEquationStroke');
+  if(dom && dom.value && isMixedComposerControlContextVisible(key)) return clampMixedComposerEquationStroke(dom.value);
   const stored=getStoredComposerEquationStrokeForKey(frameKey);
   if(stored) return stored;
   if(frameKey && cur) return 'light';
   try{ return clampMixedComposerEquationStroke(localStorage.getItem(MIXED_COMPOSER_EQUATION_STROKE_KEY)); }catch(_){ }
   return 'light';
+}
+
+function captureMixedComposerRenderContext(key=''){
+  const frameKey=key || activeComposerKey || activeComposerRenderKey || 'q';
+  const cv=document.getElementById(frameKey+'Canvas');
+  return Object.freeze({
+    key:frameKey,
+    textSize:readMixedComposerTextSize(frameKey, true),
+    mathSize:readMixedComposerMathSize(frameKey, true),
+    innerMathScale:readMixedComposerInnerMathScale(frameKey, true),
+    equationInk:readMixedComposerEquationStroke(frameKey, true),
+    renderProfile:'hallmark',
+    frameWidth:Math.max(1, Number(cv?.width)|| (frameKey==='q' ? 640 : 500))
+  });
 }
 
 function getMixedComposerEquationStrokeOptionsHTML(selected){
@@ -4489,21 +4798,13 @@ function getMixedComposerEquationStrokeOptionsHTML(selected){
   return ['fine','light','regular','bold','extra'].map(value=>'<option value="'+value+'"'+(value===current?' selected':'')+'>'+labels[value]+'</option>').join('');
 }
 
-function getMixedComposerRenderProfileOptionsHTML(selected){
-  const current=clampMixedComposerRenderProfile(selected);
-  const labels={hallmark:'Hallmark HD',official:'Official paper'};
-  return ['hallmark','official'].map(value=>'<option value="'+value+'"'+(value===current?' selected':'')+'>'+labels[value]+'</option>').join('');
-}
-
 function applyMixedComposerEditorTypography(editor, key=''){
   if(!editor) return;
   const size=readMixedComposerTextSize(key);
   editor.style.fontSize=size+'px';
   editor.style.lineHeight=(Math.max(1.38, (size+8)/size)).toFixed(2);
   const profile=readMixedComposerRenderProfile(key);
-  editor.style.fontFamily=profile==='official'
-    ? "'Times New Roman','Cambria Math','STIX Two Math','STIXGeneral',serif"
-    : "'Cambria Math','STIX Two Math','STIXGeneral','Times New Roman','Georgia','Noto Serif','Segoe UI Symbol',serif";
+  editor.style.fontFamily="'Cambria Math','STIX Two Math','STIXGeneral','Times New Roman','Georgia','Noto Serif','Segoe UI Symbol',serif";
   editor.style.setProperty('--composer-structure-font-size', Math.max(14, Math.round(size*.9))+'px');
   editor.style.setProperty('--composer-structure-limit-size', Math.max(10, Math.round(size*.6))+'px');
   editor.dataset.equationStroke=readMixedComposerEquationStroke(key);
@@ -4543,15 +4844,6 @@ function updateMixedComposerEquationStroke(value, key=''){
   const editor=document.getElementById('mixedComposerEditor');
   if(editor) editor.dataset.equationStroke=stroke;
   return stroke;
-}
-
-function updateMixedComposerRenderProfile(value, key=''){
-  const profile=clampMixedComposerRenderProfile(value);
-  try{ localStorage.setItem(MIXED_COMPOSER_RENDER_PROFILE_KEY, profile); }catch(_){ }
-  const sel=document.getElementById('mixedComposerRenderProfile');
-  if(sel) sel.value=profile;
-  applyMixedComposerEditorTypography(document.getElementById('mixedComposerEditor'), key || activeComposerKey || activeComposerRenderKey);
-  return profile;
 }
 
 function getComposerMatrixRowCount(latex=''){
@@ -4640,41 +4932,48 @@ function getComposerEquationVerticalPadding(key='', latex='', targetHeight=36){
 
 function getComposerEquationTargetHeight(key='', latex=''){
   const mathSize=readMixedComposerMathSize(key || activeComposerRenderKey);
-  if(isComposerCompactInlineLatex(latex)) return Math.max(18, Math.min(46, Math.round(mathSize*1.28)));
-  const base=Math.max(20, Math.min(104, Math.round(mathSize*1.94)));
+  const innerFactor=readMixedComposerInnerMathScale(key || activeComposerRenderKey)/100;
+  if(isComposerCompactInlineLatex(latex)) return Math.max(16, Math.min(64, Math.round(mathSize*1.24*innerFactor)));
+  const base=Math.max(18, Math.min(104, mathSize*1.78));
   const tall=getComposerLatexTallness(latex);
   const matrixRows=tall.matrixRows;
-  if(matrixRows) return Math.min(340, Math.max(base, Math.round(base*(matrixRows*.94+.32))));
-  let multiplier=1;
-  if(tall.fracDepth>0) multiplier+=Math.min(1.12, tall.fracDepth*.38);
-  if(tall.fracCount>1) multiplier+=Math.min(.42, (tall.fracCount-1)*.11);
-  if(tall.rootCount>0) multiplier+=Math.min(.36, tall.rootCount*.14);
-  if(tall.bigDelimiterCount>0) multiplier+=Math.min(.30, tall.bigDelimiterCount*.07);
-  if(tall.bigOpCount>0) multiplier+=Math.min(.44, tall.bigOpCount*.16);
-  if(tall.integralCount>0) multiplier+=Math.min(.34, tall.integralCount*.12);
-  if(tall.bigOpScriptCount>0) multiplier+=Math.min(.36, tall.bigOpScriptCount*.18);
-  if(tall.scriptCount>1) multiplier+=Math.min(.32, (tall.scriptCount-1)*.07);
-  if(tall.complexScriptCount>0) multiplier+=Math.min(.54, tall.complexScriptCount*.28);
-  if(tall.accentCount>0) multiplier+=Math.min(.16, tall.accentCount*.04);
-  const minNested=tall.fracDepth>1 ? Math.round(mathSize*3.25) : base;
-  const minComplex=(tall.fracCount || tall.rootCount || tall.bigOpCount || tall.bigDelimiterCount || tall.complexScriptCount)
-    ? Math.round(mathSize*2.52)
-    : base;
-  const minScript=tall.scriptCount>1 ? Math.round(mathSize*2.18) : base;
-  return Math.min(280, Math.max(base, minNested, minComplex, minScript, Math.round(base*multiplier)));
+  if(matrixRows){
+    const matrixFactor=1 + Math.max(0,matrixRows-1)*.72;
+    return Math.min(340, Math.max(18, Math.round(base*matrixFactor*innerFactor)));
+  }
+  // MathJax's SVG already contains the true height of integrals, limits,
+  // fractions and scripts. Counting every operator as extra zoom magnified a
+  // horizontal run of integrals at Math 14 back to ~60-75px. Keep only a mild
+  // depth allowance; repeated operators affect width, not font size.
+  let structureFactor=1;
+  if(tall.fracDepth>0) structureFactor+=Math.min(.24, tall.fracDepth*.10);
+  if(tall.rootCount>0) structureFactor+=.06;
+  if(tall.bigDelimiterCount>0) structureFactor+=.05;
+  if(tall.bigOpScriptCount>0) structureFactor+=.08;
+  else if(tall.bigOpCount>0) structureFactor+=.04;
+  if(tall.complexScriptCount>0) structureFactor+=.08;
+  if(tall.accentCount>0) structureFactor+=.03;
+  structureFactor=Math.min(1.38, structureFactor);
+  return Math.min(280, Math.max(18, Math.round(base*structureFactor*innerFactor)));
 }
 
 function prepareComposerEquationLatex(latex, key=''){
   let out=String(latex||'').trim();
   if(!out) return '';
   const innerScale=readMixedComposerInnerMathScale(key || activeComposerRenderKey);
-  if(innerScale>=105) out=out.replace(/\\tfrac/g,'\\frac');
-  if(innerScale>=115) out=out.replace(/\\frac/g,'\\dfrac');
+  out=out.replace(/^\\(?:displaystyle|textstyle|scriptstyle|scriptscriptstyle)\b\s*/,'');
+  if(innerScale<=100){
+    // Ask TeX for genuinely compact vector geometry instead of rendering a
+    // display-sized equation and shrinking the bitmap afterwards.
+    out=out.replace(/\\(?:dfrac|frac|tfrac)\b/g,'\\tfrac');
+  }else{
+    if(innerScale>=105) out=out.replace(/\\tfrac/g,'\\frac');
+    if(innerScale>=115) out=out.replace(/\\frac/g,'\\dfrac');
+  }
   const compact=isComposerCompactInlineLatex(out);
-  if(compact){
-    out=out.replace(/^\\displaystyle\b\s*/,'').replace(/^\\textstyle\b\s*/,'');
+  if(compact || innerScale<=100){
     out='\\textstyle '+out;
-  }else if(!/^\\displaystyle\b/.test(out)){
+  }else{
     out='\\displaystyle '+out;
   }
   return out;
@@ -4693,26 +4992,44 @@ function getComposerDerivativeTextSize(){ return Math.max(12, Math.round(readMix
 function getComposerDerivativePowerTextSize(){ return Math.max(8, Math.round(readMixedComposerTextSize(activeComposerRenderKey)*0.48)); }
 
 function getComposerFont(style, size=18){
-  const family=readMixedComposerRenderProfile(activeComposerRenderKey)==='official'
-    ? "'Times New Roman','Cambria Math','STIX Two Math','STIXGeneral',serif"
-    : "'Cambria Math','STIX Two Math','STIXGeneral','Times New Roman','Georgia','Noto Serif','Segoe UI Symbol',serif";
-  return `${style?.italic?'italic ' : ''}${style?.bold?'700 ' : ''}${Math.max(8,size)}px ${family}`;
+  const family="'Cambria Math','STIX Two Math','STIXGeneral','Times New Roman','Georgia','Noto Serif','Segoe UI Symbol',serif";
+  const inkWeight=getComposerEquationInkProfile(readMixedComposerEquationStroke(activeComposerRenderKey)).fontWeight;
+  const weight=style?.bold ? Math.max(700,inkWeight) : inkWeight;
+  return `${style?.italic?'italic ' : ''}${weight} ${Math.max(8,size)}px ${family}`;
 }
 
-
-function strokeCanvasText(ctx, text, x, y, color='#000', width=0.18){
-  if(readMixedComposerRenderProfile(activeComposerRenderKey)==='official') return;
-  ctx.save();
-  ctx.lineJoin='round';
-  ctx.lineCap='round';
-  ctx.strokeStyle=color;
-  ctx.lineWidth=width;
-  ctx.strokeText(text, x, y);
-  ctx.restore();
-}
 
 function getComposerRenderScale(){
   return Math.max(EXPORT_IMAGE_SCALE * 2, 8);
+}
+
+function drawComposerTextWithInk(ctx, text, x, y, color='#000', maxWidth=0){
+  const content=String(text||'');
+  if(!content) return;
+  const profile=getComposerEquationInkProfile(readMixedComposerEquationStroke(activeComposerRenderKey));
+  const sizeFactor=Math.max(.6, Math.min(1.6, readMixedComposerTextSize(activeComposerRenderKey)/20));
+  const spread=Math.max(0, Number(profile.textSpread)||0)*sizeFactor;
+  const offsets=profile.textPasses>=9
+    ? [[0,0],[-spread,0],[spread,0],[0,-spread],[0,spread],[-spread*.7,-spread*.7],[spread*.7,-spread*.7],[-spread*.7,spread*.7],[spread*.7,spread*.7]]
+    : profile.textPasses>=5
+      ? [[0,0],[-spread,0],[spread,0],[0,-spread],[0,spread]]
+      : [[0,0]];
+  ctx.save();
+  ctx.fillStyle=color;
+  ctx.globalAlpha=profile.opacity;
+  // Windows frequently aliases 500 to regular and both 650/800 to the same
+  // installed bold face. Sub-pixel fills on the 12x surface preserve smooth
+  // edges while keeping Bold and Extra Bold visibly distinct after downsample.
+  for(const [dx,dy] of offsets){
+    if(maxWidth>0) ctx.fillText(content,x+dx,y+dy,maxWidth);
+    else ctx.fillText(content,x+dx,y+dy);
+  }
+  ctx.restore();
+}
+
+function getHallmarkRuleWidth(baseWidth){
+  const profile=getComposerEquationInkProfile(readMixedComposerEquationStroke(activeComposerRenderKey));
+  return Math.max(.45, Number(baseWidth||1)*profile.ruleScale);
 }
 
 
@@ -4729,21 +5046,16 @@ function drawComposerBitmapText(ctx, text, x, baseline, font, fontSize, color='#
   if(!content) return 0;
   ctx.save();
   ctx.font=font;
+  ctx.fillStyle=color;
+  ctx.textBaseline='alphabetic';
+  ctx.textRendering='geometricPrecision';
+  if('fontKerning' in ctx) ctx.fontKerning='normal';
   const measured=Math.ceil(ctx.measureText(content).width);
+  const scale=Math.max(1, getMixedComposerRenderScale());
+  const drawX=Math.round(Number(x||0)*scale)/scale;
+  const drawY=Math.round(Number(baseline||0)*scale)/scale;
+  drawComposerTextWithInk(ctx, content, drawX, drawY, color, maxWidth);
   ctx.restore();
-  if(typeof buildCanvasTextBitmap==='function'){
-    const bitmap=buildCanvasTextBitmap(content, Math.max(maxWidth || (measured+8), 12), font, fontSize+4, color);
-    if(bitmap){
-      const dx=x-(bitmap.pad/bitmap.scale);
-      const dy=(baseline-fontSize)-(bitmap.pad/bitmap.scale);
-      const dw=bitmap.canvas.width/bitmap.scale;
-      const dh=bitmap.canvas.height/bitmap.scale;
-      ctx.drawImage(bitmap.canvas, dx, dy, dw, dh);
-      return measured;
-    }
-  }
-  strokeCanvasText(ctx, content, x, baseline, color, 0.12);
-  ctx.fillText(content, x, baseline);
   return measured;
 }
 
@@ -4867,7 +5179,7 @@ function drawComposerStructure(ctx, item, x, y, rowHeight){
     ctx.moveTo(x+Math.max(14, textW+3), arrowY);
     ctx.lineTo(x+Math.max(14, textW+3)-4, arrowY+3);
     ctx.strokeStyle='#000';
-    ctx.lineWidth=1.2;
+    ctx.lineWidth=getHallmarkRuleWidth(1.2);
     ctx.stroke();
     return;
   }
@@ -4913,7 +5225,7 @@ function drawComposerStructure(ctx, item, x, y, rowHeight){
     ctx.moveTo(exprX+1, cy+8);
     ctx.lineTo(exprX+exprW+5, cy+8);
     ctx.strokeStyle='#000';
-    ctx.lineWidth=1.4;
+    ctx.lineWidth=getHallmarkRuleWidth(1.4);
     ctx.stroke();
     drawComposerBitmapText(ctx, expr, exprX+3, cy+30, exprFont, mainSize, '#000');
     return;
@@ -4930,7 +5242,7 @@ function drawComposerStructure(ctx, item, x, y, rowHeight){
     ctx.moveTo(fx+1, cy2+16);
     ctx.lineTo(fx+fracW-1, cy2+16);
     ctx.strokeStyle='#000';
-    ctx.lineWidth=1.2;
+    ctx.lineWidth=getHallmarkRuleWidth(1.2);
     ctx.stroke();
     drawDerivativeTerm(ctx, fx+(fracW-bottomW)/2, cy2+31, parts.op, parts.power, parts.variable, item.style);
     ctx.font=getComposerFont(item.style,getComposerMainTextSize(item.style));
@@ -5104,17 +5416,7 @@ function finalizeComposerRow(items){
 }
 
 function getMixedComposerRenderScale(){
-  if(readMixedComposerRenderProfile(activeComposerRenderKey)==='official') return Math.max(6, getComposerRenderScale());
   return Math.max(12, getComposerRenderScale()+4);
-}
-
-function getComposerRowSurfacePad(key){
-  return key==='q' ? 11 : 9;
-}
-
-function getComposerRowWidth(row){
-  if(!row || !row.items || !row.items.length) return 0;
-  return row.items.reduce((m,item)=>Math.max(m, (item.x||0) + (item.width||0)), 0);
 }
 
 function drawComposerRowItems(ctx, row, originX, baseline){
@@ -5138,27 +5440,22 @@ function drawComposerRowItems(ctx, row, originX, baseline){
       const numW=ctx.measureText(item.num).width;
       const denW=ctx.measureText(item.den).width;
       if(variant==='slash' || variant==='linear'){
-        strokeCanvasText(ctx, item.num, fx, cy+16, '#000', 0.35);
-        ctx.fillText(item.num, fx, cy+16);
+        drawComposerTextWithInk(ctx,item.num,fx,cy+16);
         const slashX=fx+numW+4;
-        strokeCanvasText(ctx, '/', slashX, cy+16, '#000', 0.35);
-        ctx.fillText('/', slashX, cy+16);
-        strokeCanvasText(ctx, item.den, slashX+8, cy+16, '#000', 0.35);
-        ctx.fillText(item.den, slashX+8, cy+16);
+        drawComposerTextWithInk(ctx,'/',slashX,cy+16);
+        drawComposerTextWithInk(ctx,item.den,slashX+8,cy+16);
       } else {
         const numX=fx + (item.width-numW)/2;
-        strokeCanvasText(ctx, item.num, numX, cy+11, '#000', 0.35);
-        ctx.fillText(item.num, numX, cy+11);
+        drawComposerTextWithInk(ctx,item.num,numX,cy+11);
         ctx.beginPath();
         ctx.moveTo(fx+2, cy+15);
         ctx.lineTo(fx+item.width-2, cy+15);
         ctx.strokeStyle='#000';
-        ctx.lineWidth=variant==='small'?1.15:1.5;
+        ctx.lineWidth=getHallmarkRuleWidth(variant==='small'?1.15:1.5);
         ctx.stroke();
         const denX=fx + (item.width-denW)/2;
         const denY=cy+(variant==='small'?24:29);
-        strokeCanvasText(ctx, item.den, denX, denY, '#000', 0.35);
-        ctx.fillText(item.den, denX, denY);
+        drawComposerTextWithInk(ctx,item.den,denX,denY);
       }
       return;
     }
@@ -5186,27 +5483,15 @@ function drawComposerRowItems(ctx, row, originX, baseline){
     const supDepth=Number(style.supDepth)||0;
     const subDepth=Number(style.subDepth)||0;
     const yShift=supDepth>0 ? -(7+(supDepth-1)*5) : (subDepth>0 ? 5+(subDepth-1)*4 : 0);
-    const textX=originX+item.x;
-    const textY=baseline+yShift-fontSize;
-    if(typeof buildCanvasTextBitmap==='function' && item.text && !/^[\s]+$/.test(item.text)){
-      const bitmap=buildCanvasTextBitmap(item.text, Math.max(item.width+6, 12), font, fontSize+4, '#000');
-      if(bitmap){
-        const dx=textX-(bitmap.pad/bitmap.scale);
-        const dy=textY-(bitmap.pad/bitmap.scale);
-        const dw=bitmap.canvas.width/bitmap.scale;
-        const dh=bitmap.canvas.height/bitmap.scale;
-        ctx.drawImage(bitmap.canvas, dx, dy, dw, dh);
-      } else {
-        strokeCanvasText(ctx, item.text, textX, baseline+yShift, '#000', style.bold?0.32:0.12);
-        ctx.fillText(item.text, textX, baseline+yShift);
-      }
-    } else {
-      strokeCanvasText(ctx, item.text, textX, baseline+yShift, '#000', style.bold?0.32:0.12);
-      ctx.fillText(item.text, textX, baseline+yShift);
-    }
+    const renderScale=Math.max(1, getMixedComposerRenderScale());
+    const textX=Math.round((originX+item.x)*renderScale)/renderScale;
+    const textY=Math.round((baseline+yShift)*renderScale)/renderScale;
+    ctx.textRendering='geometricPrecision';
+    if('fontKerning' in ctx) ctx.fontKerning='normal';
+    drawComposerTextWithInk(ctx,item.text,textX,textY);
     if(style.underline && item.text.trim()){
       ctx.strokeStyle='#000';
-      ctx.lineWidth=1.2;
+      ctx.lineWidth=getHallmarkRuleWidth(1.2);
       const uy=baseline+yShift+2;
       ctx.beginPath();
       ctx.moveTo(textX, uy);
@@ -5216,133 +5501,34 @@ function drawComposerRowItems(ctx, row, originX, baseline){
   });
 }
 
-function hardenComposerRowSurface(surface){
-  try{
-    const ctx=surface.getContext('2d');
-    const img=ctx.getImageData(0,0,surface.width,surface.height);
-    const d=img.data;
-    for(let i=0;i<d.length;i+=4){
-      const a=d[i+3];
-      if(a<8) continue;
-      const lum=(d[i]*0.299)+(d[i+1]*0.587)+(d[i+2]*0.114);
-      if(lum>248){ d[i]=255; d[i+1]=255; d[i+2]=255; continue; }
-      if(lum>226){ d[i]=248; d[i+1]=248; d[i+2]=248; continue; }
-      if(lum>170){ d[i]=12; d[i+1]=12; d[i+2]=12; continue; }
-      if(lum>112){ d[i]=2; d[i+1]=2; d[i+2]=2; continue; }
-      d[i]=0; d[i+1]=0; d[i+2]=0;
-    }
-    ctx.putImageData(img,0,0);
-  }catch(_){ }
-  return surface;
-}
-
-function clearComposerRowPadding(surface, pad){
-  try{
-    const ctx=surface.getContext('2d');
-    const w=surface.width;
-    const h=surface.height;
-    const scale=Math.max(1, getMixedComposerRenderScale());
-    const p=Math.max(1, Math.round(pad*scale));
-    const img=ctx.getImageData(0,0,w,h);
-    const d=img.data;
-    for(let y=0;y<h;y++){
-      const edgeY=y<p || y>=h-p;
-      for(let x=0;x<w;x++){
-        if(!edgeY && x>=p && x<w-p) continue;
-        const i=(y*w+x)*4;
-        if(d[i+3]>0 && d[i]>246 && d[i+1]>246 && d[i+2]>246){
-          d[i+3]=0;
-        }
-      }
-    }
-    ctx.putImageData(img,0,0);
-  }catch(_){ }
-  return surface;
-}
-
-function renderComposerRowSurface(row, key){
-  const scale=getMixedComposerRenderScale();
-  const rowPad=getComposerRowSurfacePad(key);
-  const width=Math.max(1, Math.ceil(getComposerRowWidth(row) + rowPad*2));
-  const height=Math.max(1, Math.ceil(row.height + rowPad*2));
-  const surface=document.createElement('canvas');
-  surface.width=Math.max(1, Math.round(width*scale));
-  surface.height=Math.max(1, Math.round(height*scale));
-  surface.style.width=width+'px';
-  surface.style.height=height+'px';
-  const sctx=surface.getContext('2d');
-  sctx.scale(scale, scale);
-  sctx.imageSmoothingEnabled=true;
-  sctx.imageSmoothingQuality='high';
-  sctx.fillStyle='#fff';
-  sctx.fillRect(0,0,width,height);
-  sctx.lineJoin='round';
-  sctx.lineCap='round';
-  drawComposerRowItems(sctx, row, rowPad, rowPad + row.baseline);
-  // Keep the clean high-resolution anti-aliased row. Pixel thresholding here
-  // creates jagged edges and compounds when the surface is downscaled.
-  clearComposerRowPadding(surface, rowPad);
-  return { canvas:surface, width, height, pad:rowPad };
-}
-
 function getComposerEquationInkProfile(level){
   const ink=clampMixedComposerEquationStroke(level);
-  if(ink==='regular') return { radius:1, strength:.30 };
-  if(ink==='bold') return { radius:1, strength:.62 };
-  if(ink==='extra') return { radius:2, strength:.72 };
-  return { radius:0, strength:0 };
+  if(ink==='fine') return { opacity:.72, spread:0, passes:1, fontWeight:300, ruleScale:.72, textSpread:0, textPasses:1 };
+  if(ink==='light') return { opacity:.90, spread:0, passes:1, fontWeight:400, ruleScale:.88, textSpread:0, textPasses:1 };
+  if(ink==='regular') return { opacity:1, spread:.16, passes:5, fontWeight:500, ruleScale:1, textSpread:0, textPasses:1 };
+  if(ink==='bold') return { opacity:1, spread:.32, passes:5, fontWeight:650, ruleScale:1.35, textSpread:.08, textPasses:5 };
+  return { opacity:1, spread:.54, passes:9, fontWeight:800, ruleScale:1.72, textSpread:.18, textPasses:9 };
 }
 
-function applyEquationInkToAssetCanvas(canvas, level='light', renderProfile='hallmark'){
-  try{
-    const profile=getComposerEquationInkProfile(level);
-    if(!profile.radius || !profile.strength) return canvas;
-    const ctx=canvas.getContext('2d');
-    const img=ctx.getImageData(0,0,canvas.width,canvas.height);
-    const d=img.data;
-    const source=new Uint8ClampedArray(d);
-    const width=canvas.width;
-    const height=canvas.height;
-    const profileFactor=clampMixedComposerRenderProfile(renderProfile)==='official' ? .78 : 1;
-    const strength=profile.strength*profileFactor;
-    // Expand only the anti-aliased equation ink. Unlike the previous threshold
-    // pass, this preserves every original edge shade and never touches prose.
-    for(let y=0;y<height;y++){
-      for(let x=0;x<width;x++){
-        const index=(y*width+x)*4;
-        if(source[index+3]<8) continue;
-        const lum=(source[index]*.299)+(source[index+1]*.587)+(source[index+2]*.114);
-        const darkness=255-lum;
-        if(darkness<18) continue;
-        for(let dy=-profile.radius;dy<=profile.radius;dy++){
-          for(let dx=-profile.radius;dx<=profile.radius;dx++){
-            if(dx===0 && dy===0) continue;
-            const distance=Math.sqrt(dx*dx+dy*dy);
-            if(distance>profile.radius+.01) continue;
-            const nx=x+dx, ny=y+dy;
-            if(nx<0 || ny<0 || nx>=width || ny>=height) continue;
-            const neighbor=(ny*width+nx)*4;
-            const falloff=profile.radius===1 ? 1 : Math.max(.42,1-(distance-1)*.42);
-            const spreadDarkness=darkness*strength*falloff;
-            const currentLum=(d[neighbor]*.299)+(d[neighbor+1]*.587)+(d[neighbor+2]*.114);
-            if(255-currentLum>=spreadDarkness) continue;
-            const value=Math.max(0,Math.min(255,Math.round(255-spreadDarkness)));
-            d[neighbor]=Math.min(d[neighbor],value);
-            d[neighbor+1]=Math.min(d[neighbor+1],value);
-            d[neighbor+2]=Math.min(d[neighbor+2],value);
-            d[neighbor+3]=Math.max(d[neighbor+3],source[index+3]);
-          }
-        }
-      }
-    }
-    ctx.putImageData(img,0,0);
-  }catch(_){ }
-  return canvas;
+function drawEquationAssetWithInk(ctx, image, x, y, width, height, level='light', renderProfile='hallmark', rasterScale=1){
+  const profile=getComposerEquationInkProfile(level);
+  const density=Math.max(1, Number(rasterScale)||1);
+  const sizeFactor=Math.max(.55, Math.min(1.6, readMixedComposerMathSize(activeComposerRenderKey)/22));
+  const spread=profile.spread*density*sizeFactor;
+  const offsets=profile.passes>=9
+    ? [[0,0],[-spread,0],[spread,0],[0,-spread],[0,spread],[-spread*.7,-spread*.7],[spread*.7,-spread*.7],[-spread*.7,spread*.7],[spread*.7,spread*.7]]
+    : profile.passes>=5
+      ? [[0,0],[-spread,0],[spread,0],[0,-spread],[0,spread]]
+      : [[0,0]];
+  ctx.save();
+  ctx.globalAlpha=profile.opacity;
+  for(const [dx,dy] of offsets) ctx.drawImage(image,x+dx,y+dy,width,height);
+  ctx.restore();
 }
 
 function trimEquationAssetHorizontalPadding(canvas, padding=4){
   try{
-    const ctx=canvas?.getContext?.('2d');
+    const ctx=canvas?.getContext?.('2d', { willReadFrequently:true });
     if(!ctx || !canvas.width || !canvas.height) return canvas;
     const image=ctx.getImageData(0,0,canvas.width,canvas.height);
     const data=image.data;
@@ -5366,8 +5552,7 @@ function trimEquationAssetHorizontalPadding(canvas, padding=4){
     cropped.width=width;
     cropped.height=canvas.height;
     const cctx=cropped.getContext('2d');
-    cctx.fillStyle='#fff';
-    cctx.fillRect(0,0,cropped.width,cropped.height);
+    cctx.clearRect(0,0,cropped.width,cropped.height);
     cctx.drawImage(canvas,left,0,width,canvas.height,0,0,width,canvas.height);
     return cropped;
   }catch(_){
@@ -5375,12 +5560,32 @@ function trimEquationAssetHorizontalPadding(canvas, padding=4){
   }
 }
 
-async function renderMixedComposerCanvas(root, key){
+let mixedComposerRenderQueue=Promise.resolve();
+
+function renderMixedComposerCanvas(root, key, renderContext=null){
+  // The renderer still uses a small number of shared layout helpers keyed by
+  // activeComposerRenderKey. Capture immutable settings before queueing, then
+  // serialize jobs so UI changes and other records cannot leak across awaits.
+  const snapshot=renderContext
+    ? Object.freeze({...renderContext,key:key||renderContext.key||'q',renderProfile:'hallmark'})
+    : captureMixedComposerRenderContext(key);
+  const run=()=>renderMixedComposerCanvasQueuedWork(root,key,snapshot);
+  const pending=mixedComposerRenderQueue.then(run,run);
+  mixedComposerRenderQueue=pending.catch(()=>{});
+  return pending;
+}
+
+async function renderMixedComposerCanvasQueuedWork(root, key, renderContext){
   const prevComposerRenderKey=activeComposerRenderKey;
-  activeComposerRenderKey=key||'';
+  const prevComposerRenderContext=activeComposerRenderContext;
+  activeComposerRenderKey=renderContext?.key || key || '';
+  activeComposerRenderContext=renderContext || captureMixedComposerRenderContext(activeComposerRenderKey);
   try{
-  const cv=document.getElementById(key+'Canvas');
-  const maxWidth=Math.max(220, (cv?.width||760)-32);
+  // Font fallback during measurement followed by a late font swap changes
+  // glyph widths and produces cramped, uneven small text. Measure and paint
+  // only after the browser's font set has settled.
+  try{ if(document.fonts?.ready) await document.fonts.ready; }catch(_){ }
+  const maxWidth=Math.max(220, (Number(activeComposerRenderContext?.frameWidth)|| (key==='q' ? 640 : 500))-32);
   const lines=extractMixedComposerLines(root);
   const measureCanvas=document.createElement('canvas');
   const mctx=measureCanvas.getContext('2d');
@@ -5392,37 +5597,62 @@ async function renderMixedComposerCanvas(root, key){
     const renderProfile=readMixedComposerRenderProfile(activeComposerRenderKey);
     const cacheKey=preparedLatex+'|'+readMixedComposerMathSize(activeComposerRenderKey)+'|'+readMixedComposerInnerMathScale(activeComposerRenderKey)+'|'+equationInk+'|'+renderProfile;
     if(eqCache[cacheKey]) return eqCache[cacheKey];
-    let dataUrl='';
+    let vector=null;
     try{
-      dataUrl=await renderTexToDataUrl(preparedLatex);
+      vector=await renderTexToSvgImage(preparedLatex);
     }catch(err){
       console.warn('Composer equation render fallback:', preparedLatex, err);
       return null;
     }
-    const rawImg=await loadImg(dataUrl);
-    const naturalW=rawImg.naturalWidth||rawImg.width||120;
-    const naturalH=rawImg.naturalHeight||rawImg.height||36;
-    const targetH=getComposerEquationTargetHeight(activeComposerRenderKey, preparedLatex);
-    const verticalPad=getComposerEquationVerticalPadding(activeComposerRenderKey, preparedLatex, targetH);
-    const scale=targetH/Math.max(1,naturalH);
-    let assetW=Math.max(16, Math.round(naturalW*scale));
-    const mathH=Math.max(18, Math.round(naturalH*scale));
-    const assetH=mathH + verticalPad*2;
-    let eqCanvas=document.createElement('canvas');
-    eqCanvas.width=Math.max(1, assetW*2);
-    eqCanvas.height=Math.max(1, assetH*2);
-    const eqCtx=eqCanvas.getContext('2d');
-    eqCtx.imageSmoothingEnabled=true;
-    eqCtx.imageSmoothingQuality='high';
-    eqCtx.fillStyle='#fff';
-    eqCtx.fillRect(0,0,eqCanvas.width,eqCanvas.height);
-    eqCtx.drawImage(rawImg, 0, verticalPad*2, eqCanvas.width, mathH*2);
-    applyEquationInkToAssetCanvas(eqCanvas, equationInk, renderProfile);
-    const sourceWidth=eqCanvas.width;
-    eqCanvas=trimEquationAssetHorizontalPadding(eqCanvas, Math.max(3, Math.round(targetH*.12)));
-    assetW=Math.max(12, Math.round(assetW*(eqCanvas.width/Math.max(1,sourceWidth))));
-    eqCache[cacheKey]={ img:eqCanvas, width:assetW, height:assetH };
-    return eqCache[cacheKey];
+    try{
+      const rawImg=vector.img;
+      const naturalW=rawImg.naturalWidth||rawImg.width||120;
+      const naturalH=rawImg.naturalHeight||rawImg.height||36;
+      const targetH=getComposerEquationTargetHeight(activeComposerRenderKey, preparedLatex);
+      const verticalPad=getComposerEquationVerticalPadding(activeComposerRenderKey, preparedLatex, targetH);
+      const scale=targetH/Math.max(1,naturalH);
+      // Scale both axes uniformly. Minimum layout footprints are transparent
+      // padding, never independent width/height clamps that stretch small
+      // scripts, accents, or Math 14 compact atoms.
+      const mathW=Math.max(1, naturalW*scale);
+      const mathH=Math.max(1, naturalH*scale);
+      const horizontalPad=Math.max(0,(16-mathW)/2);
+      const assetW=mathW + horizontalPad*2;
+      const assetH=mathH + verticalPad*2;
+      const equationScale=getMixedComposerRenderScale();
+      let eqCanvas=document.createElement('canvas');
+      eqCanvas.width=Math.max(1, Math.round(assetW*equationScale));
+      eqCanvas.height=Math.max(1, Math.round(assetH*equationScale));
+      const eqCtx=eqCanvas.getContext('2d');
+      eqCtx.imageSmoothingEnabled=true;
+      eqCtx.imageSmoothingQuality='high';
+      eqCtx.clearRect(0,0,eqCanvas.width,eqCanvas.height);
+      // Rasterize MathJax's SVG once, directly at the final Hallmark HD size.
+      // Avoiding the former SVG -> PNG -> resized PNG chain keeps small glyph
+      // stems smooth when the Math size selector is lowered.
+      drawEquationAssetWithInk(
+        eqCtx,
+        rawImg,
+        horizontalPad*equationScale,
+        verticalPad*equationScale,
+        mathW*equationScale,
+        mathH*equationScale,
+        equationInk,
+        renderProfile,
+        equationScale
+      );
+      eqCanvas=trimEquationAssetHorizontalPadding(eqCanvas, Math.max(4*equationScale, Math.round(targetH*.12*equationScale)));
+      // Keep the exact post-trim physical/logical ratio. Rounding here and then
+      // drawing onto another 12x surface caused a hidden second resample.
+      eqCache[cacheKey]={
+        img:eqCanvas,
+        width:eqCanvas.width/equationScale,
+        height:eqCanvas.height/equationScale
+      };
+      return eqCache[cacheKey];
+    }finally{
+      URL.revokeObjectURL(vector.url);
+    }
   }
   async function getInlineImageAsset(src, widthHint, heightHint){
     const keyId=`${src}|${widthHint}|${heightHint}`;
@@ -5471,7 +5701,7 @@ async function renderMixedComposerCanvas(root, key){
         }
         if(rowWidth>0 && rowWidth+asset.width>maxWidth) pushRow();
         const scale=Math.min(1, maxWidth/Math.max(1,asset.width));
-        const fitted={...asset,width:Math.max(16,Math.round(asset.width*scale)),height:Math.max(18,Math.round(asset.height*scale))};
+        const fitted=scale<1 ? {...asset,width:asset.width*scale,height:asset.height*scale} : asset;
         rowItems.push({ type:'eq', x:rowWidth, width:fitted.width, height:fitted.height, img:fitted.img, latex:seg.latex });
         rowWidth+=fitted.width+inlineMathGap;
         rowHeight=Math.max(rowHeight, fitted.height+8);
@@ -5502,7 +5732,7 @@ async function renderMixedComposerCanvas(root, key){
             if(!asset) throw new Error('Equation asset fallback');
             if(rowWidth>0 && rowWidth+asset.width>maxWidth) pushRow();
             const scale=Math.min(1, maxWidth/Math.max(1,asset.width));
-            const fitted={...asset,width:Math.max(16,Math.round(asset.width*scale)),height:Math.max(18,Math.round(asset.height*scale))};
+            const fitted=scale<1 ? {...asset,width:asset.width*scale,height:asset.height*scale} : asset;
             rowItems.push({ type:'eq', x:rowWidth, width:fitted.width, height:fitted.height, img:fitted.img, latex:seg.latex });
             rowWidth+=fitted.width+inlineMathGap;
             rowHeight=Math.max(rowHeight, fitted.height+8);
@@ -5564,9 +5794,7 @@ async function renderMixedComposerCanvas(root, key){
     }
     pushRow();
   }
-  const margin=key==='q' ? 9 : 3;
-  const rowSurfacePad=getComposerRowSurfacePad(key);
-  const outerMargin=Math.max(margin, rowSurfacePad);
+  const outerMargin=key==='q' ? 11 : 9;
   const gap=key==='q' ? 6 : 4;
   const width=maxWidth + outerMargin*2;
   const minBlockHeight=key==='q' ? 44 : 30;
@@ -5577,27 +5805,26 @@ async function renderMixedComposerCanvas(root, key){
   canvas.height=Math.round(height*scale);
   canvas.style.width=width+'px';
   canvas.style.height=height+'px';
+  canvas.dataset.composerOuterMargin=String(outerMargin);
   const ctx=canvas.getContext('2d');
   ctx.scale(scale, scale);
   ctx.imageSmoothingEnabled=true;
   ctx.imageSmoothingQuality='high';
+  ctx.textRendering='geometricPrecision';
+  if('fontKerning' in ctx) ctx.fontKerning='normal';
   ctx.fillStyle='#fff';
   ctx.fillRect(0,0,width,height);
   ctx.lineJoin='round';
   ctx.lineCap='round';
   let y=outerMargin;
   rows.forEach(row=>{
-    try{
-      const surface=renderComposerRowSurface(row, key);
-      ctx.drawImage(surface.canvas, outerMargin - surface.pad, y - surface.pad, surface.width, surface.height);
-    }catch(err){
-      drawComposerRowItems(ctx, row, outerMargin, y + row.baseline);
-    }
+    drawComposerRowItems(ctx, row, outerMargin, y + row.baseline);
     y+=row.height+gap;
   });
   return canvas;
   } finally {
     activeComposerRenderKey=prevComposerRenderKey;
+    activeComposerRenderContext=prevComposerRenderContext;
   }
 }
 
@@ -5628,15 +5855,16 @@ function getComposerApplyCanvasSource(source){
   return canvas;
 }
 
-function getComposerSurfaceHorizontalInkCrop(source, padLogical=14){
+function getComposerSurfaceInkCrop(source, padLogical=14){
   const canvas=getComposerApplyCanvasSource(source);
   const scale=getComposerApplySourceScale(source);
+  const structuralMargin=Number(source?.dataset?.composerOuterMargin);
   const width=canvas.width||1;
   const height=canvas.height||1;
   try{
     const ctx=canvas.getContext('2d');
     const data=ctx.getImageData(0,0,width,height).data;
-    let minX=width, maxX=-1;
+    let minX=width, maxX=-1, minY=height, maxY=-1;
     for(let y=0;y<height;y++){
       for(let x=0;x<width;x++){
         const index=(y*width+x)*4;
@@ -5647,6 +5875,8 @@ function getComposerSurfaceHorizontalInkCrop(source, padLogical=14){
         if(lum<246){
           minX=Math.min(minX,x);
           maxX=Math.max(maxX,x);
+          minY=Math.min(minY,y);
+          maxY=Math.max(maxY,y);
         }
       }
     }
@@ -5654,14 +5884,22 @@ function getComposerSurfaceHorizontalInkCrop(source, padLogical=14){
       const padPx=Math.max(4, Math.round(padLogical*scale));
       const sx=Math.max(0, minX-padPx);
       const right=Math.min(width, maxX+padPx+1);
-      return { source:canvas, sx, sy:0, sw:Math.max(1,right-sx), sh:height, scale };
+      const padYPx=Math.max(3, Math.round(6*scale));
+      // A Hallmark surface can begin with intentional blank Composer rows used
+      // as a top figure slot. Remove only its known outer margin; preserve those
+      // authored rows instead of cropping directly to the first ink pixel.
+      const sy=Number.isFinite(structuralMargin) && structuralMargin>=0
+        ? Math.max(0,Math.min(minY,Math.round(structuralMargin*scale)))
+        : Math.max(0,minY-padYPx);
+      const bottom=Math.min(height,maxY+padYPx+1);
+      return { source:canvas, sx, sy, sw:Math.max(1,right-sx), sh:Math.max(1,bottom-sy), scale };
     }
   }catch(_){ }
   return { source:canvas, sx:0, sy:0, sw:width, sh:height, scale };
 }
 
 function prepareComposerSurfaceForCanvasApply(source, key){
-  const crop=getComposerSurfaceHorizontalInkCrop(source, key==='q' ? 18 : 14);
+  const crop=getComposerSurfaceInkCrop(source, key==='q' ? 18 : 14);
   const scale=Math.max(1, crop.scale||1);
   return {
     source:crop.source,
@@ -5675,9 +5913,11 @@ function prepareComposerSurfaceForCanvasApply(source, key){
 }
 
 function addImageFigureDirect(key, dataUrl){
+  const expectedQuestion=cur;
+  const expectedCanvas=document.getElementById(key+'Canvas');
   loadImg(dataUrl).then(async img=>{
     const cv=document.getElementById(key+'Canvas');
-    if(!cv) return;
+    if(!cv || !isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas)) return;
     const figs=getFigureStore(key);
     const maxW=Math.max(180, cv.width-32);
     let drawW=img.naturalWidth||img.width||maxW;
@@ -5701,20 +5941,27 @@ function addImageFigureDirect(key, dataUrl){
     renderFigureOverlays(key);
     appendFigureMarker(key);
     if(ensureSourceBackedFrame(key) && typeof syncCanvasAssetForKeyAsync==='function'){
-      await syncCanvasAssetForKeyAsync(key, { allowBitmapFallback:false });
+      const synced=await syncCanvasAssetForKeyAsync(key, { allowBitmapFallback:false, expectedQuestion, expectedCanvas });
+      if(synced===false || !isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas)) return;
       saveLS();
     }else{
+      if(!isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas)) return;
       saveCanvasToQ(key);
     }
     renderPaper();
   }).catch(()=>{
-    showNotice('Composed statement could not be inserted into the frame.', 'Composer');
+    if(isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas)){
+      showNotice('Composed statement could not be inserted into the frame.', 'Composer');
+    }
   });
 }
 
-async function applyMixedComposerSurfaceToCanvas(key, source){
+async function applyMixedComposerSurfaceToCanvas(key, source, opts={}){
   const cv=document.getElementById(key+'Canvas');
   if(!cv) throw new Error('Target canvas was not found');
+  const expectedQuestion=opts.expectedQuestion || cur;
+  const expectedCanvas=opts.expectedCanvas || cv;
+  if(!isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas)) return false;
   const baseHeight=getBaseCanvasHeight(key);
   const pad=key==='q' ? 8 : 4;
   const preparedSource=prepareComposerSurfaceForCanvasApply(source, key);
@@ -5722,8 +5969,8 @@ async function applyMixedComposerSurfaceToCanvas(key, source){
   const srcH=preparedSource.logicalHeight||baseHeight;
   const maxDrawW=Math.max(180, cv.width-pad*2);
   const drawScale=Math.min(1, maxDrawW/Math.max(1,srcW));
-  const drawW=Math.max(60, Math.round(srcW*drawScale));
-  const drawH=Math.max(key==='q' ? 28 : 18, Math.round(srcH*drawScale));
+  const drawW=Math.max(1, srcW*drawScale);
+  const drawH=Math.max(1, srcH*drawScale);
   let burnedLayerHeight=0;
   const burnedLayer=getBurnedFigureImage(key);
   if(burnedLayer){
@@ -5732,13 +5979,14 @@ async function applyMixedComposerSurfaceToCanvas(key, source){
       burnedLayerHeight=(layerImg.naturalHeight||layerImg.height||0)/getBurnedFigureScale(key);
     }catch(_){ }
   }
+  if(!isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas)) return false;
   burnedLayerHeight=Math.max(burnedLayerHeight, getBurnedFigureBottom(key));
   const figs=getFigureStore(key);
   // Composer updates replace the text bitmap while keeping placed figures in
   // their canvas coordinates, so blank Composer space can act as a figure slot.
-  const preservedFigures=figs.filter(fig=>fig && fig.src);
+  const preservedFigures=figs.filter(fig=>fig && (fig.src || String(fig.sourceSvg||'').trim()));
   const figureBottom=preservedFigures.reduce((bottom,fig)=>Math.max(bottom,(+fig.y||0)+(+fig.h||0)),0);
-  const targetH=Math.max(baseHeight, Math.min(2200, Math.max(drawH+pad*2, cv.height, burnedLayerHeight, figureBottom+12)));
+  const targetH=Math.ceil(Math.max(baseHeight, Math.min(2200, Math.max(drawH+pad*2, cv.height, burnedLayerHeight, figureBottom+12))));
   cv.height=targetH;
   const ctx=cv.getContext('2d');
   ctx.fillStyle='#fff';
@@ -5752,7 +6000,7 @@ async function applyMixedComposerSurfaceToCanvas(key, source){
   ctx.imageSmoothingQuality='high';
   ctx.globalCompositeOperation='source-over';
   const drawX=pad;
-  const drawY=key==='q' ? pad : Math.max(pad, Math.round((targetH-drawH)/2));
+  const drawY=pad;
   ctx.drawImage(
     preparedSource.source,
     preparedSource.sx,
@@ -5766,12 +6014,24 @@ async function applyMixedComposerSurfaceToCanvas(key, source){
   );
   pushHistory(key);
   if((getBurnedFigureStore(key).length || getBurnedFigureImage(key)) && typeof syncCanvasAssetForKeyAsync==='function'){
-    await syncCanvasAssetForKeyAsync(key, { allowBitmapFallback:false });
+    const synced=await syncCanvasAssetForKeyAsync(key, { allowBitmapFallback:false, expectedQuestion, expectedCanvas });
+    if(synced===false && isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas)){
+      throw new Error('Hallmark frame assets could not be synchronized safely.');
+    }
   }else{
+    if(!isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas)) return false;
     saveCanvasToQ(key);
   }
+  if(!isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas)) return false;
   renderPaper();
   autoAdjustCanvasPane(key);
+  renderComposerSourceOverlay(key, preparedSource, {
+    x:drawX,
+    y:drawY,
+    width:drawW,
+    height:drawH
+  });
+  return true;
 }
 
 function applyMixedComposerToCanvas(key, dataUrl){
@@ -5808,14 +6068,14 @@ function openMixedComposer(key){
           <label class="field" style="display:inline-flex;align-items:center;gap:6px;margin:0 4px;min-width:auto;border:0;padding:0">Text <select id="mixedComposerTextSize" class="input" style="width:82px;padding:6px 8px">${getMixedComposerTextOptionsHTML(readMixedComposerTextSize(key))}</select></label>
           <label class="field" style="display:inline-flex;align-items:center;gap:6px;margin:0 4px;min-width:auto;border:0;padding:0">Math <select id="mixedComposerMathSize" class="input" style="width:82px;padding:6px 8px">${getMixedComposerMathOptionsHTML(readMixedComposerMathSize(key))}</select></label>
           <label class="field" style="display:inline-flex;align-items:center;gap:6px;margin:0 4px;min-width:auto;border:0;padding:0">Inner <select id="mixedComposerInnerMathScale" class="input" style="width:92px;padding:6px 8px">${getMixedComposerInnerMathOptionsHTML(readMixedComposerInnerMathScale(key))}</select></label>
-          <label class="field" style="display:inline-flex;align-items:center;gap:6px;margin:0 4px;min-width:auto;border:0;padding:0">Canvas style <select id="mixedComposerRenderProfile" class="input" style="width:122px;padding:6px 8px">${getMixedComposerRenderProfileOptionsHTML(readMixedComposerRenderProfile(key))}</select></label>
-          <label class="field" style="display:inline-flex;align-items:center;gap:6px;margin:0 4px;min-width:auto;border:0;padding:0">Equation ink <select id="mixedComposerEquationStroke" class="input" style="width:104px;padding:6px 8px">${getMixedComposerEquationStrokeOptionsHTML(readMixedComposerEquationStroke(key))}</select></label>
+          <span class="composer-profile-badge" title="High-resolution canvas rendering">Hallmark HD</span>
+          <label class="field" style="display:inline-flex;align-items:center;gap:6px;margin:0 4px;min-width:auto;border:0;padding:0">Hallmark ink <select id="mixedComposerEquationStroke" class="input" style="width:104px;padding:6px 8px">${getMixedComposerEquationStrokeOptionsHTML(readMixedComposerEquationStroke(key))}</select></label>
           <div class="mixed-composer-actions">
             <button class="btn" type="button" onclick="adjustMixedComposerEditorHeight(80)">Expand</button>
             <button class="btn" type="button" onclick="adjustMixedComposerEditorHeight(-80)">Contract</button>
             <button class="btn pri composer-apply-btn" type="button" id="mixedComposerApplyTopBtn">Apply</button>
           </div>
-          <span class="modal-note">Canvas style: Hallmark HD keeps the dark high-DPI finish. Official paper uses a cleaner exam-paper text/equation print. Equation ink changes both editable equation outlines and the final canvas equation asset.</span>
+          <span class="modal-note">Hallmark HD renders text and equations once at final resolution. Hallmark ink gives Fine, Light, Regular, Bold, and Extra bold visibly different print weights.</span>
         </div>
         <div class="field">
           <label>Statement And Equation Block</label>
@@ -5888,8 +6148,6 @@ function openMixedComposer(key){
     if(mathSizeSel){ mathSizeSel.value=String(readMixedComposerMathSize(key)); mathSizeSel.onchange=()=>updateMixedComposerMathSize(mathSizeSel.value, key); }
     const innerMathSel=document.getElementById('mixedComposerInnerMathScale');
     if(innerMathSel){ innerMathSel.value=String(readMixedComposerInnerMathScale(key)); innerMathSel.onchange=()=>updateMixedComposerInnerMathScale(innerMathSel.value, key); }
-    const renderProfileSel=document.getElementById('mixedComposerRenderProfile');
-    if(renderProfileSel){ renderProfileSel.value=readMixedComposerRenderProfile(key); renderProfileSel.onchange=()=>updateMixedComposerRenderProfile(renderProfileSel.value, key); }
     const equationStrokeSel=document.getElementById('mixedComposerEquationStroke');
     if(equationStrokeSel){ equationStrokeSel.value=readMixedComposerEquationStroke(key); equationStrokeSel.onchange=()=>updateMixedComposerEquationStroke(equationStrokeSel.value, key); }
     initMixedComposerResizeUI();
@@ -5940,6 +6198,13 @@ function openMixedComposer(key){
   saveMixedComposerRange();
   const applyBtn=document.getElementById('mixedComposerApplyBtn');
   const applyTopBtn=document.getElementById('mixedComposerApplyTopBtn');
+  const applySettingControls=['mixedComposerTextSize','mixedComposerMathSize','mixedComposerInnerMathScale','mixedComposerEquationStroke']
+    .map(id=>document.getElementById(id))
+    .filter(Boolean);
+  const applyLockControls=[
+    document.getElementById('appModalClose'),
+    ...document.querySelectorAll('.mixed-composer .modal-actions button:not(.composer-apply-btn)')
+  ].filter(Boolean);
   const setApplyBusy=(busy)=>{
     [applyBtn,applyTopBtn].forEach(btn=>{
       if(!btn) return;
@@ -5948,60 +6213,123 @@ function openMixedComposer(key){
       btn.classList.toggle('is-applying', !!busy);
       btn.textContent=busy ? 'Applying...' : btn.dataset.idleText;
     });
+    applySettingControls.forEach(control=>{
+      if(busy){
+        control.dataset.applyWasDisabled=control.disabled ? '1' : '0';
+        control.disabled=true;
+      }else{
+        control.disabled=control.dataset.applyWasDisabled==='1';
+        delete control.dataset.applyWasDisabled;
+      }
+    });
+    applyLockControls.forEach(control=>{
+      if(busy){
+        control.dataset.applyWasDisabled=control.disabled ? '1' : '0';
+        control.disabled=true;
+      }else{
+        control.disabled=control.dataset.applyWasDisabled==='1';
+        delete control.dataset.applyWasDisabled;
+      }
+    });
+    const composerEditor=editor;
+    if(composerEditor){
+      if(busy){
+        composerEditor.dataset.applyWasContentEditable=composerEditor.getAttribute('contenteditable') ?? '';
+        composerEditor.setAttribute('contenteditable','false');
+      }else{
+        const previous=composerEditor.dataset.applyWasContentEditable;
+        if(previous==='') composerEditor.removeAttribute('contenteditable');
+        else if(previous!=null) composerEditor.setAttribute('contenteditable',previous);
+        delete composerEditor.dataset.applyWasContentEditable;
+      }
+    }
   };
   const runApply=async ()=>{
     const editorEl=document.getElementById('mixedComposerEditor');
     if(!editorEl) return;
+    const targetQuestion=cur;
+    const targetCanvas=document.getElementById(key+'Canvas');
+    if(!targetQuestion || !targetCanvas) return;
+    const ownsApplyTarget=()=>isCanvasRenderTargetCurrent(key,targetQuestion,targetCanvas)
+      && document.getElementById('mixedComposerEditor')===editorEl;
     syncMixedComposerFractionInputs(editorEl);
     cleanupMixedComposerFormatTails(editorEl);
-    const plainText=getMixedComposerPlainText(editorEl);
+    // Freeze source DOM and every render selector as one atomic Apply record.
+    // The queued renderer waits for fonts, so reading the live editor after an
+    // await could otherwise save different source/settings than it painted.
+    const sourceHTML=editorEl.innerHTML;
+    const renderRoot=editorEl.cloneNode(true);
+    const renderContext=captureMixedComposerRenderContext(key);
+    const plainText=getMixedComposerPlainText(renderRoot);
     if(!plainText){
       showNotice('Please type the statement first.', 'Composer');
       return;
     }
     setApplyBusy(true);
     try{
-      const surface=await renderMixedComposerCanvas(editorEl, key);
-      const composerSize=readMixedComposerTextSize(key);
-      const composerMathSize=readMixedComposerMathSize(key);
-      const composerInnerMathScale=readMixedComposerInnerMathScale(key);
-      const composerEquationInk=readMixedComposerEquationStroke(key);
-      const composerRenderProfile=readMixedComposerRenderProfile(key);
-      if(cur){
+      const surface=await renderMixedComposerCanvas(renderRoot, key, renderContext);
+      if(!ownsApplyTarget()){
+        setApplyBusy(false);
+        if(document.getElementById('mixedComposerEditor')===editorEl){
+          showNotice('The selected question changed before rendering finished, so nothing was applied.', 'Composer');
+        }
+        return;
+      }
+      const composerSize=renderContext.textSize;
+      const composerMathSize=renderContext.mathSize;
+      const composerInnerMathScale=renderContext.innerMathScale;
+      const composerEquationInk=renderContext.equationInk;
+      const composerRenderProfile=renderContext.renderProfile;
+      if(targetQuestion){
         if(key==='q'){
-          cur.questionText=plainText;
-          cur.questionComposerHTML=editorEl.innerHTML;
-          cur.questionComposerTextSize=composerSize;
-          cur.questionComposerMathSize=composerMathSize;
-          cur.questionComposerInnerMathScale=composerInnerMathScale;
-          cur.questionComposerEquationInk=composerEquationInk;
-          cur.questionComposerRenderProfile=composerRenderProfile;
+          targetQuestion.questionText=plainText;
+          targetQuestion.questionComposerHTML=sourceHTML;
+          targetQuestion.questionComposerTextSize=composerSize;
+          targetQuestion.questionComposerMathSize=composerMathSize;
+          targetQuestion.questionComposerInnerMathScale=composerInnerMathScale;
+          targetQuestion.questionComposerEquationInk=composerEquationInk;
+          targetQuestion.questionComposerRenderProfile=composerRenderProfile;
           clearFramePdfTextOverride(key);
           markFrameAsSource(key);
         }
         else if(key.startsWith('opt')){
           const idx=+key.slice(3);
-          if(cur.options[idx]){
-            cur.options[idx].text=plainText;
-            cur.options[idx].composerHTML=editorEl.innerHTML;
-            cur.options[idx].composerTextSize=composerSize;
-            cur.options[idx].composerMathSize=composerMathSize;
-            cur.options[idx].composerInnerMathScale=composerInnerMathScale;
-            cur.options[idx].composerEquationInk=composerEquationInk;
-            cur.options[idx].composerRenderProfile=composerRenderProfile;
+          if(targetQuestion.options[idx]){
+            targetQuestion.options[idx].text=plainText;
+            targetQuestion.options[idx].composerHTML=sourceHTML;
+            targetQuestion.options[idx].composerTextSize=composerSize;
+            targetQuestion.options[idx].composerMathSize=composerMathSize;
+            targetQuestion.options[idx].composerInnerMathScale=composerInnerMathScale;
+            targetQuestion.options[idx].composerEquationInk=composerEquationInk;
+            targetQuestion.options[idx].composerRenderProfile=composerRenderProfile;
             clearFramePdfTextOverride(key);
             markFrameAsSource(key);
           }
         }
       }
-      await applyMixedComposerSurfaceToCanvas(key, surface);
+      const applied=await applyMixedComposerSurfaceToCanvas(key, surface, {
+        expectedQuestion:targetQuestion,
+        expectedCanvas:targetCanvas
+      });
+      if(applied===false || !ownsApplyTarget()){
+        setApplyBusy(false);
+        if(document.getElementById('mixedComposerEditor')===editorEl){
+          showNotice('The selected question changed before the canvas update finished, so the result was not committed.', 'Composer');
+        }
+        return;
+      }
       syncPdfSourceFields();
       mixedComposerDraftHTML='';
+      setApplyBusy(false);
       closeModal();
       toast('Statement written to canvas');
     }catch(err){
-      showNotice(err?.message || 'Composer render failed.', 'Composer');
       setApplyBusy(false);
+      if(document.getElementById('mixedComposerEditor')===editorEl){
+        showNotice(err?.message || 'Composer render failed.', 'Composer');
+      }else{
+        console.warn('Composer render failed after its editor was replaced:', err);
+      }
     }
   };
   if(applyBtn) applyBtn.onclick=runApply;
@@ -6110,6 +6438,10 @@ async function equationStudioRenderToFigure(key){
     showNotice('Please build an equation first.', 'Equation Studio');
     return;
   }
+  const expectedQuestion=cur;
+  const expectedCanvas=document.getElementById(key+'Canvas');
+  const ownsTarget=()=>isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas);
+  if(!expectedQuestion || !expectedCanvas || !ownsTarget()) return;
   const btn=document.getElementById('eqStudioRenderBtn');
   if(btn){
     btn.disabled=true;
@@ -6117,11 +6449,15 @@ async function equationStudioRenderToFigure(key){
   }
   try{
     const dataUrl=await renderTexToDataUrl(value);
+    if(!ownsTarget()){
+      if(btn?.isConnected){ btn.disabled=false; btn.textContent='Render To Figure'; }
+      return;
+    }
     closeModal();
-    placeRenderedEquationImage(key, dataUrl);
+    placeRenderedEquationImage(key, dataUrl, {expectedQuestion,expectedCanvas});
     toast('Equation rendered as figure');
   }catch(err){
-    showNotice(err?.message || 'Equation rendering failed.', 'Equation Studio');
+    if(ownsTarget()) showNotice(err?.message || 'Equation rendering failed.', 'Equation Studio');
     if(btn){
       btn.disabled=false;
       btn.textContent='Render To Figure';
@@ -6551,6 +6887,10 @@ async function applyImagePlacement(key, mode='replace'){
   const img=box?.querySelector('img');
   const cv=document.getElementById(key+'Canvas');
   if(!box||!img||!cv) return;
+  const expectedQuestion=cur;
+  const expectedCanvas=cv;
+  const ownsTarget=()=>isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas);
+  if(!expectedQuestion || !ownsTarget()) return;
   const metrics=getCanvasOverlayMetrics(key);
   if(!metrics) return;
   const figs=getFigureStore(key);
@@ -6563,6 +6903,7 @@ async function applyImagePlacement(key, mode='replace'){
   const drawH=Math.max(1, Math.round((+box.dataset.logicalHeight||0) || (imgCssH>0 ? imgCssH*metrics.scaleY : fit.drawH)));
   const figureMetadata=(box._figureMetadata && typeof box._figureMetadata==='object') ? box._figureMetadata : {};
   const trimmed=await trimPlainPlacedImageWhitespace(img, box, figureMetadata);
+  if(!ownsTarget() || !box.isConnected) return;
   const figSrc=trimmed?.src || img.src;
   const finalDrawW=trimmed?.logicalWidth || drawW;
   const finalDrawH=trimmed?.logicalHeight || drawH;
@@ -6605,9 +6946,11 @@ async function applyImagePlacement(key, mode='replace'){
   renderFigureOverlays(key);
   appendFigureMarker(key);
   if(ensureSourceBackedFrame(key) && typeof syncCanvasAssetForKeyAsync==='function'){
-    await syncCanvasAssetForKeyAsync(key, { allowBitmapFallback:false });
+    const synced=await syncCanvasAssetForKeyAsync(key, { allowBitmapFallback:false, expectedQuestion, expectedCanvas });
+    if(synced===false || !ownsTarget()) return;
     saveLS();
   }else{
+    if(!ownsTarget()) return;
     saveCanvasToQ(key);
   }
   renderPaper();
@@ -8247,17 +8590,28 @@ function applyPdfPageNumbersToAllPages(doc, pageW, pageH){
   }
 }
 
-function loadImg(src){
+function loadImg(src, timeoutMs=10000){
   return new Promise((resolve,reject)=>{
     const img=new Image();
-    img.onload=()=>resolve(img);
-    img.onerror=reject;
-    img.src=src;
+    let settled=false;
+    const finish=(ok,value)=>{
+      if(settled) return;
+      settled=true;
+      clearTimeout(timer);
+      img.onload=null;
+      img.onerror=null;
+      if(ok) resolve(value);
+      else reject(value instanceof Error ? value : new Error('Image could not be loaded'));
+    };
+    const timer=setTimeout(()=>finish(false,new Error('Image load timed out')),Math.max(500,Number(timeoutMs)||10000));
+    img.onload=()=>finish(true,img);
+    img.onerror=err=>finish(false,err);
+    try{ img.src=src; }catch(err){ finish(false,err); }
   });
 }
 
 async function composeFiguresForPDF(figs, legends=[]){
-  const list=(Array.isArray(figs)?figs:[]).filter(fig=>fig && fig.src);
+  const list=(Array.isArray(figs)?figs:[]).filter(hasRenderableFigureSource);
   const legendList=(Array.isArray(legends)?legends:[]).filter(lg=>String(lg?.text||'').trim());
   if(!list.length && !legendList.length) return null;
   const measureCanvas=document.createElement('canvas');
@@ -8301,7 +8655,7 @@ async function composeFiguresForPDF(figs, legends=[]){
   ctx.fillRect(0,0,width,height);
   for(const fig of list){
     try{
-      const img=await loadImg(fig.src);
+      const img=await loadImg(getFigureDisplaySource(fig));
       const crop=getFigureCrop(fig);
       const sx=img.width*crop.l;
       const sy=img.height*crop.t;
@@ -8650,13 +9004,13 @@ function buildSelectableCanvasFigureStack(normalized, boxW, boxH, className='lp-
     if(circuitSvg){
       return '<span class="lp-canvas-circuit" aria-label="Placed figure '+(index+1)+'" style="left:'+x+'px;top:'+y+'px;width:'+Math.round(width)+'px;height:'+Math.round(height)+'px">'+circuitSvg+'</span>';
     }
-    return '<img class="lp-canvas-figure" src="'+escLinkedPreviewHTML(fig.src)+'" alt="Placed figure '+(index+1)+'" style="left:'+x+'px;top:'+y+'px;width:'+Math.round(width)+'px;height:'+Math.round(height)+'px">';
+    return '<img class="lp-canvas-figure" src="'+escLinkedPreviewHTML(getFigureDisplaySource(fig))+'" alt="Placed figure '+(index+1)+'" style="left:'+x+'px;top:'+y+'px;width:'+Math.round(width)+'px;height:'+Math.round(height)+'px">';
   }).join('');
   return '<span class="'+className+'" style="width:'+Math.max(1,Math.round(boxW))+'px;height:'+Math.max(1,Math.round(boxH))+'px">'+html+'</span>';
 }
 
 function getSelectableCanvasFigureLayer(figures){
-  const list=(Array.isArray(figures) ? figures : []).filter(fig=>fig && /^data:image\//i.test(String(fig.src||'')));
+  const list=(Array.isArray(figures) ? figures : []).filter(fig=>/^data:image\//i.test(getFigureDisplaySource(fig)));
   if(!list.length) return {html:'', flowHtml:'', height:0, flowHeight:0};
   let minLeft=Infinity,minTop=Infinity,maxRight=0,maxBottom=0;
   const normalized=list.map(fig=>{
@@ -9639,8 +9993,8 @@ function openCanvasTextBox(key, boxX, boxY, x, y){
   }
   box.innerHTML=`
     <div class="canvas-textbox-head">
-      <div class="canvas-textbox-meta">${mode==='legend'?'Legend editor for figure label':'Paragraph editor with fixed left alignment.'}</div>
-      <div class="canvas-textbox-handle">${mode==='legend'?'Drag to position':'Middle-left aligned'}</div>
+      <div class="canvas-textbox-meta">${mode==='legend'?'Legend editor for figure label':'Paragraph editor with fixed top-left alignment.'}</div>
+      <div class="canvas-textbox-handle">${mode==='legend'?'Drag to position':'Top-left aligned'}</div>
     </div>
     <textarea id="${key}FloatingText" spellcheck="true" placeholder="Enter text..."></textarea>
     ${mode!=='legend' ? `<div class="selection-tools" id="${key}SelectionTools" hidden>
@@ -9808,9 +10162,10 @@ function saveCanvasToQ(key){
   tctx.drawImage(cv,0,0,cv.width,logicalH,0,0,temp.width,temp.height);
   const figs=getFigureStore(key);
   figs.forEach(fig=>{
-    const img=[...(wrap?.querySelectorAll('.canvas-imagebox img, .figure-item img')||[])].find(node=>node.getAttribute('src')===fig.src) || new Image();
+    const source=getFigureDisplaySource(fig);
+    const img=[...(wrap?.querySelectorAll('.canvas-imagebox img, .figure-item img')||[])].find(node=>node.getAttribute('src')===source) || new Image();
     if(!(img instanceof HTMLImageElement)) return;
-    if(!img.getAttribute('src')) img.src=fig.src;
+    if(!img.getAttribute('src')) img.src=source;
     if(!img.complete && !img.naturalWidth) return;
     const crop=getFigureCrop(fig);
     const srcW=(img.naturalWidth||img.width||fig.w);
@@ -9846,7 +10201,7 @@ function saveCanvasToQ(key){
   const basePx=Math.round(getBaseCanvasHeight(key)*exportScale);
   const padPx=Math.round((key==='q' ? 10 : 8)*exportScale);
   if(key!=='q'){
-    // Options need to keep their full frame so center-left alignment survives JSON export.
+    // Options keep their full frame while content remains top-left aligned.
     minY=0;
     maxY=temp.height-1;
   }else if(maxY>=0){
@@ -9885,9 +10240,19 @@ function clampExportSurfaceSize(width, height){
   const edgeScale=Math.min(1, maxEdge/Math.max(1,width), maxEdge/Math.max(1,height));
   const pixelScale=Math.min(1, Math.sqrt(maxPixels/Math.max(1,width*height)));
   const scale=Math.min(edgeScale, pixelScale);
+  let outWidth=Math.max(1, Math.round(width*scale));
+  let outHeight=Math.max(1, Math.round(height*scale));
+  // Rounding both axes upward can otherwise overshoot the advertised pixel
+  // ceiling. Correct the rounded pair once so large batch exports stay inside
+  // the memory budget deterministically.
+  if(outWidth*outHeight>maxPixels){
+    const correction=Math.sqrt(maxPixels/(outWidth*outHeight));
+    outWidth=Math.max(1, Math.floor(outWidth*correction));
+    outHeight=Math.max(1, Math.floor(outHeight*correction));
+  }
   return {
-    width:Math.max(1, Math.round(width*scale)),
-    height:Math.max(1, Math.round(height*scale))
+    width:outWidth,
+    height:outHeight
   };
 }
 
@@ -9925,14 +10290,18 @@ function makeViewerCanvasImage(sourceCanvas, key){
   ctx.fillStyle='#fff';
   ctx.fillRect(0,0,targetW,targetH);
   const drawH=Math.round(sourceCanvas.height * (targetW / Math.max(1, sourceCanvas.width)));
-  const drawY=key==='q' ? 0 : Math.max(0, Math.round((targetH-drawH)/2));
+  const drawY=0;
   ctx.drawImage(sourceCanvas,0,0,sourceCanvas.width,sourceCanvas.height,0,drawY,targetW,drawH);
   return out;
 }
 
-async function syncBitmapCanvasWithBurnedFiguresAsync(key){
+async function syncBitmapCanvasWithBurnedFiguresAsync(key, opts={}){
   const cv=document.getElementById(key+'Canvas');
   if(!cv) return false;
+  const expectedQuestion=opts.expectedQuestion || cur;
+  const expectedCanvas=opts.expectedCanvas || cv;
+  const ownsTarget=()=>isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas);
+  if(!ownsTarget()) return false;
   const burned=getBurnedFigureStore(key);
   if(!burned.length) return false;
   const desiredH=getDesiredCanvasHeight(key, key==='q' ? 12 : 8);
@@ -9948,6 +10317,7 @@ async function syncBitmapCanvasWithBurnedFiguresAsync(key){
   ctx.fillRect(0,0,surface.width,surface.height);
   ctx.drawImage(cv,0,0,cv.width,logicalH,0,0,surface.width,surface.height);
   await drawBurnedFigureLayerOnCanvas(ctx, key, exportScale);
+  if(!ownsTarget()) return false;
   const fullDataUrl=surface.toDataURL('image/png');
   const viewerDataUrl=makeViewerCanvasImage(surface, key).toDataURL('image/png');
   storeCanvasImagesForKey(key, cv.toDataURL('image/png'), fullDataUrl, viewerDataUrl);
@@ -9964,9 +10334,13 @@ function getStoredImg(key){
 }
 
 async function syncCanvasAssetForKeyAsync(key, opts={}){
-  if(!cur) return;
+  if(!cur) return true;
   const cv=document.getElementById(key+'Canvas');
-  if(!cv) return;
+  if(!cv) return true;
+  const expectedQuestion=opts.expectedQuestion || cur;
+  const expectedCanvas=opts.expectedCanvas || cv;
+  const ownsTarget=()=>isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas);
+  if(!ownsTarget()) return false;
   const allowBitmapFallback=opts.allowBitmapFallback!==false;
   const mode=(typeof getFrameRenderMode==='function') ? getFrameRenderMode(key) : 'bitmap';
   const composerHtml=(typeof getComposerSourceHTML==='function') ? String(getComposerSourceHTML(key)||'').trim() : '';
@@ -9975,42 +10349,48 @@ async function syncCanvasAssetForKeyAsync(key, opts={}){
       const host=document.createElement('div');
       host.innerHTML=composerHtml;
       let surface=await renderMixedComposerCanvas(host, key);
+      if(!ownsTarget()) return false;
       if(getBurnedFigureImage(key) || getFigureStore(key).length){
-        surface=await composeSourceSurfaceWithCanvasFigures(surface, key);
+        surface=await composeSourceSurfaceWithCanvasFigures(surface, key, {strictFigures:true});
       }else{
         surface=await flattenCanvasSurfaceWithFigures(surface, key);
       }
+      if(!ownsTarget()) return false;
       const exportSurface=(typeof buildHighResExportSurface==='function') ? buildHighResExportSurface(surface, key, 1) : surface;
       const fullDataUrl=exportSurface.toDataURL('image/png');
       const viewerDataUrl=makeViewerCanvasImage(surface, key).toDataURL('image/png');
       const baseDataUrl=cv.toDataURL('image/png');
+      if(!ownsTarget()) return false;
       storeCanvasImagesForKey(key, baseDataUrl, fullDataUrl, viewerDataUrl);
-      return;
+      return true;
     }catch(err){
       console.warn('Source composer export sync failed; keeping source frame instead of bitmap fallback:', key, err);
-      if(!allowBitmapFallback || composerHtml) return;
+      if(!allowBitmapFallback || composerHtml) return false;
     }
-    if(!allowBitmapFallback) return;
+    if(!allowBitmapFallback) return false;
   }
   if(mode==='bitmap' && getBurnedFigureStore(key).length){
-    const ok=await syncBitmapCanvasWithBurnedFiguresAsync(key);
-    if(ok) return;
+    const ok=await syncBitmapCanvasWithBurnedFiguresAsync(key, {expectedQuestion,expectedCanvas});
+    if(!ownsTarget()) return false;
+    if(ok) return true;
   }
-  if(mode==='bitmap' && !isFrameBitmapDirty(key) && getStoredImg(key)) return;
+  if(mode==='bitmap' && !isFrameBitmapDirty(key) && getStoredImg(key)) return true;
+  if(!ownsTarget()) return false;
   saveCanvasToQ(key);
+  return true;
 }
 
 async function syncCurrentEditorCanvasAssetsForExportAsync(){
-  try{
-    if(!cur) return;
-    await syncCanvasAssetForKeyAsync('q');
-    if(Array.isArray(cur.options)){
-      for(let idx=0; idx<cur.options.length; idx++){
-        await syncCanvasAssetForKeyAsync('opt'+idx);
-      }
+  if(!cur) return;
+  const failed=[];
+  if(await syncCanvasAssetForKeyAsync('q')===false) failed.push('q');
+  if(Array.isArray(cur.options)){
+    for(let idx=0; idx<cur.options.length; idx++){
+      if(await syncCanvasAssetForKeyAsync('opt'+idx)===false) failed.push('opt'+idx);
     }
-    saveLS();
-  }catch(_){ }
+  }
+  saveLS();
+  if(failed.length) throw new Error('Hallmark source render failed for: '+failed.join(', '));
 }
 
 function syncCurrentEditorCanvasAssetsForExport(){

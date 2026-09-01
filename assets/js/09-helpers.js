@@ -106,6 +106,246 @@ function drawCanvasText(ctx, text, x, y, maxWidth, font, lineHeight, color){
   ctx.restore();
   return bitmap.lines.length*lineHeight;
 }
+
+// A paper is released only after its lightweight viewer assets and the active
+// editor have reached a terminal state. Full Hallmark export rasters stay
+// encoded in the bank and are not decoded here, which keeps large banks sane.
+let paperPreparationGeneration=0;
+let paperPreparationHardTimer=null;
+let paperPreparationActive=false;
+
+function paperPreparationDelay(ms){
+  return new Promise(resolve=>setTimeout(resolve,Math.max(0,Number(ms)||0)));
+}
+
+function paperPreparationFrame(timeoutMs=280){
+  return new Promise(resolve=>{
+    let settled=false;
+    let timer=null;
+    const finish=()=>{
+      if(settled) return;
+      settled=true;
+      if(timer) clearTimeout(timer);
+      resolve();
+    };
+    timer=setTimeout(finish,Math.max(80,Number(timeoutMs)||280));
+    try{
+      if(typeof window.requestAnimationFrame==='function') window.requestAnimationFrame(finish);
+      else setTimeout(finish,16);
+    }catch(_){ finish(); }
+  });
+}
+
+function paperPreparationTimeout(promise, timeoutMs, fallback=false){
+  return new Promise(resolve=>{
+    let settled=false;
+    const finish=value=>{
+      if(settled) return;
+      settled=true;
+      clearTimeout(timer);
+      resolve(value);
+    };
+    const timer=setTimeout(()=>finish(fallback),Math.max(100,Number(timeoutMs)||1000));
+    Promise.resolve(promise).then(finish,()=>finish(fallback));
+  });
+}
+
+function updatePaperPreparation(token, detail, progress, foot=''){
+  if(token!==paperPreparationGeneration || !paperPreparationActive) return false;
+  const detailEl=document.getElementById('paperLoadDetail');
+  const progressEl=document.getElementById('paperLoadProgress');
+  const footEl=document.getElementById('paperLoadFoot');
+  if(detailEl && detail) detailEl.textContent=detail;
+  if(progressEl && Number.isFinite(Number(progress))) progressEl.style.width=Math.max(4,Math.min(100,Number(progress)))+'%';
+  if(footEl && foot) footEl.textContent=foot;
+  const state=window.__paperPreparationState||{};
+  window.__paperPreparationState={...state,token,active:true,detail:detail||state.detail||'',progress:Number(progress)||state.progress||0};
+  return true;
+}
+
+function beginPaperPreparation(options={}){
+  const token=++paperPreparationGeneration;
+  paperPreparationActive=true;
+  const overlay=document.getElementById('paperLoadOverlay');
+  const title=document.getElementById('paperLoadTitle');
+  const shell=document.querySelector('.shell');
+  if(paperPreparationHardTimer) clearTimeout(paperPreparationHardTimer);
+  document.body.classList.add('paper-preparing');
+  document.body.setAttribute('aria-busy','true');
+  if(shell){
+    shell.setAttribute('inert','');
+    shell.setAttribute('aria-busy','true');
+  }
+  if(overlay){
+    overlay.classList.add('is-active');
+    overlay.setAttribute('aria-hidden','false');
+    overlay.setAttribute('aria-busy','true');
+  }
+  if(title) title.textContent=options.title||'Preparing your question paper';
+  updatePaperPreparation(
+    token,
+    options.detail||'Loading fonts, equations, canvas ink, and paper previews...',
+    7,
+    options.foot||'Please wait—the paper will open when it is ready to scroll.'
+  );
+  const hardTimeout=Math.max(4000,Number(options.hardTimeoutMs)||18000);
+  paperPreparationHardTimer=setTimeout(()=>{
+    finishPaperPreparation(token,{timedOut:true,failed:0,reason:options.reason||'hard-timeout'});
+  },hardTimeout+1200);
+  window.__paperPreparationState={token,active:true,reason:options.reason||'workspace',startedAt:Date.now(),progress:7};
+  return token;
+}
+
+async function finishPaperPreparation(token, report={}){
+  if(token!==paperPreparationGeneration || !paperPreparationActive) return false;
+  paperPreparationActive=false;
+  if(paperPreparationHardTimer){ clearTimeout(paperPreparationHardTimer); paperPreparationHardTimer=null; }
+  const failed=Math.max(0,Number(report.failed)||0);
+  const timedOut=!!report.timedOut;
+  const readyDetail=timedOut
+    ? 'Paper opened safely. A slow resource may finish in the background.'
+    : (failed ? `Paper ready. ${failed} unavailable preview resource${failed===1?' was':'s were'} skipped.` : 'Paper ready—canvas ink and previews are prepared.');
+  const state=window.__paperPreparationState||{};
+  window.__paperPreparationState={...state,active:true,releasing:true,progress:100,failed,timedOut,completedAt:Date.now(),reason:report.reason||state.reason||'workspace'};
+  const detailEl=document.getElementById('paperLoadDetail');
+  const progressEl=document.getElementById('paperLoadProgress');
+  const footEl=document.getElementById('paperLoadFoot');
+  if(detailEl) detailEl.textContent=readyDetail;
+  if(progressEl) progressEl.style.width='100%';
+  if(footEl) footEl.textContent='Ready';
+  await paperPreparationDelay(140);
+  if(token!==paperPreparationGeneration) return false;
+  const overlay=document.getElementById('paperLoadOverlay');
+  const shell=document.querySelector('.shell');
+  if(overlay){
+    overlay.classList.remove('is-active');
+    overlay.setAttribute('aria-hidden','true');
+    overlay.setAttribute('aria-busy','false');
+  }
+  document.body.classList.remove('paper-preparing');
+  document.body.setAttribute('aria-busy','false');
+  if(shell){
+    shell.removeAttribute('inert');
+    shell.setAttribute('aria-busy','false');
+  }
+  window.__paperPreparationState={...window.__paperPreparationState,active:false,releasing:false,releasedAt:Date.now()};
+  return true;
+}
+
+async function warmPaperFonts(){
+  if(!document.fonts) return true;
+  const jobs=[];
+  if(document.fonts.ready) jobs.push(document.fonts.ready);
+  if(typeof document.fonts.load==='function'){
+    ['16px "Times New Roman"','16px "Cambria Math"','16px "KaTeX_Main"','16px "KaTeX_Math"'].forEach(font=>jobs.push(document.fonts.load(font)));
+  }
+  await paperPreparationTimeout(Promise.allSettled(jobs),4500,[]);
+  return true;
+}
+
+async function waitForWorkspaceGlobal(name, timeoutMs=3500){
+  const started=Date.now();
+  while(!window[name] && Date.now()-started<timeoutMs) await paperPreparationDelay(60);
+  return !!window[name];
+}
+
+async function settleWorkspaceImages(selector, timeoutMs=4500){
+  const images=[...document.querySelectorAll(selector)];
+  if(!images.length) return {total:0,loaded:0,failed:0};
+  const results=await Promise.all(images.map(img=>paperPreparationTimeout(new Promise(resolve=>{
+    const decode=async ok=>{
+      if(ok && typeof img.decode==='function'){
+        try{ await paperPreparationTimeout(img.decode(),1600,true); }catch(_){ }
+      }
+      resolve(ok);
+    };
+    if(img.complete){ decode(img.naturalWidth>0); return; }
+    img.addEventListener('load',()=>decode(true),{once:true});
+    img.addEventListener('error',()=>decode(false),{once:true});
+  }),timeoutMs,false)));
+  return {total:images.length,loaded:results.filter(Boolean).length,failed:results.filter(value=>!value).length};
+}
+
+async function waitForStablePaperLayout(){
+  const scroll=document.getElementById('paperScroll');
+  const sheet=document.getElementById('paperSheet');
+  const oldScrollTop=scroll?.scrollTop||0;
+  let stableFrames=0;
+  let previous=-1;
+  for(let i=0;i<8 && stableFrames<2;i++){
+    await paperPreparationFrame();
+    const height=Math.round(sheet?.getBoundingClientRect?.().height||sheet?.offsetHeight||0);
+    if(height===previous) stableFrames++;
+    else stableFrames=0;
+    previous=height;
+  }
+  if(scroll) scroll.scrollTop=Math.min(oldScrollTop,Math.max(0,scroll.scrollHeight-scroll.clientHeight));
+  await new Promise(resolve=>{
+    let settled=false;
+    const finish=()=>{
+      if(settled) return;
+      settled=true;
+      clearTimeout(fallback);
+      resolve();
+    };
+    const fallback=setTimeout(finish,260);
+    if('requestIdleCallback' in window) requestIdleCallback(finish,{timeout:180});
+    else setTimeout(finish,40);
+  });
+}
+
+async function preparePaperWorkspace(options={}){
+  const token=options.token||beginPaperPreparation(options);
+  const startedAt=Date.now();
+  const minVisibleMs=Math.max(250,Number(options.minVisibleMs)||650);
+  const hardTimeoutMs=Math.max(3500,Number(options.hardTimeoutMs)||16000);
+  let failed=0;
+  let timedOut=false;
+  const work=(async ()=>{
+    await paperPreparationFrame();
+    updatePaperPreparation(token,'Building the complete paper preview...',16);
+    if(typeof renderPaper==='function') renderPaper(true);
+
+    const fontJob=warmPaperFonts();
+    const katexJob=waitForWorkspaceGlobal('katex',3000);
+    const mathJob=(typeof waitForMathJaxReady==='function')
+      ? paperPreparationTimeout(waitForMathJaxReady(6000),6500,false)
+      : Promise.resolve(true);
+
+    updatePaperPreparation(token,'Restoring Hallmark canvas ink and editable figures...',34);
+    if(typeof waitForEditorCanvasReady==='function') await waitForEditorCanvasReady(9000);
+    if(typeof waitForCanvasResourceTasks==='function'){
+      const canvasReady=await waitForCanvasResourceTasks(9000);
+      if(!canvasReady) failed++;
+    }
+
+    updatePaperPreparation(token,'Preloading every paper preview for smooth scrolling...',62);
+    if(typeof renderPaper==='function') renderPaper(true);
+    if(typeof hydratePaperLazyImages==='function'){
+      const paperImages=await hydratePaperLazyImages({eager:true});
+      failed+=Number(paperImages?.failed)||0;
+    }
+
+    updatePaperPreparation(token,'Settling fonts, equations, and active editor media...',82);
+    const resourceResults=await Promise.all([fontJob,katexJob,mathJob]);
+    if(resourceResults[1]===false) failed++;
+    if(resourceResults[2]===false) failed++;
+    const editorImages=await settleWorkspaceImages('#editor img',4200);
+    failed+=editorImages.failed;
+
+    updatePaperPreparation(token,'Finalizing paper layout...',94);
+    await waitForStablePaperLayout();
+    return true;
+  })();
+  const completed=await paperPreparationTimeout(work,hardTimeoutMs,false);
+  timedOut=completed!==true;
+  const terminalStage=String(window.__paperPreparationState?.detail||'');
+  const remaining=minVisibleMs-(Date.now()-startedAt);
+  if(remaining>0) await paperPreparationDelay(remaining);
+  await finishPaperPreparation(token,{failed,timedOut,reason:options.reason||'workspace'});
+  return {token,failed,timedOut,terminalStage,durationMs:Date.now()-startedAt};
+}
+
 function imgPDFHeight(dataUrl, maxW, maxH){
   return new Promise((res,rej)=>{
     const img=new Image();
