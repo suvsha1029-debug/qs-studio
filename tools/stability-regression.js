@@ -11,6 +11,7 @@ const readOptional = file => {
 
 const baseCss = read('assets/css/00-base.css');
 const componentCss = read('assets/css/02-components.css');
+const modernCss = read('assets/css/13-modern-workspace.css');
 const canvas = read('assets/js/04-canvas-engine.js');
 const exportJs = read('assets/js/08-export.js');
 const circuitJs = read('assets/js/12-circuit-editor.js');
@@ -239,6 +240,22 @@ check(
 );
 
 check(
+  'selectable PDF keeps mixed prose fractions inline without leaking TeX style commands',
+  includesAll(functionBody(exportJs, 'prepareSelectablePaperLatexSource'), [
+    "out=out.replace(/^\\\\(?:displaystyle|textstyle|scriptstyle|scriptscriptstyle)\\b\\s*/,'');",
+    'Explicit fraction commands preserve',
+    'return out;'
+  ]) &&
+    includesAll(functionBody(exportJs, 'renderSelectablePaperSourceHTML'), [
+      'const inlineHtml=renderSelectableLatexPreviewHTML',
+      'return `<span class="lp-text-line">${inlineHtml}</span>`;'
+    ]) &&
+    !functionBody(exportJs, 'prepareSelectablePaperLatexSource').includes("return '\\\\displaystyle '+out;") &&
+    !functionBody(exportJs, 'prepareSelectablePaperLatexSource').includes("return '\\\\textstyle '+out;"),
+  'mixed text such as "The value is \\frac{1000}{3} rad/sec" must match the composer preview in both text PDFs'
+);
+
+check(
   'visual bar shortcuts normalize for canvas and selectable math',
   includesAll(canvas, [
     'function repairComposerVisualAccentShortcuts',
@@ -410,8 +427,9 @@ check(
     'mixed-composer-actions',
     'composer-apply-btn',
     'id="mixedComposerApplyTopBtn"',
-    'id="mixedComposerApplyBtn"'
+    'role="group" aria-label="Apply"'
   ]) &&
+    !canvas.includes('id="mixedComposerApplyBtn"') &&
     includesAll(html, [
       'strip-actions',
       'btn-open',
@@ -422,18 +440,60 @@ check(
 );
 
 check(
-  'composer actions use Apply-first vertical list without selector overlap',
-  includesAll(componentCss, [
-    '.modal-close{width:30px!important;height:30px!important;border-radius:2px!important',
-    '.mixed-composer-actions{display:flex!important;flex-direction:column!important',
-    'flex:0 0 92px!important;width:92px!important',
-    '.mixed-composer-actions .btn{width:92px!important;min-width:92px!important;height:28px!important',
-    '.composer-apply-btn{order:-3;',
-    '@media (max-width:1420px)'
+  'official operations workspace replaces the visible paper preview and theme picker',
+  includesAll(html, [
+    'data-workspace-panel="actions"',
+    'class="paper-render-cache"',
+    'data-workspace-view-button="actions"',
+    'id="exportHub"'
   ]) &&
-    componentCss.lastIndexOf('.mixed-composer-actions{display:flex!important;flex-direction:column!important') >
-      componentCss.lastIndexOf('/* Final arctic official UI override - keep this last. */'),
-  'composer actions must stay as an Apply-first vertical list'
+    !html.includes('id="themeSwitch"') &&
+    !html.includes('assets/css/01-themes.css') &&
+    includesAll(modernCss, [
+      '.workspace-operations',
+      '.paper-render-cache{position:fixed;left:-100000px',
+      '--ui-bg:#e7dece',
+      '--ui-ink:#1b1a18'
+    ]),
+  'the application should expose operations instead of a visible demo-paper scroller or theme choices'
+);
+
+check(
+  'final Composer controls stay in one compact overflow-safe toolbar',
+  includesAll(modernCss, [
+    '.mixed-composer{display:grid!important;grid-template-rows:auto minmax(0,1fr)!important',
+    '.mixed-composer-toolbar{position:relative!important',
+    'flex-wrap:nowrap!important',
+    'overflow-x:auto!important',
+    '.mixed-composer-actions{position:sticky!important;left:0!important',
+    '.mixed-composer-actions .btn{width:82px!important;min-width:82px!important'
+  ]),
+  'Composer controls must not grow into a tall multi-row block'
+);
+
+check(
+  'composer prioritizes the editor and promotes everyday math controls',
+  includesAll(canvas, [
+    '<div class="mixed-composer-toolbar" role="toolbar" aria-label="Formatting">',
+    '<div class="mixed-composer-actions" role="group" aria-label="Apply">',
+    '<div class="composer-quick-math" role="group" aria-label="Quick math">',
+    'aria-label="Fraction"',
+    'aria-label="Integral"',
+    'aria-label="Derivative"',
+    'aria-label="Partial derivative"',
+    '<div class="mixed-composer-workspace">'
+  ]) &&
+    !canvas.includes('adjustMixedComposerEditorHeight') &&
+    !canvas.includes('mixedComposerEditorGrip') &&
+    !canvas.includes('mixedComposerMathGrip') &&
+    !canvas.includes('mixedComposerShellGrip') &&
+    includesAll(modernCss, [
+      'grid-template-rows:auto minmax(0,1fr)!important',
+      '.mixed-composer-workspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,340px)',
+      '.mixed-composer-editor-wrap{height:100%;min-height:340px}',
+      'overflow:hidden!important'
+    ]),
+  'Apply, fraction, integral and derivative tools must remain fixed above a wider writing pane'
 );
 
 check(
@@ -472,13 +532,14 @@ check(
 );
 
 check(
-  'Hallmark HD wording is restored and circuit figure panel is not mojibake',
-  canvas.includes('Hallmark HD renders text and equations once at final resolution') &&
+  'compact HD indicator replaces verbose boilerplate and circuit labels are readable',
+  canvas.includes('class="composer-profile-badge" title="High-resolution output">HD</span>') &&
+    !canvas.includes('Hallmark HD renders text and equations once at final resolution') &&
     circuitJs.includes("title:'Circuit Figure Panel'") &&
     circuitJs.includes("b.textContent='Circuit Fig'") &&
     !circuitJs.includes("b.textContent='â") &&
     !circuitJs.includes('Place components â'),
-  'composer should identify the Hallmark HD renderer and circuit labels must remain readable'
+  'editing controls should retain the HD renderer signal without verbose help text'
 );
 
 check(
@@ -489,7 +550,8 @@ check(
     !read('assets/js/03-editor.js').includes("setTool('pen'") &&
     !read('assets/js/03-editor.js').includes('Math→Img') &&
     includesAll(read('assets/js/03-editor.js'), [
-      'Hallmark HD Composer',
+      '>Edit content</button>',
+      'aria-label="Add text"',
       "setTool('figure','q')",
       "setTool('graph','q')",
       "setTool('line','q')",
@@ -516,7 +578,7 @@ check(
     "function clampMixedComposerRenderProfile(value){\n  return 'hallmark';",
     "function readMixedComposerRenderProfile(key=''){\n  return 'hallmark';",
     'class="composer-profile-badge"',
-    '>Hallmark HD</span>'
+    '>HD</span>'
   ]) &&
     !canvas.includes('getMixedComposerRenderProfileOptionsHTML') &&
     !canvas.includes('updateMixedComposerRenderProfile') &&
@@ -1504,6 +1566,55 @@ check(
     !functionBody(svgMaker,'saveSymbolToLibrary').includes('downloadSymbolJson()') &&
     html.includes("runExportJob('Paper JSON'") && html.includes("runExportJob('Key JSON'") && html.includes('onclick="exportOnePNG()"'),
   'Save to Library must not silently convert itself into a download action'
+);
+
+check(
+  'SVG maker grid snapping preserves existing coordinates across resolution changes',
+  includesAll(svgMaker,[
+    'function currentSnapStep()',
+    'function snappedTranslation(box,dx,dy)',
+    'snap(box.x+dx)-box.x',
+    'Grid choice affects new edits only; existing geometry never shifts',
+    '<option value="5">1/2 grid</option>',
+    '<option value="2.5">1/4 grid</option>'
+  ]) && !functionBody(svgMaker,'updateSnapLabel').includes('elements.forEach'),
+  'changing from quarter-grid to half-grid must not rewrite or wrinkle existing geometry'
+);
+
+check(
+  'SVG maker locked circuits are reversible transformable JSON units',
+  includesAll(svgMaker,[
+    'let viewW=680,viewH=440,tool=\'select\',elements=[],circuitGroups=[]',
+    'function lockSelectedAsCircuit()',
+    'function unlockSelectedCircuit()',
+    'function rotateSelectionAsUnit(delta)',
+    'function duplicateSelection()',
+    'data-group-handle',
+    'circuitGroups:copy(circuitGroups)',
+    'preserveCircuitGroups:true',
+    'gridCoordinatesStable:true',
+    'circuitGroups=draft.circuitGroups||[]',
+    'normalizeCircuitGroups()'
+  ]) && includesAll(functionBody(svgMaker,'pasteCopiedGroup'),[
+    'delete item.circuitId',
+    'item.circuitId=group.id',
+    'elementIds:clones.map(item=>item.id)'
+  ]),
+  'lock, unlock, proportional resize, rotation, duplicate, and JSON round trips must retain one stable circuit identity'
+);
+
+check(
+  'SVG maker rich math styles preserve raw KaTeX source',
+  includesAll(svgMaker,[
+    'data-qsmath-source="${esc(item.text||\'\')}"',
+    'font-weight="${item.bold?\'700\'',
+    'font-style="${item.italic?\'italic\'',
+    'text-decoration="underline"',
+    'text-anchor="${textAnchorForItem(item)}"',
+    "align:document.getElementById('textAlign').value||'left'",
+    'data-qsmath-vectorized="1"'
+  ]) && !functionBody(svgMaker,'commitText').includes('normalizeMathLabelLatex(text)'),
+  'bold, italic, underline, and alignment must style the rendered math without rewriting its LaTeX source'
 );
 
 check(

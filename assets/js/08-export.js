@@ -2088,7 +2088,12 @@ function getSelectablePaperFrameTypography(record, option=false){
   const innerEm=Math.max(.7, Math.min(1.8, innerScale/100));
   const mathEm=Math.max(.58, Math.min(3.2, (mathSize/Math.max(1,textSize))*innerEm));
   const nestedFracEm=.86;
-  return {textSize, mathSize, innerScale, line, mathEm, innerEm, nestedFracEm};
+  const ink=typeof clampMixedComposerEquationStroke==='function'
+    ? clampMixedComposerEquationStroke(option ? record?.composerEquationInk : record?.questionComposerEquationInk)
+    : String((option ? record?.composerEquationInk : record?.questionComposerEquationInk)||'light');
+  const inkWeights={fine:300,light:400,regular:500,bold:650,extra:800};
+  const inkWeight=inkWeights[ink]||400;
+  return {textSize, mathSize, innerScale, line, mathEm, innerEm, nestedFracEm, ink, inkWeight};
 }
 
 function getSelectablePaperFrameStyle(record, option=false){
@@ -2100,9 +2105,11 @@ function getSelectablePaperFrameStyle(record, option=false){
     `--selectable-math-em:${t.mathEm.toFixed(3)}em`,
     `--selectable-inner-math-em:${t.innerEm.toFixed(3)}em`,
     `--selectable-nested-frac-em:${t.nestedFracEm.toFixed(3)}em`,
+    `--selectable-ink-weight:${t.inkWeight}`,
     `--selectable-frame-width:100%`,
     `font-size:${t.textSize}px`,
-    `line-height:${t.line.toFixed(2)}`
+    `line-height:${t.line.toFixed(2)}`,
+    `font-weight:${t.inkWeight}`
   ].join(';');
 }
 
@@ -2128,11 +2135,16 @@ function prepareSelectablePaperLatexSource(source, record=null, option=false){
   out=out.replace(/^\\(?:displaystyle|textstyle|scriptstyle|scriptscriptstyle)\b\s*/,'');
   if(innerScale<=100){
     out=out.replace(/\\(?:dfrac|frac|tfrac)\b/g,'\\tfrac');
-    return '\\textstyle '+out;
+    return out;
   }
   if(innerScale>=105) out=out.replace(/\\tfrac/g,'\\frac');
   if(innerScale>=115) out=out.replace(/\\frac/g,'\\dfrac');
-  return '\\displaystyle '+out;
+  // Do not prefix a global TeX style command. PDF source commonly mixes prose
+  // and inline math ("The value is \\frac{a}{b}"). A leading \\displaystyle
+  // becomes a detached/literal token in the mixed renderer and can force the
+  // following fraction onto its own line. Explicit fraction commands preserve
+  // the requested scale without changing the sentence's inline flow.
+  return out;
 }
 
 function renderSelectablePaperSourceHTML(source, record=null, option=false){
@@ -2146,7 +2158,11 @@ function renderSelectablePaperSourceHTML(source, record=null, option=false){
       : !/\n/.test(clean)
   );
   if(singleLatex && typeof renderSelectableLatexPreviewHTML==='function'){
-    return renderSelectableLatexPreviewHTML(prepareSelectablePaperLatexSource(clean, record, option));
+    const inlineHtml=renderSelectableLatexPreviewHTML(prepareSelectablePaperLatexSource(clean, record, option));
+    // selectable-frame-stack is a column flex container. Keep mixed prose and
+    // its math atoms inside one line box so text nodes do not become separate
+    // anonymous flex rows in the printable document.
+    return `<span class="lp-text-line">${inlineHtml}</span>`;
   }
   return formatSelectablePaperText(raw);
 }
@@ -2160,13 +2176,19 @@ function renderSelectablePaperSourceWithFigures(source, figureLayer, record=null
   SELECTABLE_FIGURE_MARKER_RE.lastIndex=0;
   const parts=raw.split(SELECTABLE_FIGURE_MARKER_RE);
   let placed=false;
-  const html=parts.map(part=>{
+  const html=parts.map((part,index)=>{
     if(SELECTABLE_FIGURE_MARKER_TEST_RE.test(part)){
       if(placed) return '';
       placed=true;
       return figureLayer.flowHtml || figureLayer.html;
     }
-    return renderSelectablePaperSourceHTML(part, record, option);
+    // The line break that carries a standalone figure marker is structural,
+    // not an authored empty paragraph. Remove only the adjacent break so the
+    // PDF keeps intentional blank lines elsewhere without adding a large gap.
+    let textPart=part;
+    if(SELECTABLE_FIGURE_MARKER_TEST_RE.test(parts[index+1]||'')) textPart=textPart.replace(/\r?\n[ \t]*$/,'');
+    if(SELECTABLE_FIGURE_MARKER_TEST_RE.test(parts[index-1]||'')) textPart=textPart.replace(/^[ \t]*\r?\n/,'');
+    return renderSelectablePaperSourceHTML(textPart, record, option);
   }).join('');
   return {html, placed};
 }
@@ -2192,13 +2214,24 @@ function getSelectablePaperFrameHTML(record, option=false){
   const attachedImages=inlineImages + burnedLayerHtml;
   const finish=(content, placedFigureLayer=false)=>{
     const combined=content+attachedImages;
-    const framed=placedFigureLayer ? `<div class="selectable-frame-stack">${combined}</div>` : wrapSelectablePaperFrame(combined,figureLayer);
+    // PDF content must participate in document flow. Canvas-space overlays put
+    // the figure behind later text and reserve its original Y offset as blank
+    // paper. Marker placement already uses the compact, origin-normalized layer;
+    // use that same layer as the fallback after text when no marker is present.
+    const flowFigure=(!placedFigureLayer && figureLayer.flowHtml) ? figureLayer.flowHtml : '';
+    const framed=`<div class="selectable-frame-stack">${combined}${flowFigure}</div>`;
     return wrapSelectableTypedFrame(framed, record, option);
   };
   const sourceWithMarkers=String(source||'');
   const selectableSource=stripSelectableFigureMarkers(sourceWithMarkers);
   const sourceIsLatex=typeof isSelectableLatexSource==='function' && isSelectableLatexSource(selectableSource);
   const renderedSource=sourceWithMarkers ? renderSelectablePaperSourceWithFigures(sourceWithMarkers, figureLayer, record, option) : {html:'', placed:false};
+  // A figure marker is an explicit layout instruction. Honour it before the
+  // richer composer fallback so text below the marker cannot collide with an
+  // absolutely positioned canvas layer.
+  if(renderedSource.placed && renderedSource.html){
+    return finish(renderedSource.html, true);
+  }
   // Keep Text PDF in lockstep with the repaired selectable preview path:
   // LaTeX/PDF source is canonical because composer widget HTML can go stale
   // after the first math atom while the canvas still contains the full render.
@@ -2210,7 +2243,7 @@ function getSelectablePaperFrameHTML(record, option=false){
   if(!manual && composerHtml && typeof getLinkedPreviewRichHTMLFromComposerHTML==='function'){
     return finish(getLinkedPreviewRichHTMLFromComposerHTML(composerHtml));
   }
-  if(renderedSource.html) return finish(renderedSource.html, renderedSource.placed);
+  if(renderedSource.html) return finish(renderedSource.html, false);
   if(attachedImages || figureLayer.html) return finish('');
   const image=String(option
     ? (record?.image || record?.viewerImage || record?.baseImage || '')

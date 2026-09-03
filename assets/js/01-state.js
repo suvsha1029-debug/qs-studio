@@ -240,14 +240,9 @@ function getExportIdentity(){
   };
 }
 
-function setAppTheme(theme='normal'){
-  const clean = ['normal','dark','blue'].includes(theme) ? theme : 'normal';
-  document.body.classList.toggle('theme-dark', clean === 'dark');
-  document.body.classList.toggle('theme-blue', clean === 'blue');
-  localStorage.setItem(APP_THEME_KEY, clean);
-  document.querySelectorAll('.theme-btn').forEach(btn=>{
-    btn.classList.toggle('active', btn.dataset.theme === clean);
-  });
+function setAppTheme(){
+  document.body.classList.remove('theme-dark','theme-blue');
+  localStorage.setItem(APP_THEME_KEY, 'normal');
 }
 
 function normalizeFigureCropRecord(value){

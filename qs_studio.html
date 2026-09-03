@@ -11,10 +11,10 @@
 <link rel="stylesheet" href="assets/vendor/katex/katex.min.css?v=katex1">
 <script defer src="assets/vendor/katex/katex.min.js?v=katex1"></script>
 <link rel="stylesheet" href="assets/css/00-base.css?v=txtsize63">
-<link rel="stylesheet" href="assets/css/01-themes.css?v=topicmeta1">
-<link rel="stylesheet" href="assets/css/02-components.css?v=paperbuffer1">
+<link rel="stylesheet" href="assets/css/02-components.css?v=paperstyle2">
+<link rel="stylesheet" href="assets/css/13-modern-workspace.css?v=official4">
 </head>
-<body class="paper-preparing" aria-busy="true">
+<body class="paper-preparing" data-workspace-view="questions" aria-busy="true">
 
 <div class="paper-load-overlay is-active" id="paperLoadOverlay" role="status" aria-live="polite" aria-atomic="true" aria-busy="true" aria-hidden="false">
   <div class="paper-load-card">
@@ -23,25 +23,42 @@
       <span class="paper-load-sheet sheet-mid"></span>
       <span class="paper-load-sheet sheet-front"><i></i><i></i><i></i><i></i></span>
     </div>
-    <div class="paper-load-kicker">QUESTION PAPER BUFFER</div>
-    <div class="paper-load-title" id="paperLoadTitle">Preparing your workspace</div>
-    <div class="paper-load-detail" id="paperLoadDetail">Loading fonts, equations, canvas ink, and paper previews...</div>
+    <div class="paper-load-title" id="paperLoadTitle">Loading</div>
+    <div class="paper-load-detail" id="paperLoadDetail">Preparing questions...</div>
     <div class="paper-load-progress" aria-hidden="true"><span id="paperLoadProgress"></span></div>
-    <div class="paper-load-foot" id="paperLoadFoot">Please wait&mdash;the paper will open when it is ready to scroll.</div>
+    <div class="paper-load-foot" id="paperLoadFoot"></div>
   </div>
 </div>
+
+<header class="workspace-bar">
+  <div class="workspace-brand" aria-label="QS Studio">
+    <span class="workspace-brand-mark" aria-hidden="true">Q</span>
+    <span class="workspace-brand-copy"><strong>QS Studio</strong><small>Production workspace</small></span>
+  </div>
+  <div class="workspace-project">
+    <small>Active paper</small>
+    <strong id="workspaceProjectTitle">Untitled Project</strong>
+    <span id="workspaceQuestionStatus">No question selected</span>
+  </div>
+  <nav class="workspace-view-switch" aria-label="Workspace panels">
+    <button type="button" data-workspace-view-button="questions" aria-pressed="true" onclick="setWorkspaceView('questions',{focus:true})"><span aria-hidden="true">☷</span> Questions</button>
+    <button type="button" data-workspace-view-button="editor" aria-pressed="false" onclick="setWorkspaceView('editor',{focus:true})"><span aria-hidden="true">✎</span> Editor</button>
+    <button type="button" data-workspace-view-button="actions" aria-pressed="false" onclick="setWorkspaceView('actions',{focus:true})"><span aria-hidden="true">→</span> Actions</button>
+  </nav>
+  <div class="workspace-actions strip-actions" aria-label="Project actions">
+    <button class="top-command" type="button" aria-label="New question bank" title="New question bank" onclick="startFreshProject()"><span aria-hidden="true">＋</span><span class="command-label">New bank</span></button>
+    <button class="top-command btn-open" type="button" aria-label="Open question bank" title="Open question bank" onclick="openFromFile()"><span aria-hidden="true">↥</span><span class="command-label">Open</span></button>
+    <button class="top-command" type="button" aria-label="Open paper selector" title="Open paper selector" onclick="window.location.href='paper_selector.html'"><span aria-hidden="true">⌘</span><span class="command-label">Selector</span></button>
+    <button class="top-command primary btn-save-all" type="button" aria-label="Save all questions" title="Save all questions" onclick="saveAll()"><span aria-hidden="true">✓</span><span class="command-label">Save All</span></button>
+  </div>
+</header>
 
 <div class="shell">
 
 <!-- â•â•â• LEFT PANEL â•â•â• -->
-<div class="panel-left">
+<div class="panel-left" data-workspace-panel="questions">
   <div class="strip">
-    <h2>Questions <span id="qcount" style="background:#e0dbd4;padding:1px 6px;border-radius:10px;font-size:10px">0</span></h2>
-    <div class="strip-actions">
-      <button class="btn" onclick="startFreshProject()">+ New</button>
-      <button class="btn btn-open" onclick="openFromFile()">Open</button>
-      <button class="btn pri btn-save-all" onclick="saveAll()">Save All</button>
-    </div>
+    <div class="strip-heading"><h2>Questions</h2><span class="strip-count" id="qcount">0</span></div>
   </div>
   <div class="qs-list" id="qsList"></div>
   <div class="sidebar-footer">
@@ -50,21 +67,90 @@
 </div>
 
 <!-- â•â•â• MID EDITOR â•â•â• -->
-<div class="panel-mid">
+<div class="panel-mid" data-workspace-panel="editor">
+  <div class="question-load-overlay" id="questionLoadOverlay" aria-hidden="true">
+    <div class="question-load-card"><span class="question-load-spinner" aria-hidden="true"></span><span>Loading</span></div>
+  </div>
   <div class="strip">
-    <h2>Editor</h2>
-    <button class="btn pri" onclick="saveQ()">&#128190; Save</button>
-    <button class="btn" onclick="exportOnePNG()">&#128247; PNG</button>
-    <button class="btn del" onclick="deleteQ()">&#10005; Delete</button>
+    <div class="strip-heading"><h2>Editor</h2><span class="strip-context" id="editorQuestionStatus">No question selected</span></div>
+    <div class="strip-actions editor-strip-actions">
+      <button class="btn panel-actions-jump" type="button" onclick="setWorkspaceView('actions',{focus:true})">Open actions</button>
+      <button class="btn pri" onclick="saveQ()">Save question</button>
+    </div>
   </div>
   <div class="editor" id="editor">
     <div class="empty"><div style="font-size:32px">&#128203;</div><div>Click <strong>+ New Question</strong> to start</div></div>
   </div>
 </div>
 
-<!-- â•â•â• RIGHT LIVE PAPER â•â•â• -->
-<div class="panel-right">
-  <div class="strip"><h2>Paper Preview</h2></div>
+<!-- â•â•â• RIGHT OPERATIONS â•â•â• -->
+<aside class="panel-right workspace-operations" data-workspace-panel="actions" aria-label="Question and export actions">
+  <div class="strip">
+    <div class="strip-heading"><h2>Actions</h2><span class="strip-context">Question and export</span></div>
+  </div>
+  <div class="right-strip">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <button class="export-readiness is-empty" id="exportReadiness" type="button" onclick="openAnswerAudit()">
+        <span class="export-readiness-icon" aria-hidden="true"></span>
+        <span class="export-readiness-copy"><strong>Answer audit</strong><small id="answerAuditSummary">No questions</small></span>
+        <span class="export-readiness-open">Open</span>
+      </button>
+      <section class="operation-group operation-current" aria-labelledby="currentQuestionActions">
+        <div class="operation-heading">
+          <div><span class="operation-kicker">Current question</span><h3 id="currentQuestionActions">Edit and save</h3></div>
+          <span class="operation-route" aria-hidden="true">A</span>
+        </div>
+        <div class="operation-actions">
+          <button class="btn" type="button" onclick="openQuestionStylePanel()">Style paper</button>
+          <button class="btn" type="button" onclick="exportOnePNG()">Export PNG</button>
+          <button class="btn pri" type="button" onclick="saveQ()">Save question</button>
+          <button class="btn del" type="button" onclick="deleteQ()">Delete question</button>
+        </div>
+      </section>
+      <details class="preview-settings output-settings">
+        <summary><span>Image output</span><small>PNG background</small></summary>
+        <div class="preview-settings-content">
+          <div class="sec-lbl">Background</div>
+          <div class="fpick">
+            <button class="fp sel" type="button" onclick="setFrame('exam',this)">Paper</button>
+            <button class="fp" type="button" onclick="setFrame('minimal',this)">Minimal</button>
+            <button class="fp" type="button" onclick="setFrame('dark',this)">Dark</button>
+          </div>
+        </div>
+      </details>
+      <div class="export-hub" id="exportHub">
+        <div class="export-group">
+          <div class="operation-heading">
+            <div><span class="operation-kicker">Deliverable</span><h3>Question paper</h3></div>
+            <span class="operation-route" aria-hidden="true">B</span>
+          </div>
+          <div class="export-actions">
+            <button class="btn grn" onclick="runExportJob('Paper JSON', exportPaperJSON, {message:'Building Paper JSON...', working:'Rendering assets...'})">JSON</button>
+            <button class="btn grn" onclick="askWatermarkThen('bank')">PDF</button>
+            <button class="btn" onclick="askWatermarkThen('selectable')">Text PDF</button>
+            <button class="btn" onclick="askWatermarkThen('selectable-clean')">Clean PDF</button>
+          </div>
+          <button class="btn export-layout-btn" onclick="openQsSheetTemplatePipeline()">Page layout</button>
+        </div>
+        <div class="export-group">
+          <div class="operation-heading">
+            <div><span class="operation-kicker">Deliverable</span><h3>Answer key</h3></div>
+            <span class="operation-route" aria-hidden="true">C</span>
+          </div>
+          <div class="export-actions">
+            <button class="btn" onclick="runExportJob('Key JSON', exportAnsKeyJSON, {message:'Building Key JSON...', working:'Preparing answers...'})">Key JSON</button>
+            <button class="btn" onclick="askWatermarkThen('key')">Key PDF</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+</div>
+
+<!-- Kept off-screen for export preparation; no live-paper scroller is shown in the application. -->
+<div class="paper-render-cache" aria-hidden="true">
   <div class="paper-scroll" id="paperScroll">
     <div class="paper-sheet" id="paperSheet">
       <div class="paper-header">
@@ -78,65 +164,6 @@
       </div>
     </div>
   </div>
-  <div class="right-strip">
-    <div style="display:flex;flex-direction:column;gap:6px">
-      <div class="sec-lbl">Theme</div>
-      <div class="theme-switch" id="themeSwitch">
-        <button class="theme-btn active" type="button" data-theme="normal" onclick="setAppTheme('normal')">Normal</button>
-        <button class="theme-btn" type="button" data-theme="dark" onclick="setAppTheme('dark')">Dark</button>
-        <button class="theme-btn" type="button" data-theme="blue" onclick="setAppTheme('blue')">Dark Blue</button>
-      </div>
-      <div class="divider"></div>
-      <div class="sec-lbl" style="display:none">Image Enhance</div>
-      <div class="enh-panel" id="imgEnhPanel" style="display:none">
-        <label class="enh-toggle"><input type="checkbox" id="imgEnhEnabled" checked onchange="toggleImageEnhance(this.checked)"> <span>Apply globally</span></label>
-        <div class="enh-row">
-          <span class="enh-name">Contrast</span>
-          <input id="imgEnhContrast" type="range" min="80" max="145" step="1" value="112" oninput="setImageEnhanceValue('contrast', this.value)">
-          <span class="enh-val" id="imgEnhContrastVal">112%</span>
-        </div>
-        <div class="enh-row">
-          <span class="enh-name">Brightness</span>
-          <input id="imgEnhBrightness" type="range" min="88" max="112" step="1" value="98" oninput="setImageEnhanceValue('brightness', this.value)">
-          <span class="enh-val" id="imgEnhBrightnessVal">98%</span>
-        </div>
-        <div class="enh-row">
-          <span class="enh-name">Saturate</span>
-          <input id="imgEnhSaturate" type="range" min="70" max="120" step="1" value="90" oninput="setImageEnhanceValue('saturate', this.value)">
-          <span class="enh-val" id="imgEnhSaturateVal">90%</span>
-        </div>
-        <div class="enh-presets">
-          <button class="enh-preset" type="button" onclick="applyImageEnhancePreset('soft')">Soft</button>
-          <button class="enh-preset" type="button" onclick="applyImageEnhancePreset('crisp')">Crisp</button>
-          <button class="enh-preset" type="button" onclick="applyImageEnhancePreset('exam')">Exam Dark</button>
-          <button class="enh-preset" type="button" onclick="applyImageEnhancePreset('ultra')">Ultra Crisp</button>
-        </div>
-        <div class="enh-actions">
-          <button class="btn" type="button" onclick="resetImageEnhance()">Reset</button>
-        </div>
-      </div>
-      <div class="divider"></div>
-      <div class="divider"></div>
-      <div class="sec-lbl">PNG Frame</div>
-      <div class="fpick">
-        <div class="fp sel" onclick="setFrame('exam',this)">Paper (bordered)</div>
-        <div class="fp" onclick="setFrame('minimal',this)">Minimal</div>
-        <div class="fp" onclick="setFrame('dark',this)">Dark</div>
-      </div>
-      <div class="divider"></div>
-      <div style="display:flex;gap:5px;flex-wrap:wrap">
-        <button class="btn grn" onclick="runExportJob('Paper JSON', exportPaperJSON, {message:'Call registered. Building paper JSON...', working:'Rendering high-quality JSON assets...'})">&#8595; Paper JSON</button>
-        <button class="btn grn" onclick="askWatermarkThen('bank')">&#8595; Paper PDF</button>
-        <button class="btn grn" onclick="openQsSheetTemplatePipeline()">Page Layout PDF</button>
-        <button class="btn" onclick="askWatermarkThen('selectable')">&#8595; Text PDF</button>
-        <button class="btn" onclick="askWatermarkThen('selectable-clean')">&#8595; cleantheam</button>
-        <button class="btn" onclick="runExportJob('Key JSON', exportAnsKeyJSON, {message:'Call registered. Building answer key JSON...', working:'Preparing answer key file...'})">&#128273; Key JSON</button>
-        <button class="btn" onclick="askWatermarkThen('key')">&#128273; Key PDF</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 </div>
 
 <div class="modal-backdrop hidden" id="appModal">
@@ -159,16 +186,18 @@
 <script src="assets/js/00-constants.js"></script>
 <script src="assets/js/01-state.js?v=qualityjson2"></script>
 <script src="assets/js/02-sidebar.js?v=topiclist1"></script>
-<script src="assets/js/03-editor.js?v=canvascontrols4"></script>
-<script src="assets/js/04-canvas-engine.js?v=hallmarkink8"></script>
+<script src="assets/js/03-editor.js?v=composerui1"></script>
+<script src="assets/js/04-canvas-engine.js?v=composerui2"></script>
 <script src="assets/js/05-field-updaters.js?v=selectablesync2"></script>
 <script src="assets/js/06-actions.js?v=paperbuffer1"></script>
-<script src="assets/js/07-paper-preview.js?v=paperbuffer1"></script>
-<script src="assets/js/08-export.js?v=qualityexport2"></script>
+<script src="assets/js/07-paper-preview.js?v=paperstyle2"></script>
+<script src="assets/js/08-export.js?v=inlinefrac3"></script>
 <script src="assets/js/09-helpers.js?v=paperbuffer1"></script>
 <script src="assets/js/11-persistence.js?v=nodownload1"></script>
 <script src="assets/js/10-init.js?v=paperbuffer1"></script>
 <script src="assets/js/12-circuit-editor.js?v=vectorquality2"></script>
+<script src="assets/js/13-quality-tools.js?v=paperstyle2"></script>
+<script src="assets/js/14-modern-workspace.js?v=official2"></script>
 </body>
 </html>
 

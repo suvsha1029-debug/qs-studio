@@ -15,6 +15,15 @@ function renderPaperNow(){
     body.innerHTML='<div style="padding:20px;text-align:center;font-size:11px;color:#aaa;font-family:Times New Roman,serif">Project is empty.</div>';
     return;
   }
+  const previewStyle=(record,option=false)=>{
+    const rawSize=option ? record?.composerTextSize : record?.questionComposerTextSize;
+    const rawInk=option ? record?.composerEquationInk : record?.questionComposerEquationInk;
+    const size=typeof clampMixedComposerTextSize==='function' ? clampMixedComposerTextSize(rawSize||20) : 20;
+    const ink=typeof clampMixedComposerEquationStroke==='function' ? clampMixedComposerEquationStroke(rawInk||'light') : String(rawInk||'light');
+    const weights={fine:300,light:400,regular:500,bold:650,extra:800};
+    const paperSize=Math.max(9,Math.min(15,Math.round(size*.55*10)/10));
+    return `--pq-content-size:${paperSize}px;--pq-content-weight:${weights[ink]||400}`;
+  };
   body.innerHTML=qs.map((q,i)=>{
     const sm=getSubjectMeta(q.subject);
     const qText=stripFigureMarkers(getPaperQuestionText(q));
@@ -24,7 +33,7 @@ function renderPaperNow(){
     let opts='';
     if(!isNAT){
       opts=`<div class="pq-opts">`+q.options.map((o,j)=>`
-        <div class="pq-opt">
+        <div class="pq-opt" style="${previewStyle(o,true)}">
           <span class="ol">(${String.fromCharCode(65+j)})</span>
           <div class="pq-opt-body">
             ${stripFigureMarkers(getPaperOptionText(o))?`<div class="pq-opt-text">${escH(stripFigureMarkers(getPaperOptionText(o))).replace(/\n/g,'<br>')}</div>`:''}
@@ -38,7 +47,7 @@ function renderPaperNow(){
     return `<div class="paper-q">
       <span class="pq-num">Q.${i+1}</span>
       <div class="pq-body">
-        ${qText?`<div class="pq-text">${escH(qText).replace(/\n/g,'<br>')}</div>`:''}
+        ${qText?`<div class="pq-text" style="${previewStyle(q)}">${escH(qText).replace(/\n/g,'<br>')}</div>`:''}
         ${qImg}
         ${opts}
         <div class="pq-meta">[${q.type}] +${q.marks}M ${q.negMarks}M &nbsp;·&nbsp; ${sm.section}</div>

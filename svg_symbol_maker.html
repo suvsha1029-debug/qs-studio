@@ -13,7 +13,7 @@
 .metadata,.toolbar,.properties{display:flex;gap:8px;align-items:end;flex-wrap:wrap;padding:10px 14px;background:#edf5ff;border-bottom:1px solid var(--line);font-family:Arial,sans-serif}.field{display:flex;flex-direction:column;gap:3px;min-width:118px}.field label,.toolbar-label{font-size:10px;font-weight:800;letter-spacing:.05em;color:#38516d;text-transform:uppercase}.field input,.field select,.properties input,.properties select,.properties textarea{border:1px solid #6683a1;background:#fff;color:#10233f;min-height:30px;padding:5px 7px;font:13px Arial,sans-serif;border-radius:0}.field input[type=number]{width:76px}.field input[type=color],.toolbar input[type=color],.properties input[type=color]{width:35px;padding:2px}.field-grow{flex:1;min-width:190px}
 button{appearance:none;border:1px solid #4b6680;background:#fff;color:#10233f;min-height:30px;padding:5px 9px;cursor:pointer;font:700 12px Arial,sans-serif;border-radius:0;box-shadow:2px 2px 0 rgba(16,35,63,.16)}button:hover{background:#e4f0fc}button:active{transform:translate(1px,1px);box-shadow:none}button.active{background:#1e6fbe;color:#fff;border-color:#124b86}.primary{background:#155fa8;color:#fff;border-color:#0d477f}.danger{color:#8c1f24;border-color:#a9272c}.sep{width:1px;height:30px;background:#9db2c8;margin:0 2px}.toolbar{align-items:center;padding:8px 14px}.toolbar-group{display:flex;gap:4px;align-items:center;flex-wrap:wrap}.toolbar select{height:30px;border:1px solid #6683a1;background:#fff}.toolbar input[type=range]{width:82px}.toolbar small{font:11px Arial,sans-serif;color:var(--muted)}
 .workspace{display:grid;grid-template-columns:minmax(0,1fr) 294px;min-height:570px}.stage{position:relative;padding:16px;background:#cbd9e8;border-right:1px solid var(--line);overflow:auto}.canvas-shell{position:relative;min-width:680px;background:#fff;border:2px solid #344e68;box-shadow:5px 5px 0 rgba(16,35,63,.22)}#svgCanvas{display:block;width:100%;height:auto;min-height:440px;touch-action:none;background:#fff;cursor:crosshair}.side{background:#f9fbfd;padding:14px;font-family:Arial,sans-serif}.side h2{font:700 13px/1 Arial,sans-serif;text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px;padding-bottom:7px;border-bottom:2px solid #1e6fbe}.side p{margin:0 0 12px;color:#536b82;font-size:12px}.prop-row{display:flex;gap:7px;align-items:center;margin:8px 0}.prop-row label{font-size:11px;font-weight:700;color:#3b526a;min-width:64px}.prop-row input,.prop-row select{flex:1;width:100%}.prop-row textarea{width:100%;min-height:72px;resize:vertical}.prop-check{font-size:12px;color:#344e68}.output{border-top:2px solid #315b85;background:#10233f;padding:12px 14px;font-family:Arial,sans-serif}.output-head{display:flex;justify-content:space-between;gap:8px;align-items:center;color:#fff;margin-bottom:8px}.output-head strong{font-size:12px;letter-spacing:.04em;text-transform:uppercase}.output textarea{display:block;width:100%;height:144px;resize:vertical;border:1px solid #6683a1;background:#f7fbff;color:#10233f;padding:8px;font:11px/1.35 Consolas,"Courier New",monospace}
-.text-entry{position:absolute;display:none;z-index:10;width:370px;max-width:calc(100% - 12px);padding:10px;background:#10233f;border:2px solid #d97706;box-shadow:4px 4px 0 rgba(16,35,63,.35);font-family:Arial,sans-serif}.text-entry textarea,.text-entry select{width:100%;border:1px solid #fff;padding:5px;font:13px Arial,sans-serif}.text-entry textarea{min-height:86px;resize:vertical}.text-entry .entry-toolbar,.text-entry .entry-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.text-entry .entry-toolbar button{min-width:32px}.text-entry .entry-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}.text-entry .entry-label{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#d7e7ff}.text-entry button{min-height:26px;padding:3px 7px}.math-preview{display:none;margin-top:7px;padding:7px;background:#f8fbff;border:1px solid #bdd3ed;color:#10233f;min-height:34px;overflow:auto}.math-preview.on{display:block}.math-preview .katex{font-size:1.1em}.selection-box{fill:none;stroke:#d97706;stroke-width:1.5;stroke-dasharray:5 3;pointer-events:none}.selection-group-box{fill:rgba(30,111,190,.05);stroke:#155fa8;stroke-width:2;stroke-dasharray:7 4;pointer-events:none}.group-tools{position:absolute;display:none;z-index:9;gap:4px;align-items:center;padding:5px;background:#10233f;border:2px solid #d97706;box-shadow:4px 4px 0 rgba(16,35,63,.25);font-family:Arial,sans-serif;white-space:nowrap}.group-tools.on{display:flex}.group-tools button{min-height:24px;padding:3px 7px;font-size:11px;box-shadow:none}.group-tools .group-close{min-width:24px;color:#a9272c}.handle{fill:#1e6fbe;stroke:#fff;stroke-width:1.5;cursor:crosshair}.port-label{font:11px Arial,sans-serif;fill:#10233f;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}.hidden{display:none!important}#svgCanvas[data-tool]:not([data-tool="select"]) [data-id]{cursor:inherit!important}
+.text-entry{position:absolute;display:none;z-index:10;width:390px;max-width:calc(100% - 12px);padding:10px;background:#10233f;border:2px solid #d97706;box-shadow:4px 4px 0 rgba(16,35,63,.35);font-family:Arial,sans-serif}.text-entry textarea,.text-entry select{width:100%;border:1px solid #fff;padding:5px;font:13px Arial,sans-serif}.text-entry textarea{min-height:86px;resize:vertical}.text-entry .entry-toolbar,.text-entry .entry-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.text-entry .entry-toolbar button{min-width:32px}.text-entry .entry-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px}.text-entry .entry-label{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#d7e7ff}.text-entry button{min-height:26px;padding:3px 7px}.math-preview{display:none;margin-top:7px;padding:7px;background:#f8fbff;border:1px solid #bdd3ed;color:#10233f;min-height:34px;overflow:auto}.math-preview.on{display:block}.math-preview .katex{font-size:1.1em}.selection-box{fill:none;stroke:#d97706;stroke-width:1.5;stroke-dasharray:5 3;pointer-events:none}.selection-group-box{fill:rgba(30,111,190,.05);stroke:#155fa8;stroke-width:2;stroke-dasharray:7 4;pointer-events:none}.selection-group-box.locked{fill:rgba(21,95,168,.09);stroke:#0c315b;stroke-width:2.5;stroke-dasharray:none}.group-tools{position:absolute;display:none;z-index:9;gap:4px;align-items:center;padding:5px;background:#10233f;border:2px solid #d97706;box-shadow:4px 4px 0 rgba(16,35,63,.25);font-family:Arial,sans-serif;white-space:nowrap}.group-tools.on{display:flex}.group-tools button{min-height:24px;padding:3px 7px;font-size:11px;box-shadow:none}.group-tools .group-close{min-width:24px;color:#a9272c}.handle{fill:#1e6fbe;stroke:#fff;stroke-width:1.5;cursor:crosshair}.handle.group-handle{fill:#0c315b;cursor:nwse-resize}.workflow-strip{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:6px 14px;background:#dcecff;border-bottom:1px solid #8aa8c5;font:700 11px Arial,sans-serif;color:#294866}.workflow-strip strong{color:#0c315b}.workflow-strip .hint{font-weight:400;color:#536b82}.port-label{font:11px Arial,sans-serif;fill:#10233f;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}.hidden{display:none!important}#svgCanvas[data-tool]:not([data-tool="select"]) [data-id]{cursor:inherit!important}
 @media(max-width:900px){.workspace{grid-template-columns:1fr}.stage{border-right:0;border-bottom:1px solid var(--line)}.side{min-height:220px}.masthead{align-items:flex-start;flex-direction:column}.maker{margin:0;border-width:0;box-shadow:none}.metadata,.toolbar{padding:9px}.field-grow{min-width:150px}}
 </style>
 </head>
@@ -68,14 +68,15 @@ button{appearance:none;border:1px solid #4b6680;background:#fff;color:#10233f;mi
       <button data-tool="port" type="button" onclick="setTool('port')">Port</button>
     </div>
     <span class="sep"></span>
-    <div class="toolbar-group"><span class="toolbar-label">Stroke</span><input id="stroke" type="color" value="#111111"><span class="toolbar-label">Fill</span><input id="fill" type="color" value="#ffffff"><span class="toolbar-label">Width</span><select id="strokeWidth"><option value="1">1</option><option value="1.5">1.5</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option><option value="6">6</option></select><span class="toolbar-label">Opacity</span><input id="opacity" type="number" min="0.05" max="1" step="0.05" value="1" title="0.05 = faint, 1 = solid"><label class="prop-check"><input id="snap" type="checkbox" checked> Snap</label><select id="snapStep" title="One visible grid square equals 10px" onchange="updateSnapLabel()"><option value="10">1 grid</option><option value="5">1/2 grid</option><option value="2.5">1/4 grid</option><option value="1">1px</option></select><span id="snapInfo" class="toolbar-label">10px</span></div>
+    <div class="toolbar-group"><span class="toolbar-label">Stroke</span><input id="stroke" type="color" value="#111111"><span class="toolbar-label">Fill</span><input id="fill" type="color" value="#ffffff"><span class="toolbar-label">Width</span><select id="strokeWidth"><option value="1">1</option><option value="1.5">1.5</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option><option value="6">6</option></select><span class="toolbar-label">Opacity</span><input id="opacity" type="number" min="0.05" max="1" step="0.05" value="1" title="0.05 = faint, 1 = solid"><label class="prop-check"><input id="snap" type="checkbox" checked onchange="updateSnapLabel()"> Snap</label><select id="snapStep" title="Grid choice affects new edits only; existing geometry never shifts" onchange="updateSnapLabel()"><option value="10">1 grid</option><option value="5">1/2 grid</option><option value="2.5">1/4 grid</option><option value="1">1px</option></select><span id="snapInfo" class="toolbar-label">10px</span></div>
     <span class="sep"></span>
-    <div class="toolbar-group"><button type="button" onclick="undo()">Undo</button><button type="button" onclick="redo()">Redo</button><button type="button" onclick="rotateSelected(-15)">Rotate CCW</button><button type="button" onclick="rotateSelected(15)">Rotate CW</button><button type="button" class="danger" onclick="deleteSelected()">Delete</button><button type="button" class="danger" onclick="clearAll()">Clear</button></div>
+    <div class="toolbar-group"><button type="button" onclick="undo()">Undo</button><button type="button" onclick="redo()">Redo</button><button type="button" onclick="lockSelectedAsCircuit()">Lock Circuit</button><button type="button" onclick="unlockSelectedCircuit()">Unlock</button><button type="button" onclick="duplicateSelection()">Duplicate</button><button type="button" onclick="rotateSelected(-15)">Rotate CCW</button><button type="button" onclick="rotateSelected(15)">Rotate CW</button><button type="button" class="danger" onclick="deleteSelected()">Delete</button><button type="button" class="danger" onclick="clearAll()">Clear</button></div>
     <span class="sep"></span>
     <div class="toolbar-group"><select id="logicGateSelect" title="Insert editable logic gate"><option value="">Logic gate...</option><option value="and">AND</option><option value="nand">NAND</option><option value="or">OR</option><option value="nor">NOR</option><option value="xor">XOR</option><option value="xnor">XNOR</option><option value="not">NOT</option></select><button type="button" onclick="insertLogicGatePreset()">Insert Gate</button><label><input id="svgImportFile" type="file" accept=".svg,image/svg+xml" class="hidden" onchange="importSvgFile(event)"><button type="button" onclick="document.getElementById('svgImportFile').click()">Import SVG Gate</button></label></div>
     <span class="sep"></span>
     <div class="toolbar-group"><button type="button" onclick="copySvg()">Copy SVG</button><button type="button" class="primary" onclick="downloadSvg()">Download SVG</button><button type="button" class="primary" onclick="downloadSymbolJson()">Export Symbol JSON</button><button type="button" class="primary" onclick="saveSymbolToLibrary()">Save to Library</button><label><input id="importFile" type="file" accept="application/json,.json" class="hidden" onchange="importSymbolJson(event)"><button type="button" onclick="document.getElementById('importFile').click()">Import JSON</button></label></div>
   </nav>
+  <div class="workflow-strip"><strong id="selectionWorkflow">Nothing selected</strong><span id="gridWorkflow">Grid: 1 grid (10px)</span><span class="hint">Shift-click or drag-select parts · Ctrl+G locks a circuit · Ctrl+D duplicates · Ctrl+Shift+G unlocks</span></div>
 
   <section class="workspace">
     <div id="stage" class="stage">
@@ -91,10 +92,13 @@ button{appearance:none;border:1px solid #4b6680;background:#fff;color:#10233f;mi
         </svg>
       </div>
       <div id="groupTools" class="group-tools" aria-label="Selected vector group tools">
+        <button type="button" onclick="lockSelectedAsCircuit()">Lock Circuit</button>
+        <button type="button" onclick="unlockSelectedCircuit()">Unlock</button>
         <button type="button" onclick="groupMoveHint()">Move</button>
-        <button type="button" onclick="copySelectedGroup()">Copy</button>
+        <button type="button" onclick="duplicateSelection()">Duplicate</button>
+        <button type="button" onclick="rotateSelected(-90)">Rotate 90</button>
         <button type="button" onclick="scaleSelectedGroup(.9)">90%</button>
-        <button type="button" onclick="scaleSelectedGroup(.8)">80%</button>
+        <button type="button" onclick="scaleSelectedGroup(1.1)">110%</button>
         <button type="button" class="group-close" onclick="dismissGroupTools()">x</button>
       </div>
       <div id="textEntry" class="text-entry">
@@ -153,6 +157,10 @@ button{appearance:none;border:1px solid #4b6680;background:#fff;color:#10233f;mi
               <option value="Courier New, Consolas, monospace">Mono</option>
             </select>
           </div>
+          <div>
+            <div class="entry-label">Alignment</div>
+            <select id="textAlign" onchange="updateTextMathPreview()"><option value="left">Left</option><option value="center">Center</option><option value="right">Right</option></select>
+          </div>
         </div>
         <div class="entry-actions"><button type="button" class="primary" onclick="commitText()">Add Text</button><button type="button" onclick="cancelText()">Cancel</button></div>
       </div>
@@ -165,7 +173,7 @@ button{appearance:none;border:1px solid #4b6680;background:#fff;color:#10233f;mi
 
 <script>
 const NS='http://www.w3.org/2000/svg';
-let viewW=680,viewH=440,tool='select',elements=[],selectedId=null,multiSelectedIds=[],marquee=null,drawing=null,drag=null,handleDrag=null,pendingText=null,polylineDraft=null,freehandDraft=null,idCount=0;
+let viewW=680,viewH=440,tool='select',elements=[],circuitGroups=[],selectedId=null,multiSelectedIds=[],marquee=null,drawing=null,drag=null,handleDrag=null,pendingText=null,polylineDraft=null,freehandDraft=null,idCount=0;
 let groupClipboard=null,groupPasteCount=0,groupToolsDismissedFor='';
 let undoStack=[],redoStack=[];
 let libraryRootHandle=null;
@@ -175,7 +183,7 @@ const svg=document.getElementById('svgCanvas');
 const elementLayer=document.getElementById('elements');
 const selectionLayer=document.getElementById('selection');
 const preview=document.getElementById('preview');
-const textEntryState={bold:false,italic:false,underline:false};
+const textEntryState={bold:false,italic:false,underline:false,align:'left'};
 const superscriptMap={'0':'\u2070','1':'\u00B9','2':'\u00B2','3':'\u00B3','4':'\u2074','5':'\u2075','6':'\u2076','7':'\u2077','8':'\u2078','9':'\u2079','+':'\u207A','-':'\u207B','=':'\u207C','(':'\u207D',')':'\u207E','n':'\u207F','i':'\u2071','a':'\u1D43','b':'\u1D47','c':'\u1D9C','d':'\u1D48','e':'\u1D49','f':'\u1DA0','g':'\u1D4D','h':'\u02B0','j':'\u02B2','k':'\u1D4F','l':'\u02E1','m':'\u1D50','o':'\u1D52','p':'\u1D56','r':'\u02B3','s':'\u02E2','t':'\u1D57','u':'\u1D58','v':'\u1D5B','w':'\u02B7','x':'\u02E3','y':'\u02B8','z':'\u1DBB'};
 const subscriptMap={'0':'\u2080','1':'\u2081','2':'\u2082','3':'\u2083','4':'\u2084','5':'\u2085','6':'\u2086','7':'\u2087','8':'\u2088','9':'\u2089','+':'\u208A','-':'\u208B','=':'\u208C','(':'\u208D',')':'\u208E','a':'\u2090','e':'\u2091','h':'\u2095','i':'\u1D62','j':'\u2C7C','k':'\u2096','l':'\u2097','m':'\u2098','n':'\u2099','o':'\u2092','p':'\u209A','r':'\u1D63','s':'\u209B','t':'\u209C','u':'\u1D64','v':'\u1D65','x':'\u2093'};
 
@@ -186,17 +194,36 @@ function selected(){return elements.find(item=>item.id===selectedId)||null;}
 function clearSelection(){selectedId=null;multiSelectedIds=[];groupToolsDismissedFor='';}
 function selectOne(id){selectedId=id||null;multiSelectedIds=[];groupToolsDismissedFor='';}
 function selectedItems(){const ids=multiSelectedIds.length?multiSelectedIds:(selectedId?[selectedId]:[]);return elements.filter(item=>ids.includes(item.id));}
+function circuitForElementId(id){const item=elements.find(entry=>entry.id===id),direct=item?.circuitId?circuitGroups.find(group=>group.id===item.circuitId&&group.locked!==false):null;return direct||circuitGroups.find(group=>group.locked!==false&&group.elementIds.includes(id))||null;}
+function normalizeCircuitGroups(){
+  const ids=new Set(elements.map(item=>item.id));
+  circuitGroups=circuitGroups.map(group=>({...group,elementIds:[...new Set((group.elementIds||[]).filter(id=>ids.has(id)))]})).filter(group=>group.elementIds.length>1);
+  const valid=new Set(circuitGroups.map(group=>group.id));
+  elements.forEach(item=>{if(item.circuitId&&!valid.has(item.circuitId))delete item.circuitId;});
+  circuitGroups.forEach(group=>group.elementIds.forEach(id=>{const item=elements.find(entry=>entry.id===id);if(item)item.circuitId=group.id;}));
+}
+function selectedCircuit(){const items=selectedItems();if(!items.length)return null;const group=circuitForElementId(items[0].id);return group&&group.elementIds.length===items.length&&group.elementIds.every(id=>items.some(item=>item.id===id))?group:null;}
+function expandIdsForLockedCircuits(ids){const expanded=new Set(ids||[]);[...expanded].forEach(id=>{const group=circuitForElementId(id);group?.elementIds.forEach(member=>expanded.add(member));});return [...expanded];}
 function style(){return {stroke:document.getElementById('stroke').value,fill:document.getElementById('fill').value,sw:+document.getElementById('strokeWidth').value,opacity:clamp(+document.getElementById('opacity').value||1,.05,1)};}
 function snap(value){
   if(!document.getElementById('snap').checked)return Math.round(value);
   const step=Math.max(.25,Number(document.getElementById('snapStep')?.value||10));
   return Math.round(value/step)*step;
 }
+function currentSnapStep(){return document.getElementById('snap').checked?Math.max(.25,Number(document.getElementById('snapStep')?.value||10)):1;}
+function snappedTranslation(box,dx,dy){
+  if(!document.getElementById('snap').checked)return{dx:rounded(dx),dy:rounded(dy)};
+  return{dx:rounded(snap(box.x+dx)-box.x),dy:rounded(snap(box.y+dy)-box.y)};
+}
 function updateSnapLabel(){
   const step=Number(document.getElementById('snapStep')?.value||10);
   const label=step===10?'1 grid':step===5?'1/2 grid':step===2.5?'1/4 grid':'1px';
   const info=document.getElementById('snapInfo');
   if(info)info.textContent=label;
+  const workflow=document.getElementById('gridWorkflow');
+  if(workflow)workflow.textContent=`Grid: ${label} (${step}px snap)`;
+  const minor=document.getElementById('minorGrid');
+  if(minor){const visualStep=step>=10?5:step;minor.setAttribute('width',visualStep);minor.setAttribute('height',visualStep);const path=minor.querySelector('path');if(path)path.setAttribute('d',`M${visualStep} 0H0V${visualStep}`);}
   setStatus(`Snap resolution: ${label}.`);
 }
 function point(event){const box=svg.getBoundingClientRect();return{x:snap((event.clientX-box.left)*viewW/box.width),y:snap((event.clientY-box.top)*viewH/box.height)};}
@@ -490,13 +517,16 @@ function measureKatexLabelBox(item){
   const lines=textLines(renderMathLabelText(source));
   return {w:estimateTextWidth({...item,type:'text',text:renderMathLabelText(source)})+6,h:Math.max(fs+6,lines.length*fs*1.2+6),html:''};
 }
+function textAnchorForItem(item){return item?.align==='center'?'middle':item?.align==='right'?'end':'start';}
+function alignedTextLeft(item,width){return item?.align==='center'?item.x-width/2:item?.align==='right'?item.x-width:item.x;}
+function richTextCss(item){return `font-weight:${item?.bold?'700':'400'};font-style:${item?.italic?'italic':'normal'};text-decoration:${item?.underline?'underline':'none'}`;}
 function katexForeignObjectMarkup(item){
   const box=measureKatexLabelBox(item);
   if(!box.html) return '';
   const fs=Math.max(8,+item.fs||16);
   const family=esc(item.fontFamily||'KaTeX_Main, Georgia, Times New Roman, serif');
   const fill=esc(item.fill||item.stroke||'#111');
-  return `<foreignObject x="${item.x}" y="${item.y-box.h+Math.max(2,fs*.12)}" width="${box.w}" height="${box.h}" data-qsmath-renderer="katex" data-qsmath-source="${esc(item.text||'')}"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:${fs}px;line-height:1;color:${fill};font-family:${family};white-space:nowrap">${xhtmlForSvgImage(box.html)}</div></foreignObject>`;
+  return `<foreignObject x="${alignedTextLeft(item,box.w)}" y="${item.y-box.h+Math.max(2,fs*.12)}" width="${box.w}" height="${box.h}" data-qsmath-renderer="katex" data-qsmath-source="${esc(item.text||'')}"><div xmlns="http://www.w3.org/1999/xhtml" style="font-size:${fs}px;line-height:1;color:${fill};font-family:${family};white-space:nowrap;${richTextCss(item)}">${xhtmlForSvgImage(box.html)}</div></foreignObject>`;
 }
 function xhtmlForSvgImage(html){
   return String(html||'')
@@ -515,6 +545,7 @@ function openTextEntryForItem(item){
   input.value=item?.text||'';
   document.getElementById('textFontSize').value=String(item?.fs||18);
   document.getElementById('textFontFamily').value=item?.fontFamily||'Georgia, Times New Roman, serif';
+  document.getElementById('textAlign').value=item?.align||'left';
   textEntryState.bold=!!item?.bold;
   textEntryState.italic=!!item?.italic;
   textEntryState.underline=!!item?.underline;
@@ -532,9 +563,10 @@ function updateTextMathPreview(){
   preview.classList.toggle('on',!!isMath);
   if(!isMath){ preview.innerHTML=''; return; }
   const html=renderKatexMixedLabelHTML(input?.value||'');
+  preview.style.fontWeight=textEntryState.bold?'700':'400';preview.style.fontStyle=textEntryState.italic?'italic':'normal';preview.style.textDecoration=textEntryState.underline?'underline':'none';preview.style.textAlign=document.getElementById('textAlign')?.value||'left';
   preview.innerHTML=html || esc(input?.value ? renderMathLabelText(input.value) : 'KaTeX preview');
 }
-function toggleTextEntryStyle(kind){textEntryState[kind]=!textEntryState[kind];syncTextEntryButtons();}
+function toggleTextEntryStyle(kind){textEntryState[kind]=!textEntryState[kind];syncTextEntryButtons();updateTextMathPreview();}
 function transformSelectedText(map){
   const input=document.getElementById('textValue');
   const start=input.selectionStart??0,end=input.selectionEnd??0,value=input.value||'';
@@ -577,7 +609,7 @@ function makeTextNode(item){
     catch(_){ group.appendChild(makeTextNode({...item,type:'text',text:renderMathLabelText(item.text)})); }
     return group;
   }
-  const node=setAttrs(make('text'),{x:item.x,y:item.y,fill:item.fill,'font-size':item.fs||16,'font-family':item.fontFamily||'Georgia, Times New Roman, serif','font-weight':item.bold?'700':'400','font-style':item.italic?'italic':'normal'});
+  const node=setAttrs(make('text'),{x:item.x,y:item.y,fill:item.fill,'font-size':item.fs||16,'font-family':item.fontFamily||'Georgia, Times New Roman, serif','font-weight':item.bold?'700':'400','font-style':item.italic?'italic':'normal','text-anchor':textAnchorForItem(item)});
   if(item.underline) node.setAttribute('text-decoration','underline');
   const lines=textLines(displayTextForItem(item));
   lines.forEach((line,index)=>{
@@ -591,7 +623,7 @@ function svgTextMarkup(item){
   const family=esc(item.fontFamily||'Georgia, Times New Roman, serif');
   const attrs=item.type==='mathText'?` data-qsmath-type="mathText" data-qsmath-source="${esc(item.text||'')}"`:'';
   const lines=textLines(displayTextForItem(item)).map((line,index)=>`<tspan x="${item.x}" dy="${index===0?0:(item.fs||16)*1.18}">${esc(line||' ')}</tspan>`).join('');
-  const fallback=`<text x="${item.x}" y="${item.y}" fill="${esc(item.fill)}" font-size="${item.fs||16}" font-family="${family}" font-weight="${item.bold?'700':'400'}" font-style="${item.italic?'italic':'normal'}"${item.underline?' text-decoration="underline"':''}${attrs}>${lines}</text>`;
+  const fallback=`<text x="${item.x}" y="${item.y}" fill="${esc(item.fill)}" font-size="${item.fs||16}" font-family="${family}" font-weight="${item.bold?'700':'400'}" font-style="${item.italic?'italic':'normal'}" text-anchor="${textAnchorForItem(item)}"${item.underline?' text-decoration="underline"':''}${attrs}>${lines}</text>`;
   if(item.type!=='mathText') return fallback;
   const katex=katexForeignObjectMarkup(item);
   return katex ? `<g${attrs}>${katex}<g opacity="0" aria-hidden="true">${fallback}</g></g>` : fallback;
@@ -602,7 +634,7 @@ function portableSvgTextMarkup(item){
   if(item.type==='mathText') return vectorizedKatexSvgTextMarkup(item,attrs) || portableMathSvgTextMarkup(item,attrs,family);
   const text=displayTextForItem(item);
   const lines=textLines(text).map((line,index)=>`<tspan x="${item.x}" dy="${index===0?0:(item.fs||16)*1.18}">${esc(line||' ')}</tspan>`).join('');
-  return `<text x="${item.x}" y="${item.y}" fill="${esc(item.fill)}" font-size="${item.fs||16}" font-family="${family}" font-weight="${item.bold?'700':'400'}" font-style="${item.italic?'italic':'normal'}"${item.underline?' text-decoration="underline"':''}${attrs}>${lines}</text>`;
+  return `<text x="${item.x}" y="${item.y}" fill="${esc(item.fill)}" font-size="${item.fs||16}" font-family="${family}" font-weight="${item.bold?'700':'400'}" font-style="${item.italic?'italic':'normal'}" text-anchor="${textAnchorForItem(item)}"${item.underline?' text-decoration="underline"':''}${attrs}>${lines}</text>`;
 }
 function svgComputedTextStyle(node){
   const st=window.getComputedStyle ? window.getComputedStyle(node.parentElement||node) : {};
@@ -619,7 +651,7 @@ function vectorizedKatexSvgTextMarkup(item,attrs){
   if(!html || !document?.body) return '';
   const box=measureKatexLabelBox(item);
   const fs=Math.max(8,+item.fs||16);
-  const x0=item.x, y0=item.y-box.h+Math.max(2,fs*.12);
+  const x0=alignedTextLeft(item,box.w), y0=item.y-box.h+Math.max(2,fs*.12);
   const host=document.createElement('div');
   host.style.cssText=`position:absolute;left:-20000px;top:-20000px;width:${box.w}px;min-height:${box.h}px;font-size:${fs}px;line-height:1;color:${item.fill||item.stroke||'#111'};font-family:${item.fontFamily||'Arial, Helvetica, sans-serif'};white-space:nowrap;visibility:hidden`;
   host.innerHTML=html;
@@ -649,7 +681,7 @@ function vectorizedKatexSvgTextMarkup(item,attrs){
         if(rect.width<=0||rect.height<=0)return;
         const x=x0+rect.left-hostRect.left;
         const y=y0+rect.top-hostRect.top+rect.height*.78;
-        pieces.push(`<text x="${Number(x.toFixed(2))}" y="${Number(y.toFixed(2))}" fill="${esc(style.fill)}" font-size="${Number(style.size.toFixed(2))}" font-family="${esc(style.family)}" font-weight="${esc(style.weight)}" font-style="${esc(style.style)}">${esc(text)}</text>`);
+        pieces.push(`<text x="${Number(x.toFixed(2))}" y="${Number(y.toFixed(2))}" fill="${esc(style.fill)}" font-size="${Number(style.size.toFixed(2))}" font-family="${esc(style.family)}" font-weight="${item.bold?'700':esc(style.weight)}" font-style="${item.italic?'italic':esc(style.style)}"${item.underline?' text-decoration="underline"':''}>${esc(text)}</text>`);
       });
       range.detach?.();
     }
@@ -719,29 +751,27 @@ function portableMathSvgTextMarkup(item,attrs,family){
   const box=measureKatexLabelBox(item);
   const top=item.y-box.h+Math.max(2,fs*.12);
   const firstBaseline=top+fs;
-  return `<text x="${item.x}" y="${Number(firstBaseline.toFixed(2))}" fill="${esc(item.fill)}" font-size="${fs}" font-family="${family}" font-weight="${item.bold?'700':'400'}" font-style="${item.italic?'italic':'normal'}"${item.underline?' text-decoration="underline"':''}${attrs}>${lines.map((line,lineIndex)=>`<tspan x="${item.x}" dy="${lineIndex===0?0:lineHeight}">${line.map(run=>run.script?`<tspan font-size="${scriptSize}" baseline-shift="${run.script==='sup'?'super':'sub'}">${esc(run.text)}</tspan>`:`<tspan>${esc(run.text)}</tspan>`).join('')}</tspan>`).join('')}</text>`;
+  return `<text x="${item.x}" y="${Number(firstBaseline.toFixed(2))}" fill="${esc(item.fill)}" font-size="${fs}" font-family="${family}" font-weight="${item.bold?'700':'400'}" font-style="${item.italic?'italic':'normal'}" text-anchor="${textAnchorForItem(item)}"${item.underline?' text-decoration="underline"':''}${attrs}>${lines.map((line,lineIndex)=>`<tspan x="${item.x}" dy="${lineIndex===0?0:lineHeight}">${line.map(run=>run.script?`<tspan font-size="${scriptSize}" baseline-shift="${run.script==='sup'?'super':'sub'}">${esc(run.text)}</tspan>`:`<tspan>${esc(run.text)}</tspan>`).join('')}</tspan>`).join('')}</text>`;
 }
-function pushHistory(){undoStack.push(JSON.stringify(elements));if(undoStack.length>60)undoStack.shift();redoStack=[];}
-function restore(snapshot){elements=JSON.parse(snapshot);clearSelection();renderAll();}
-function undo(){if(!undoStack.length)return;redoStack.push(JSON.stringify(elements));restore(undoStack.pop());setStatus('Undo applied');}
-function redo(){if(!redoStack.length)return;undoStack.push(JSON.stringify(elements));restore(redoStack.pop());setStatus('Redo applied');}
+function editorSnapshot(){return JSON.stringify({elements,circuitGroups});}
+function pushHistory(){undoStack.push(editorSnapshot());if(undoStack.length>60)undoStack.shift();redoStack=[];}
+function restore(snapshot){const state=JSON.parse(snapshot);if(Array.isArray(state)){elements=state;circuitGroups=[];}else{elements=Array.isArray(state.elements)?state.elements:[];circuitGroups=Array.isArray(state.circuitGroups)?state.circuitGroups:[];}normalizeCircuitGroups();clearSelection();renderAll();}
+function undo(){if(!undoStack.length)return;redoStack.push(editorSnapshot());restore(undoStack.pop());setStatus('Undo applied');}
+function redo(){if(!redoStack.length)return;undoStack.push(editorSnapshot());restore(redoStack.pop());setStatus('Redo applied');}
 function setStatus(value){document.getElementById('status').textContent=value;}
 function setTool(next){tool=next;drawing=null;drag=null;handleDrag=null;polylineDraft=null;freehandDraft=null;hidePreview();svg.dataset.tool=next;document.querySelectorAll('[data-tool]').forEach(button=>button.classList.toggle('active',button.dataset.tool===next));svg.style.cursor=next==='select'?'default':(next==='text'||next==='mathText')?'text':next==='paint'?'cell':(next==='pen'||next==='dottedPen')?'crosshair':'crosshair';const arcTools=['arc','dottedArc','curveArrow','dottedCurveArrow'];setStatus(next==='select'?'Double-click an element to edit it':next==='port'?'Click to add named circuit ports':next==='mathText'?'Click to place vector math text with Greek/LaTeX recognition':next==='text'?'Click to place editable text boxes':next==='paint'?'Click closed shapes to apply the selected fill':next==='polyline'?'Click each sharp corner, then double-click the last point to finish.':next==='pen'?'Hold and draw freely. Release to auto-smooth into a clean vector path.':next==='dottedPen'?'Hold and draw freely. Release to auto-smooth into a clean dotted vector path.':arcTools.includes(next)?'Drag to draw. Select it and pull the blue middle dot to bend or soften it.':'Drawing '+next+' - press Esc to stop');updateGroupTools();}
 function add(item){pushHistory();elements.push(item);selectOne(item.id);renderAll();}
-function removeSelected(){const ids=selectedItems().map(item=>item.id);if(!ids.length)return;pushHistory();elements=elements.filter(item=>!ids.includes(item.id));clearSelection();renderAll();}
+function removeSelected(){const ids=selectedItems().map(item=>item.id);if(!ids.length)return;pushHistory();elements=elements.filter(item=>!ids.includes(item.id));circuitGroups=circuitGroups.map(group=>({...group,elementIds:group.elementIds.filter(id=>!ids.includes(id))})).filter(group=>group.elementIds.length>1);normalizeCircuitGroups();clearSelection();renderAll();}
 function deleteSelected(){removeSelected();}
-function clearAll(){if(!elements.length||!confirm('Clear the complete symbol draft?'))return;pushHistory();elements=[];clearSelection();renderAll();setStatus('Blank symbol draft');}
+function clearAll(){if(!elements.length||!confirm('Clear the complete symbol draft?'))return;pushHistory();elements=[];circuitGroups=[];clearSelection();renderAll();setStatus('Blank symbol draft');}
 
 function normalizedBox(x1,y1,x2,y2){return{x:Math.min(x1,x2),y:Math.min(y1,y2),w:Math.abs(x2-x1),h:Math.abs(y2-y1)};}
 function boxesIntersect(a,b){return a.x<=b.x+b.w&&a.x+a.w>=b.x&&a.y<=b.y+b.h&&a.y+a.h>=b.y;}
 function markSize(start,end){return Math.max(6,Math.round(Math.max(Math.abs(end.x-start.x),Math.abs(end.y-start.y))));}
 function itemOpacity(item){return clamp(+item?.opacity||1,.05,1);}
 function itemCenter(item){
-  if(['rect','ellipse','triangle','triangleDown','diamond','cuboid','embeddedSvg'].includes(item.type)) return {x:item.x+item.w/2,y:item.y+item.h/2};
-  if(['line','arrow','wave','curveArrow'].includes(item.type)) return {x:(item.x1+item.x2)/2,y:(item.y1+item.y2)/2};
-  if(item.type==='text'||item.type==='mathText') return {x:item.x+estimateTextWidth(item)/2,y:item.y-(item.fs||16)*0.4};
-  if(item.type==='path'){const box=bounds(item);return{x:box.x+box.w/2,y:box.y+box.h/2};}
-  return {x:item.x,y:item.y};
+  const box=bounds(item);
+  return{x:box.x+box.w/2,y:box.y+box.h/2};
 }
 function itemTransform(item){
   const rot=((+item?.rot||0)%360+360)%360;
@@ -909,7 +939,7 @@ function trianglePoints(item,inverted=false){
     : `${x+w/2},${y} ${x+w},${y+h} ${x},${y+h}`;
 }
 function rotationCenter(item){
-  const box=bounds(item);
+  const box=rawBounds(item);
   return {x:box.x+box.w/2,y:box.y+box.h/2};
 }
 function rotationTransform(item){
@@ -919,7 +949,8 @@ function rotationTransform(item){
   return `rotate(${angle} ${center.x} ${center.y})`;
 }
 function cuboidFaces(item){const x=item.x,y=item.y,w=Math.max(12,item.w),h=Math.max(12,item.h),d=clamp(+item.depth||Math.min(w,h)*.22,6,Math.max(6,Math.min(w,h)*.45));return{front:`${x},${y+d} ${x+w-d},${y+d} ${x+w-d},${y+h} ${x},${y+h}`,top:`${x},${y+d} ${x+d},${y} ${x+w},${y} ${x+w-d},${y+d}`,side:`${x+w-d},${y+d} ${x+w},${y} ${x+w},${y+h-d} ${x+w-d},${y+h}`};}
-function bounds(item){if(['rect','ellipse','triangle','triangleDown','diamond','cuboid'].includes(item.type))return{x:item.x,y:item.y,w:item.w,h:item.h};if(item.type==='path')return item.box?{...item.box}:pathBoundsFromD(item.d);if(item.type==='embeddedSvg')return embeddedSvgBounds(item);if(item.type==='polyline')return polylineBounds(item.points);if(item.type==='freehand')return freehandBounds(item);if(isLineItem(item)){const pad=['curveArrow','arc','dottedCurveArrow','dottedArc'].includes(item.type)?Math.abs(+item.bend||24):item.type==='wave'?Math.abs(+item.amp||14):0;return{x:Math.min(item.x1,item.x2)-pad,y:Math.min(item.y1,item.y2)-pad,w:Math.abs(item.x2-item.x1)+pad*2,h:Math.abs(item.y2-item.y1)+pad*2};}if(item.type==='text'||item.type==='mathText'){const fs=item.fs||16,lines=textLines(displayTextForItem(item));return{x:item.x,y:item.y-fs,w:estimateTextWidth(item),h:Math.max(1,lines.length)*fs*1.18};}return{x:item.x-14,y:item.y-14,w:28,h:28};}
+function rawBounds(item){if(['rect','ellipse','triangle','triangleDown','diamond','cuboid'].includes(item.type))return{x:item.x,y:item.y,w:item.w,h:item.h};if(item.type==='path')return item.box?{...item.box}:pathBoundsFromD(item.d);if(item.type==='embeddedSvg')return embeddedSvgBounds(item);if(item.type==='polyline')return polylineBounds(item.points);if(item.type==='freehand')return freehandBounds(item);if(isLineItem(item)){const pad=['curveArrow','arc','dottedCurveArrow','dottedArc'].includes(item.type)?Math.abs(+item.bend||24):item.type==='wave'?Math.abs(+item.amp||14):0;return{x:Math.min(item.x1,item.x2)-pad,y:Math.min(item.y1,item.y2)-pad,w:Math.abs(item.x2-item.x1)+pad*2,h:Math.abs(item.y2-item.y1)+pad*2};}if(item.type==='text'||item.type==='mathText'){const fs=item.fs||16,lines=textLines(displayTextForItem(item)),w=estimateTextWidth(item);return{x:alignedTextLeft(item,w),y:item.y-fs,w,h:Math.max(1,lines.length)*fs*1.18};}return{x:item.x-14,y:item.y-14,w:28,h:28};}
+function bounds(item){const box=rawBounds(item),angle=Number(item?.rotation)||0;return angle?rotatedPaintBox(box,angle,{x:box.x+box.w/2,y:box.y+box.h/2}):box;}
 function rounded(value){return Math.round((Number(value)||0)*10)/10;}
 function groupBounds(items){
   const boxes=(Array.isArray(items)?items:[]).map(item=>bounds(item)).filter(box=>box&&Number.isFinite(+box.x)&&Number.isFinite(+box.y)&&Number.isFinite(+box.w)&&Number.isFinite(+box.h));
@@ -949,7 +980,7 @@ function rotatedPaintBox(box,angle,center){
   return{x:Math.min(...xs),y:Math.min(...ys),w:Math.max(...xs)-Math.min(...xs),h:Math.max(...ys)-Math.min(...ys)};
 }
 function itemPaintBounds(item){
-  const base=bounds(item);
+  const base=rawBounds(item);
   const sw=Math.max(1,+item?.sw||2);
   let pad=Math.max(8,sw*3);
   if(isArrow(item))pad=Math.max(pad,sw*12,24);
@@ -1000,6 +1031,7 @@ function exportStyleManifest(geom){
     elements:(safe.items||[]).map(item=>({
       id:item.id,
       type:item.type,
+      circuitId:item.circuitId||undefined,
       x:item.x,
       y:item.y,
       x1:item.x1,
@@ -1018,6 +1050,7 @@ function exportStyleManifest(geom){
       bold:!!item.bold,
       italic:!!item.italic,
       underline:!!item.underline,
+      align:item.align||undefined,
       rotation:+item.rotation||0,
       size:+item.size||undefined,
       bend:+item.bend||undefined,
@@ -1028,7 +1061,35 @@ function exportStyleManifest(geom){
   };
 }
 function selectedSignature(){return selectedItems().map(item=>item.id).sort().join('|');}
-function applySelectionIds(ids){const safe=[...new Set((ids||[]).filter(Boolean))];selectedId=safe[0]||null;multiSelectedIds=safe.length>1?safe:[];groupToolsDismissedFor='';}
+function applySelectionIds(ids){const safe=expandIdsForLockedCircuits([...new Set((ids||[]).filter(Boolean))]);selectedId=safe[0]||null;multiSelectedIds=safe.length>1?safe:[];groupToolsDismissedFor='';}
+function circuitName(group){return group?.name||'Locked Circuit';}
+function nextCircuitName(){return `Circuit ${circuitGroups.length+1}`;}
+function lockSelectedAsCircuit(){
+  const items=selectedItems();
+  if(items.length<2){setStatus('Select at least two unlocked parts to lock as a circuit.');return;}
+  const existing=[...new Set(items.map(item=>circuitForElementId(item.id)?.id).filter(Boolean))];
+  if(existing.length===1&&selectedCircuit()){setStatus(`${circuitName(selectedCircuit())} is already locked.`);return;}
+  if(existing.length){setStatus('Unlock existing circuit groups before combining them into a new circuit.');return;}
+  pushHistory();
+  const group={id:'circuit_'+uid(),name:nextCircuitName(),elementIds:items.map(item=>item.id),locked:true,createdGridStep:currentSnapStep()};
+  circuitGroups.push(group);
+  items.forEach(item=>{item.circuitId=group.id;});
+  applySelectionIds(group.elementIds);
+  renderAll();
+  setStatus(`${group.name} locked as one reversible circuit.`);
+}
+function unlockSelectedCircuit(){
+  const group=selectedCircuit();
+  if(!group){setStatus('Select one locked circuit to unlock it.');return;}
+  pushHistory();
+  circuitGroups=circuitGroups.filter(item=>item.id!==group.id);
+  elements.forEach(item=>{if(item.circuitId===group.id)delete item.circuitId;});
+  normalizeCircuitGroups();
+  applySelectionIds(group.elementIds);
+  renderAll();
+  setStatus(`${circuitName(group)} unlocked; its parts are individually editable again.`);
+}
+function renameSelectedCircuit(value){const group=selectedCircuit();if(!group)return;group.name=String(value||'').trim().slice(0,80)||'Locked Circuit';updateWorkflowStatus();setStatus(`Circuit renamed ${group.name}.`);}
 function updateGroupTools(items=selectedItems()){
   const tools=document.getElementById('groupTools');
   if(!tools)return;
@@ -1040,7 +1101,7 @@ function updateGroupTools(items=selectedItems()){
   const box=groupBounds(items),stage=document.getElementById('stage'),svgBox=svg.getBoundingClientRect(),stageBox=stage.getBoundingClientRect();
   const left=svgBox.left-stageBox.left+((box.x+box.w)/Math.max(1,viewW))*svgBox.width+8;
   const top=svgBox.top-stageBox.top+(box.y/Math.max(1,viewH))*svgBox.height;
-  tools.style.left=clamp(left,6,Math.max(6,stage.clientWidth-250))+'px';
+  tools.style.left=clamp(left,6,Math.max(6,stage.clientWidth-480))+'px';
   tools.style.top=clamp(top,6,Math.max(6,stage.clientHeight-38))+'px';
   tools.classList.add('on');
 }
@@ -1119,6 +1180,27 @@ function scaleSelectedGroup(factor){
   renderAll();
   setStatus(`Selection scaled to ${Math.round(factor*100)}%.`);
 }
+function resizeSelectedGroupTo(axis,value){
+  const items=selectedItems(),box=groupBounds(items),target=Math.max(4,+value||0);
+  if(items.length<2||!box.w||!box.h)return;
+  const factor=axis==='h'?target/box.h:target/box.w;
+  scaleSelectedGroup(clamp(factor,.05,20));
+}
+function rotatePointAround(point,center,angle){const rad=angle*Math.PI/180,cos=Math.cos(rad),sin=Math.sin(rad),dx=point.x-center.x,dy=point.y-center.y;return{x:rounded(center.x+dx*cos-dy*sin),y:rounded(center.y+dx*sin+dy*cos)};}
+function rotateItemAround(item,center,angle){
+  const own=itemCenter(item),next=rotatePointAround(own,center,angle);
+  moveItemBy(item,next.x-own.x,next.y-own.y);
+  item.rotation=rounded(((Number(item.rotation)||0)+angle)%360);
+  return item;
+}
+function rotateSelectionAsUnit(delta){
+  const items=selectedItems();if(!items.length)return;
+  pushHistory();
+  if(items.length===1){items[0].rotation=rounded(((Number(items[0].rotation)||0)+Number(delta||0))%360);}
+  else{const box=groupBounds(items),center={x:box.x+box.w/2,y:box.y+box.h/2};items.forEach(item=>rotateItemAround(item,center,Number(delta||0)));}
+  renderAll();
+  setStatus(`${selectedCircuit()?circuitName(selectedCircuit()):'Selection'} rotated ${Math.abs(Number(delta||0))}° ${Number(delta||0)<0?'counter-clockwise':'clockwise'}.`);
+}
 function selectAllElements(){
   if(!elements.length){setStatus('No vector parts to select.');return;}
   applySelectionIds(elements.map(item=>item.id));
@@ -1128,7 +1210,8 @@ function selectAllElements(){
 function selectedGroupPayload(){
   const items=selectedItems();
   if(!items.length)return null;
-  return{kind:'qs-svg-maker-selection',version:1,items:copy(items),bounds:groupBounds(items),viewW,viewH};
+  const group=selectedCircuit();
+  return{kind:'qs-svg-maker-selection',version:2,items:copy(items),circuitGroup:group?copy(group):null,bounds:groupBounds(items),viewW,viewH};
 }
 function sanitizePortName(value){return String(value||'').toUpperCase().replace(/[^A-Z0-9_]/g,'').slice(0,16);}
 function uniquePortName(preferred,used){
@@ -1172,19 +1255,27 @@ async function pasteCopiedGroup(){
   const usedPorts=new Set(elements.filter(item=>item.type==='port').map(item=>sanitizePortName(item.name)).filter(Boolean));
   const clones=copy(payload.items).map(item=>{
     item.id=uid();
+    delete item.circuitId;
     if(item.type==='port'){item.name=uniquePortName(item.name,usedPorts);usedPorts.add(item.name);}
     return moveItemBy(item,offset.dx,offset.dy);
   });
   pushHistory();
+  if(payload.circuitGroup&&clones.length>1){const group={id:'circuit_'+uid(),name:`${payload.circuitGroup.name||'Circuit'} Copy`,elementIds:clones.map(item=>item.id),locked:true,createdGridStep:currentSnapStep()};clones.forEach(item=>{item.circuitId=group.id;});circuitGroups.push(group);}
   elements.push(...clones);
   groupPasteCount++;
   applySelectionIds(clones.map(item=>item.id));
   renderAll();
   setStatus(`${clones.length} vector part${clones.length===1?'':'s'} pasted.`);
 }
+function duplicateSelection(){
+  const payload=selectedGroupPayload();
+  if(!payload){setStatus('Select a part or circuit to duplicate.');return;}
+  groupClipboard=payload;groupPasteCount=0;
+  pasteCopiedGroup();
+}
 function make(type){return document.createElementNS(NS,type);}
 function setAttrs(node,attrs){Object.entries(attrs).forEach(([key,value])=>node.setAttribute(key,String(value)));return node;}
-function renderElement(item){const group=make('g');group.dataset.id=item.id;group.style.cursor='move';group.setAttribute('opacity',String(itemOpacity(item)));const transform=rotationTransform(item);if(transform)group.setAttribute('transform',transform);let node;
+function renderElement(item){const group=make('g');group.dataset.id=item.id;if(item.circuitId)group.dataset.circuitId=item.circuitId;group.style.cursor='move';group.setAttribute('opacity',String(itemOpacity(item)));const transform=rotationTransform(item);if(transform)group.setAttribute('transform',transform);let node;
   if(item.type==='rect'){node=setAttrs(make('rect'),{x:item.x,y:item.y,width:item.w,height:item.h,fill:item.fill,stroke:item.stroke,'stroke-width':item.sw,rx:item.rx||0});}
   if(item.type==='ellipse'){node=setAttrs(make('ellipse'),{cx:item.x+item.w/2,cy:item.y+item.h/2,rx:item.w/2,ry:item.h/2,fill:item.fill,stroke:item.stroke,'stroke-width':item.sw});}
   if(item.type==='triangle'||item.type==='triangleDown'){node=setAttrs(make('polygon'),{points:trianglePoints(item,item.type==='triangleDown'),fill:item.fill,stroke:item.stroke,'stroke-width':item.sw,'stroke-linejoin':'round'});}
@@ -1204,15 +1295,17 @@ function renderElement(item){const group=make('g');group.dataset.id=item.id;grou
   if(item.type==='port'){node=make('g');node.appendChild(setAttrs(make('circle'),{cx:item.x,cy:item.y,r:5,fill:'#fff',stroke:item.stroke,'stroke-width':item.sw}));const label=setAttrs(make('text'),{x:item.x+8,y:item.y-7,class:'port-label'});label.textContent=item.name;node.appendChild(label);}
   group.appendChild(node);return group;
 }
-function renderAll(){svg.dataset.tool=tool;elementLayer.innerHTML='';elements.forEach(item=>elementLayer.appendChild(renderElement(item)));renderSelection();renderProperties();updateOutput();}
+function updateWorkflowStatus(){const host=document.getElementById('selectionWorkflow'),items=selectedItems(),group=selectedCircuit();if(!host)return;host.textContent=group?`🔒 ${circuitName(group)} · ${items.length} parts · one unit`:items.length>1?`${items.length} parts selected · ready to lock`:items.length===1?`1 ${items[0].type} selected`:'Nothing selected';}
+function renderAll(){svg.dataset.tool=tool;elementLayer.innerHTML='';elements.forEach(item=>elementLayer.appendChild(renderElement(item)));renderSelection();renderProperties();updateOutput();updateWorkflowStatus();}
 function renderSelection(){
   selectionLayer.innerHTML='';
   if(marquee){const box=normalizedBox(marquee.start.x,marquee.start.y,marquee.end.x,marquee.end.y);selectionLayer.appendChild(setAttrs(make('rect'),{x:box.x,y:box.y,width:box.w,height:box.h,'class':'selection-box',fill:'rgba(30,111,190,.08)'}));}
-  const selectedItemsNow=selectedItems();
-  selectedItemsNow.forEach(item=>{const box=bounds(item);selectionLayer.appendChild(setAttrs(make('rect'),{x:box.x-4,y:box.y-4,width:Math.max(8,box.w+8),height:Math.max(8,box.h+8),'class':'selection-box'}));});
+  const selectedItemsNow=selectedItems(),locked=selectedCircuit();
+  if(!locked)selectedItemsNow.forEach(item=>{const box=bounds(item);selectionLayer.appendChild(setAttrs(make('rect'),{x:box.x-4,y:box.y-4,width:Math.max(8,box.w+8),height:Math.max(8,box.h+8),'class':'selection-box'}));});
   if(selectedItemsNow.length>1){
     const group=groupBounds(selectedItemsNow);
-    selectionLayer.appendChild(setAttrs(make('rect'),{x:group.x-8,y:group.y-8,width:Math.max(12,group.w+16),height:Math.max(12,group.h+16),'class':'selection-group-box'}));
+    selectionLayer.appendChild(setAttrs(make('rect'),{x:group.x-8,y:group.y-8,width:Math.max(12,group.w+16),height:Math.max(12,group.h+16),'class':`selection-group-box${locked?' locked':''}`}));
+    if(locked)[['nw',group.x,group.y],['ne',group.x+group.w,group.y],['sw',group.x,group.y+group.h],['se',group.x+group.w,group.y+group.h]].forEach(([kind,x,y])=>selectionLayer.appendChild(setAttrs(make('circle'),{cx:x,cy:y,r:6,'class':'handle group-handle','data-group-handle':kind})));
     updateGroupTools(selectedItemsNow);
     return;
   }
@@ -1231,13 +1324,13 @@ function renderSelection(){
   if(item.type==='text'||item.type==='mathText')handles.push(['size',box.x+box.w,box.y]);
   handles.forEach(([kind,x,y])=>{const node=setAttrs(make('circle'),{cx:x,cy:y,r:kind==='bend'?7:5,'class':'handle','data-handle':kind});if(kind==='bend')node.setAttribute('title','Drag to bend / soften the arc');selectionLayer.appendChild(node);});
 }
-function renderProperties(){const host=document.getElementById('properties'),item=selected();const ports=elements.filter(entry=>entry.type==='port');document.getElementById('portSummary').textContent='Ports: '+(ports.length?ports.map(port=>port.name).join(', '):'none');if(multiSelectedIds.length>1){host.innerHTML=`<p style="font-size:12px;color:#617a90;margin:0 0 10px">${multiSelectedIds.length} elements selected. Drag any selected part to move the whole group.</p><div class="prop-row"><label>Group</label><button type="button" onclick="groupMoveHint()">Move</button><button type="button" onclick="copySelectedGroup()">Copy</button><button type="button" onclick="pasteCopiedGroup()">Paste</button></div><div class="prop-row"><label>Scale</label><button type="button" onclick="scaleSelectedGroup(.9)">90%</button><button type="button" onclick="scaleSelectedGroup(.8)">80%</button><button type="button" onclick="scaleSelectedGroup(1.1)">110%</button></div><div class="prop-row"><label>Stroke all</label><input type="number" min=".5" max="12" step=".5" value="2" oninput="applyMultiProp('sw',+this.value)"></div><div class="prop-row"><label>Opacity all</label><input type="number" min="0.05" max="1" step="0.05" value="1" oninput="applyMultiProp('opacity',+this.value)"></div><div class="prop-row"><label>Width all</label><input type="number" min="12" max="1200" step="1" value="120" oninput="equalizeMultiWidths(+this.value)"></div><button class="danger" type="button" onclick="deleteSelected()">Delete Selected Elements</button>`;return;}if(!item){host.innerHTML='<p style="font-size:12px;color:#617a90;margin:0">Select an element to edit properties. Drag a selection box for multiple items, or double-click an element to edit it.</p>';return;}
+function renderProperties(){const host=document.getElementById('properties'),item=selected(),locked=selectedCircuit();const ports=elements.filter(entry=>entry.type==='port');document.getElementById('portSummary').textContent='Ports: '+(ports.length?ports.map(port=>port.name).join(', '):'none');if(multiSelectedIds.length>1){const box=groupBounds(selectedItems());host.innerHTML=locked?`<p style="font-size:12px;color:#244d78;margin:0 0 10px"><strong>Locked circuit:</strong> ${esc(circuitName(locked))}. Internal geometry stays intact; move, resize, rotate, copy, or unlock the complete unit.</p><div class="prop-row"><label>Name</label><input value="${esc(circuitName(locked))}" oninput="renameSelectedCircuit(this.value)"></div><div class="prop-row"><label>Size</label><input aria-label="Circuit width" type="number" min="4" max="1400" step=".5" value="${rounded(box.w)}" onchange="resizeSelectedGroupTo('w',this.value)"><span>×</span><input aria-label="Circuit height" type="number" min="4" max="1000" step=".5" value="${rounded(box.h)}" onchange="resizeSelectedGroupTo('h',this.value)"></div><div class="prop-row"><label>Circuit</label><button type="button" onclick="duplicateSelection()">Duplicate</button><button type="button" onclick="rotateSelected(90)">Rotate 90°</button><button type="button" onclick="unlockSelectedCircuit()">Unlock</button></div><div class="prop-row"><label>Scale</label><button type="button" onclick="scaleSelectedGroup(.9)">90%</button><button type="button" onclick="scaleSelectedGroup(1.1)">110%</button></div><button class="danger" type="button" onclick="deleteSelected()">Delete Complete Circuit</button>`:`<p style="font-size:12px;color:#617a90;margin:0 0 10px">${multiSelectedIds.length} elements selected. Lock them to make one reversible circuit.</p><div class="prop-row"><label>Group</label><button type="button" onclick="lockSelectedAsCircuit()">Lock Circuit</button><button type="button" onclick="groupMoveHint()">Move</button><button type="button" onclick="duplicateSelection()">Duplicate</button></div><div class="prop-row"><label>Scale</label><button type="button" onclick="scaleSelectedGroup(.9)">90%</button><button type="button" onclick="scaleSelectedGroup(1.1)">110%</button></div><div class="prop-row"><label>Stroke all</label><input type="number" min=".5" max="12" step=".5" value="2" oninput="applyMultiProp('sw',+this.value)"></div><div class="prop-row"><label>Opacity all</label><input type="number" min="0.05" max="1" step="0.05" value="1" oninput="applyMultiProp('opacity',+this.value)"></div><button class="danger" type="button" onclick="deleteSelected()">Delete Selected Elements</button>`;return;}if(!item){host.innerHTML='<p style="font-size:12px;color:#617a90;margin:0">Select an element to edit properties. Drag a selection box for multiple items, or double-click an element to edit it.</p>';return;}
   let html=`<div class="prop-row"><label>Type</label><strong>${esc(item.type)}</strong></div>`;
   if(item.stroke)html+=`<div class="prop-row"><label>Stroke</label><input type="color" value="${esc(item.stroke)}" oninput="setProp('stroke',this.value)"><label style="min-width:auto">Width</label><input type="number" min=".5" max="12" step=".5" value="${item.sw||1}" oninput="setProp('sw',+this.value)"></div>`;
   if(['rect','ellipse','triangle','triangleDown','diamond','cuboid'].includes(item.type)){const fill=item.fill&&item.fill!=='none'?item.fill:'#ffffff';html+=`<div class="prop-row"><label>Fill</label><input type="color" value="${esc(fill)}" oninput="setProp('fill',this.value)"><button type="button" onclick="setProp('fill','none')">No Fill</button></div><div class="prop-row"><label>Rotate</label><button type="button" onclick="rotateSelected(-15)">CCW 15</button><button type="button" onclick="rotateSelected(15)">CW 15</button><button type="button" onclick="rotateSelected(-90)">CCW 90</button><button type="button" onclick="rotateSelected(90)">CW 90</button></div><div class="prop-row"><label>Angle</label><input type="number" min="-360" max="360" step="1" value="${Number(item.rotation)||0}" oninput="setProp('rotation',+this.value)"></div>`;}
   if(item.type==='path'){const fill=item.fill&&item.fill!=='none'?item.fill:'#ffffff';html+=`<div class="prop-row"><label>Fill</label><input type="color" value="${esc(fill)}" oninput="setProp('fill',this.value)"><button type="button" onclick="setProp('fill','none')">No Fill</button></div><div class="prop-row"><label>Path</label><textarea oninput="setProp('d',this.value)">${esc(item.d||'')}</textarea></div>`;}
   if(item.type==='embeddedSvg')html+=`<div class="prop-row"><label>Width</label><input type="number" min="4" max="1400" value="${Math.round(item.w||1)}" oninput="setProp('w',+this.value)"></div><div class="prop-row"><label>Height</label><input type="number" min="4" max="1000" value="${Math.round(item.h||1)}" oninput="setProp('h',+this.value)"></div><p style="font-size:11px;color:#617a90;margin:0 0 8px">Complex imported SVG kept as a vector group. Use group tools to scale it with native parts.</p>`;
-  if(item.type==='text'||item.type==='mathText')html+=`<div class="prop-row"><label>${item.type==='mathText'?'Math src':'Text'}</label><textarea oninput="setProp('text',this.value)">${esc(item.text)}</textarea></div>${item.type==='mathText'?`<div class="prop-row"><label>Rendered</label><textarea readonly>${esc(renderMathLabelText(item.text))}</textarea></div>`:''}<div class="prop-row"><label>Font size</label><input type="number" min="8" max="96" value="${item.fs||16}" oninput="setProp('fs',+this.value)"></div><div class="prop-row"><label>Font</label><select onchange="setProp('fontFamily',this.value)"><option value="Georgia, Times New Roman, serif" ${(item.fontFamily||'Georgia, Times New Roman, serif')==='Georgia, Times New Roman, serif'?'selected':''}>Serif</option><option value="Arial, Helvetica, sans-serif" ${item.fontFamily==='Arial, Helvetica, sans-serif'?'selected':''}>Sans</option><option value="Cambria, Georgia, serif" ${item.fontFamily==='Cambria, Georgia, serif'?'selected':''}>Cambria</option><option value="Courier New, Consolas, monospace" ${item.fontFamily==='Courier New, Consolas, monospace'?'selected':''}>Mono</option></select></div><div class="prop-row"><label>Style</label><span class="prop-check"><input type="checkbox" ${item.bold?'checked':''} onchange="setProp('bold',this.checked)"> Bold</span><span class="prop-check"><input type="checkbox" ${item.italic?'checked':''} onchange="setProp('italic',this.checked)"> Italic</span><span class="prop-check"><input type="checkbox" ${item.underline?'checked':''} onchange="setProp('underline',this.checked)"> Underline</span></div><div class="prop-row"><label>Rotate</label><button type="button" onclick="rotateSelected(-15)">CCW 15</button><button type="button" onclick="rotateSelected(15)">CW 15</button><button type="button" onclick="rotateSelected(-90)">CCW 90</button><button type="button" onclick="rotateSelected(90)">CW 90</button></div><div class="prop-row"><label>Angle</label><input type="number" min="-360" max="360" step="1" value="${Number(item.rotation)||0}" oninput="setProp('rotation',+this.value)"></div>`;
+  if(item.type==='text'||item.type==='mathText')html+=`<div class="prop-row"><label>${item.type==='mathText'?'Math src':'Text'}</label><textarea oninput="setProp('text',this.value)">${esc(item.text)}</textarea></div>${item.type==='mathText'?`<div class="prop-row"><label>Rendered</label><textarea readonly>${esc(renderMathLabelText(item.text))}</textarea></div>`:''}<div class="prop-row"><label>Font size</label><input type="number" min="8" max="96" value="${item.fs||16}" oninput="setProp('fs',+this.value)"></div><div class="prop-row"><label>Font</label><select onchange="setProp('fontFamily',this.value)"><option value="Georgia, Times New Roman, serif" ${(item.fontFamily||'Georgia, Times New Roman, serif')==='Georgia, Times New Roman, serif'?'selected':''}>Serif</option><option value="Arial, Helvetica, sans-serif" ${item.fontFamily==='Arial, Helvetica, sans-serif'?'selected':''}>Sans</option><option value="Cambria, Georgia, serif" ${item.fontFamily==='Cambria, Georgia, serif'?'selected':''}>Cambria</option><option value="Courier New, Consolas, monospace" ${item.fontFamily==='Courier New, Consolas, monospace'?'selected':''}>Mono</option></select></div><div class="prop-row"><label>Style</label><span class="prop-check"><input type="checkbox" ${item.bold?'checked':''} onchange="setProp('bold',this.checked)"> Bold</span><span class="prop-check"><input type="checkbox" ${item.italic?'checked':''} onchange="setProp('italic',this.checked)"> Italic</span><span class="prop-check"><input type="checkbox" ${item.underline?'checked':''} onchange="setProp('underline',this.checked)"> Underline</span></div><div class="prop-row"><label>Align</label><select onchange="setProp('align',this.value)"><option value="left" ${(item.align||'left')==='left'?'selected':''}>Left</option><option value="center" ${item.align==='center'?'selected':''}>Center</option><option value="right" ${item.align==='right'?'selected':''}>Right</option></select></div><div class="prop-row"><label>Rotate</label><button type="button" onclick="rotateSelected(-15)">CCW 15</button><button type="button" onclick="rotateSelected(15)">CW 15</button><button type="button" onclick="rotateSelected(-90)">CCW 90</button><button type="button" onclick="rotateSelected(90)">CW 90</button></div><div class="prop-row"><label>Angle</label><input type="number" min="-360" max="360" step="1" value="${Number(item.rotation)||0}" oninput="setProp('rotation',+this.value)"></div>`;
   if(item.type==='freehand'){const fill=item.fill&&item.fill!=='none'?item.fill:'#ffffff';html+=`<div class="prop-row"><label>Line</label><span class="prop-check"><input type="checkbox" ${item.dotted?'checked':''} onchange="setProp('dotted',this.checked)"> Dotted stroke</span></div><div class="prop-row"><label>Close</label><span class="prop-check"><input type="checkbox" ${item.closed?'checked':''} onchange="setProp('closed',this.checked)"> Close shape</span></div><div class="prop-row"><label>Fill</label><input type="color" value="${esc(fill)}" oninput="setProp('fill',this.value)"><button type="button" onclick="setProp('fill','none')">No Fill</button></div><div class="prop-row"><label>Smooth</label><input type="range" min="0" max="5" step="1" value="${Number.isFinite(+item.smooth)?item.smooth:2}" oninput="setProp('smooth',+this.value)"><small>${Number.isFinite(+item.smooth)?item.smooth:2}</small></div><div class="prop-row"><label>Simplify</label><input type="number" min="0" max="12" step="0.5" value="${Number.isFinite(+item.simplify)?item.simplify:1.5}" oninput="setProp('simplify',+this.value)"></div><p style="font-size:11px;color:#617a90;margin:6px 0 0">Raw points: ${(item.points||[]).length}; exported as a smooth ${item.dotted?'dotted ':' '}vector path.</p>`;}
   if(item.type==='port')html+=`<div class="prop-row"><label>Port name</label><input maxlength="16" value="${esc(item.name)}" oninput="setProp('name',this.value.toUpperCase().replace(/[^A-Z0-9_]/g,''))"></div>`;
   if(item.type==='wave')html+=`<div class="prop-row"><label>Amplitude</label><input type="number" min="4" max="80" value="${item.amp||14}" oninput="setProp('amp',+this.value)"></div>${item.coil?`<div class="prop-row"><label>Coil turns</label><input type="number" min="2" max="24" value="${item.turns||4}" oninput="setProp('turns',+this.value)"></div>`:''}`;
@@ -1250,10 +1343,7 @@ function renderProperties(){const host=document.getElementById('properties'),ite
 }
 function setProp(key,value){const item=selected();if(!item)return;item[key]=value;renderAll();}
 function rotateSelected(delta){
-  const item=selected();
-  if(!item)return;
-  item.rotation=((Number(item.rotation)||0)+Number(delta||0))%360;
-  renderAll();
+  rotateSelectionAsUnit(delta);
 }
 function applyMultiProp(key,value){selectedItems().forEach(item=>{item[key]=value;});renderAll();}
 function equalizeMultiWidths(width){
@@ -1298,12 +1388,12 @@ function finishPolyline(){
   setStatus('Sharp Path added. Tool remains active.');
 }
 function placeMark(kind,p){const s=style();add({id:uid(),type:kind,x:p.x,y:p.y,...s,size:22});}
-function showTextEntry(p,item=null,mode='text'){pendingText=item ? {editId:item.id,x:item.x,y:item.y,mode:item.type||mode} : {...p,mode};const stage=document.getElementById('stage'),entry=document.getElementById('textEntry'),box=svg.getBoundingClientRect(),stageBox=stage.getBoundingClientRect();entry.style.left=clamp(box.left-stageBox.left+((pendingText.x||0)/viewW)*box.width,6,Math.max(6,stage.clientWidth-390))+'px';entry.style.top=clamp(box.top-stageBox.top+((pendingText.y||0)/viewH)*box.height,6,Math.max(6,stage.clientHeight-220))+'px';entry.style.display='block';entry.dataset.mode=pendingText.mode;entry.querySelector('.entry-label').textContent=pendingText.mode==='mathText'?'Math text source':'Label text';document.getElementById('textValue').placeholder=pendingText.mode==='mathText'?'Type LaTeX-like math: \\alpha, x^2, \\frac{1}{s^2}, \\sqrt{x}':'Type label text, equations, or notes';openTextEntryForItem(item);}
-function commitText(){const input=document.getElementById('textValue'),text=(input.value||'').replace(/\r\n/g,'\n').trim();if(!pendingText||!text){cancelText();return;}const s=style();const payload={type:pendingText.mode==='mathText'?'mathText':'text',x:pendingText.x,y:pendingText.y,text,...s,fill:s.stroke,fs:+document.getElementById('textFontSize').value||18,bold:textEntryState.bold,italic:textEntryState.italic,underline:textEntryState.underline,fontFamily:document.getElementById('textFontFamily').value||'Georgia, Times New Roman, serif'};if(pendingText.editId){const item=elements.find(entry=>entry.id===pendingText.editId);if(item){Object.assign(item,payload);renderAll();}}else add({id:uid(),...payload});cancelText();}
+function showTextEntry(p,item=null,mode='text'){pendingText=item ? {editId:item.id,x:item.x,y:item.y,mode:item.type||mode} : {...p,mode};const stage=document.getElementById('stage'),entry=document.getElementById('textEntry'),box=svg.getBoundingClientRect(),stageBox=stage.getBoundingClientRect();entry.style.left=clamp(box.left-stageBox.left+((pendingText.x||0)/viewW)*box.width,6,Math.max(6,stage.clientWidth-410))+'px';entry.style.top=clamp(box.top-stageBox.top+((pendingText.y||0)/viewH)*box.height,6,Math.max(6,stage.clientHeight-220))+'px';entry.style.display='block';entry.dataset.mode=pendingText.mode;entry.querySelector('.entry-label').textContent=pendingText.mode==='mathText'?'Math text source':'Label text';document.getElementById('textValue').placeholder=pendingText.mode==='mathText'?'Type LaTeX-like math: \\alpha, x^2, \\frac{1}{s^2}, \\sqrt{x}':'Type label text, equations, or notes';openTextEntryForItem(item);}
+function commitText(){const input=document.getElementById('textValue'),text=(input.value||'').replace(/\r\n/g,'\n').trim();if(!pendingText||!text){cancelText();return;}const s=style();const payload={type:pendingText.mode==='mathText'?'mathText':'text',x:pendingText.x,y:pendingText.y,text,...s,fill:s.stroke,fs:+document.getElementById('textFontSize').value||18,bold:textEntryState.bold,italic:textEntryState.italic,underline:textEntryState.underline,align:document.getElementById('textAlign').value||'left',fontFamily:document.getElementById('textFontFamily').value||'Georgia, Times New Roman, serif'};if(pendingText.editId){const item=elements.find(entry=>entry.id===pendingText.editId);if(item){Object.assign(item,payload);renderAll();}}else add({id:uid(),...payload});cancelText();}
 function cancelText(){pendingText=null;document.getElementById('textEntry').style.display='none';}
 
 svg.addEventListener('pointerdown',event=>{
-  const p=point(event),raw=rawPoint(event),hit=event.target.closest('[data-id]')?.dataset.id,handle=event.target.closest('[data-handle]')?.dataset.handle;
+  const p=point(event),raw=rawPoint(event),hit=event.target.closest('[data-id]')?.dataset.id,handle=event.target.closest('[data-handle]')?.dataset.handle,groupHandle=event.target.closest('[data-group-handle]')?.dataset.groupHandle;
   if(tool==='pen'||tool==='dottedPen'){
     clearSelection();freehandDraft={points:[raw],style:style(),dotted:tool==='dottedPen'};showFreehandPreview();svg.setPointerCapture(event.pointerId);event.preventDefault();setStatus(tool==='dottedPen'?'Drawing dotted freehand... release to auto-smooth.':'Drawing freehand... release to auto-smooth.');return;
   }
@@ -1312,28 +1402,27 @@ svg.addEventListener('pointerdown',event=>{
     else{const last=polylineDraft.points[polylineDraft.points.length-1];if(Math.hypot(last.x-p.x,last.y-p.y)>2)polylineDraft.points.push(p);showPolylinePreview(p);}
     event.preventDefault();return;
   }
+  if(tool==='select'&&groupHandle&&selectedCircuit()){
+    const items=copy(selectedItems()),box=groupBounds(items);
+    pushHistory();handleDrag={kind:groupHandle,group:true,base:items,box};svg.setPointerCapture(event.pointerId);event.preventDefault();return;
+  }
   if(tool==='select'&&handle&&selected()&&!multiSelectedIds.length){
     pushHistory();handleDrag={kind:handle,base:copy(selected())};svg.setPointerCapture(event.pointerId);event.preventDefault();return;
   }
   if(tool==='select'){
     if(hit&&event.shiftKey){
       const ids=selectedItems().map(item=>item.id);
-      const next=ids.includes(hit)?ids.filter(id=>id!==hit):ids.concat(hit);
+      const hitGroup=circuitForElementId(hit),hitIds=hitGroup?hitGroup.elementIds:[hit];
+      const remove=hitIds.every(id=>ids.includes(id));
+      const next=remove?ids.filter(id=>!hitIds.includes(id)):ids.concat(hitIds);
       applySelectionIds(next);
       renderAll();
       event.preventDefault();
       return;
     }
-    if(hit&&multiSelectedIds.includes(hit)){
-      pushHistory();
-      drag={origin:p,group:true,base:copy(selectedItems())};
-      svg.setPointerCapture(event.pointerId);
-      setStatus('Moving selected vector group.');
-      event.preventDefault();
-      return;
-    }
     if(hit){
-      selectOne(hit);pushHistory();drag={origin:p,base:copy(selected())};svg.setPointerCapture(event.pointerId);renderAll();return;
+      if(!selectedItems().some(item=>item.id===hit))applySelectionIds(circuitForElementId(hit)?.elementIds||[hit]);
+      const items=selectedItems();pushHistory();drag={origin:raw,group:items.length>1,base:copy(items),box:groupBounds(items)};svg.setPointerCapture(event.pointerId);renderAll();setStatus(items.length>1?'Moving complete circuit/group on the active grid.':'Moving element on the active grid.');return;
     }
     clearSelection();marquee={start:p,end:p};svg.setPointerCapture(event.pointerId);renderSelection();return;
   }
@@ -1355,7 +1444,7 @@ svg.addEventListener('pointermove',event=>{
   if(drawing){showPreview(drawing.kind,drawing.start,p);return;}
   if(marquee){marquee.end=p;renderSelection();return;}
   if(drag){
-    const dx=p.x-drag.origin.x,dy=p.y-drag.origin.y;
+    const delta=snappedTranslation(drag.box||groupBounds(drag.base||[]),raw.x-drag.origin.x,raw.y-drag.origin.y),dx=delta.dx,dy=delta.dy;
     if(drag.group){
       (drag.base||[]).forEach(base=>{
         const item=elements.find(entry=>entry.id===base.id);
@@ -1365,16 +1454,18 @@ svg.addEventListener('pointermove',event=>{
       renderAll();
       return;
     }
-    const item=selected();if(!item)return;const base=drag.base;
-    if(['rect','ellipse','triangle','triangleDown','diamond','cuboid','embeddedSvg'].includes(item.type)){item.x=base.x+dx;item.y=base.y+dy;}
-    else if(item.type==='path'){Object.assign(item,moveItemBy(copy(base),dx,dy));}
-    else if(item.type==='polyline'){item.points=normalizedPolylinePoints(base.points).map(point=>({x:point.x+dx,y:point.y+dy}));}
-    else if(item.type==='freehand'){item.points=normalizedFreehandPoints(base.points).map(point=>({x:Math.round((point.x+dx)*10)/10,y:Math.round((point.y+dy)*10)/10}));}
-    else if(isLineItem(item)){item.x1=base.x1+dx;item.y1=base.y1+dy;item.x2=base.x2+dx;item.y2=base.y2+dy;}
-    else{item.x=base.x+dx;item.y=base.y+dy;}
+    const item=selected();if(!item)return;const base=drag.base[0]||drag.base;
+    Object.assign(item,moveItemBy(copy(base),dx,dy));
     renderAll();return;
   }
   if(handleDrag){
+    if(handleDrag.group){
+      const box=handleDrag.box,anchor=handleDrag.kind==='nw'?{x:box.x+box.w,y:box.y+box.h}:handleDrag.kind==='ne'?{x:box.x,y:box.y+box.h}:handleDrag.kind==='sw'?{x:box.x+box.w,y:box.y}:{x:box.x,y:box.y};
+      const baseCorner=handleDrag.kind==='nw'?{x:box.x,y:box.y}:handleDrag.kind==='ne'?{x:box.x+box.w,y:box.y}:handleDrag.kind==='sw'?{x:box.x,y:box.y+box.h}:{x:box.x+box.w,y:box.y+box.h};
+      const baseDistance=Math.max(1,Math.hypot(baseCorner.x-anchor.x,baseCorner.y-anchor.y)),factor=clamp(Math.hypot(p.x-anchor.x,p.y-anchor.y)/baseDistance,.05,20);
+      handleDrag.base.forEach(base=>{const item=elements.find(entry=>entry.id===base.id);if(item)Object.assign(item,scaleItemFrom(copy(base),anchor,factor));});
+      renderAll();return;
+    }
     const item=selected(),base=handleDrag.base;if(!item)return;
     if(['rect','ellipse','triangle','triangleDown','diamond','cuboid','embeddedSvg'].includes(item.type)){
       const right=base.x+base.w,bottom=base.y+base.h;
@@ -1393,7 +1484,7 @@ svg.addEventListener('pointermove',event=>{
   }
 });
 svg.addEventListener('pointerup',event=>{const p=point(event);if(freehandDraft){const draft=freehandDraft;freehandDraft=null;hidePreview();const pts=normalizedFreehandPoints(draft.points);let added=false;if(pts.length>3&&pointDistance(pts[0],pts[pts.length-1])>1){const s=draft.style||style();const close=pts.length>8&&pointDistance(pts[0],pts[pts.length-1])<18;const cleanPts=close?pts.slice(0,-1):pts;add({id:uid(),type:'freehand',points:cleanPts,...s,fill:'none',closed:close,smooth:2,simplify:1.5,dotted:!!draft.dotted});added=true;}setStatus(added?(draft.dotted?'Dotted Pen added. Use Smooth/Simplify controls to refine it.':'Smooth Pen added. Use Smooth/Simplify controls to refine it.'):(draft.dotted?'Dotted Pen cancelled.':'Smooth Pen cancelled.'));try{svg.releasePointerCapture(event.pointerId);}catch(_){}return;}if(marquee){marquee.end=p;const box=normalizedBox(marquee.start.x,marquee.start.y,p.x,p.y);const ids=(box.w>2||box.h>2)?elements.filter(item=>boxesIntersect(box,bounds(item))).map(item=>item.id):[];applySelectionIds(ids);marquee=null;renderAll();setStatus(ids.length?`${ids.length} element${ids.length===1?'':'s'} selected.`:'Selection cleared.');}else if(drawing){const kind=drawing.kind,start=drawing.start,box=normalizedBox(start.x,start.y,p.x,p.y),s=style();let added=false;if(['line','arrow','wave','coil','curveArrow','arc','dottedLine','dottedArrow','dottedArc','dottedCurveArrow'].includes(kind)&&Math.hypot(p.x-start.x,p.y-start.y)>6){add({id:uid(),type:kind==='coil'?'wave':kind,x1:start.x,y1:start.y,x2:p.x,y2:p.y,...s,amp:14,coil:kind==='coil',turns:4,bend:['curveArrow','dottedCurveArrow'].includes(kind)?Math.min(80,Math.max(20,Math.hypot(p.x-start.x,p.y-start.y)*.24)):['arc','dottedArc'].includes(kind)?Math.min(90,Math.max(24,Math.hypot(p.x-start.x,p.y-start.y)*.32)):undefined});added=true;}if(['plus','minus'].includes(kind)){add({id:uid(),type:kind,x:start.x,y:start.y,...s,size:markSize(start,p)});added=true;}if(['rect','ellipse','triangle','triangleDown','diamond','cuboid'].includes(kind)&&box.w>6&&box.h>6){add({id:uid(),type:kind,...box,...s,fill:'none',rx:0,depth:kind==='cuboid'?Math.min(box.w,box.h)*.22:undefined});added=true;}drawing=null;hidePreview();setStatus(added?`Added ${kind}. Tool remains active.`:`${kind} cancelled. Tool remains active.`);}drag=null;handleDrag=null;try{svg.releasePointerCapture(event.pointerId);}catch(_){}});
-svg.addEventListener('dblclick',event=>{if(tool==='polyline'&&polylineDraft){event.preventDefault();event.stopPropagation();finishPolyline();return;}const hit=event.target.closest('[data-id]')?.dataset.id;if(!hit)return;event.preventDefault();event.stopPropagation();drawing=null;marquee=null;hidePreview();setTool('select');selectOne(hit);renderAll();const item=selected();if(item?.type==='text'||item?.type==='mathText')showTextEntry({x:item.x,y:item.y},item,item.type);setStatus('Element selected - drag, resize, or edit it in the side panel.');});
+svg.addEventListener('dblclick',event=>{if(tool==='polyline'&&polylineDraft){event.preventDefault();event.stopPropagation();finishPolyline();return;}const hit=event.target.closest('[data-id]')?.dataset.id;if(!hit)return;event.preventDefault();event.stopPropagation();drawing=null;marquee=null;hidePreview();setTool('select');applySelectionIds(circuitForElementId(hit)?.elementIds||[hit]);renderAll();const item=selected();if(!selectedCircuit()&&(item?.type==='text'||item?.type==='mathText'))showTextEntry({x:item.x,y:item.y},item,item.type);setStatus(selectedCircuit()?'Locked circuit selected. Unlock it to edit internal parts.':'Element selected - drag, resize, or edit it in the side panel.');});
 document.addEventListener('keydown',event=>{
   const target=event.target;
   if(target instanceof HTMLInputElement||target instanceof HTMLTextAreaElement){
@@ -1403,6 +1494,9 @@ document.addEventListener('keydown',event=>{
   }
   const key=event.key.toLowerCase();
   if((event.ctrlKey||event.metaKey)&&key==='a'){event.preventDefault();selectAllElements();return;}
+  if((event.ctrlKey||event.metaKey)&&event.shiftKey&&key==='g'){event.preventDefault();unlockSelectedCircuit();return;}
+  if((event.ctrlKey||event.metaKey)&&key==='g'){event.preventDefault();lockSelectedAsCircuit();return;}
+  if((event.ctrlKey||event.metaKey)&&key==='d'){event.preventDefault();duplicateSelection();return;}
   if((event.ctrlKey||event.metaKey)&&key==='c'){event.preventDefault();copySelectedGroup();return;}
   if((event.ctrlKey||event.metaKey)&&key==='v'){event.preventDefault();pasteCopiedGroup();return;}
   if(event.key==='Delete'||event.key==='Backspace'){event.preventDefault();deleteSelected();}
@@ -1435,7 +1529,7 @@ function svgItemMarkup(item){
   else if(item.type==='ground'){const s=item.size||22;body=`<path d="M ${item.x} ${item.y-s} V ${item.y-s/3} M ${item.x-s} ${item.y-s/3} H ${item.x+s} M ${item.x-s*.65} ${item.y+s*.05} H ${item.x+s*.65} M ${item.x-s*.3} ${item.y+s*.4} H ${item.x+s*.3}" fill="none" stroke="${stroke}" stroke-width="${width}" stroke-linecap="round"/>`;}
   else if(item.type==='port') body=`<circle cx="${item.x}" cy="${item.y}" r="5" fill="#fff" stroke="${stroke}" stroke-width="${width}"/>`;
   const transform=rotationTransform(item);
-  return body?`<g opacity="${opacity}"${transform?` transform="${transform}"`:''}>${body}</g>`:'';
+  return body?`<g opacity="${opacity}"${item.circuitId?` data-qs-circuit-id="${esc(item.circuitId)}"`:''}${transform?` transform="${transform}"`:''}>${body}</g>`:'';
 }
 function svgMarkup(geometry=null){
   const geom=geometry||exportGeometry();
@@ -1445,7 +1539,7 @@ function svgMarkup(geometry=null){
   const manifest=esc(JSON.stringify(exportStyleManifest(geom)));
   return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${geom.width}" height="${geom.height}" viewBox="0 0 ${geom.width} ${geom.height}" data-qs-preserve-styles="1"><metadata id="qs-style-manifest" data-preserve-styles="1">${manifest}</metadata>${defs}\n  ${body}\n</svg>`;
 }
-function symbolPayload(){const name=document.getElementById('symbolName').value.trim()||'Custom Symbol',libraryKey=filename(),geom=exportGeometry(),styleManifest=exportStyleManifest(geom),svg=svgMarkup(geom);return{version:3,kind:'qs-studio-circuit-symbol',id:'custom_'+name.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')+'_'+Date.now().toString(36),libraryKey,label:name,category:document.getElementById('symbolCategory').value,subcategory:document.getElementById('symbolSubcategory').value.trim(),componentDefaults:{reference:document.getElementById('componentReference').value.trim(),value:document.getElementById('componentValue').value.trim(),legend:document.getElementById('componentLegend').value.trim()},width:geom.width,height:geom.height,sourceViewBox:{x:0,y:0,w:geom.width,h:geom.height},sourceBounds:geom.box,sourcePaintBounds:geom.paintBox,styleManifest,anchorMode:'top-left',ports:geom.items.filter(item=>item.type==='port').map(port=>({id:port.name,x:port.x,y:port.y})),elements:copy(geom.items),editorDraft:{width:viewW,height:viewH,elements:copy(elements)},svg,sourceSvg:svg,exportMeta:{encoding:'utf-8',textVectorized:true,strokePreserved:true,strokeWidthPreserved:true,fontSizePreserved:true,componentDimensionsPreserved:true,preserveElementStyles:true,topLeftNormalized:true,preservesMakerWorkspace:true,createdAt:new Date().toISOString()}};}
+function symbolPayload(){const name=document.getElementById('symbolName').value.trim()||'Custom Symbol',libraryKey=filename(),geom=exportGeometry(),styleManifest=exportStyleManifest(geom),svg=svgMarkup(geom);return{version:4,kind:'qs-studio-circuit-symbol',id:'custom_'+name.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')+'_'+Date.now().toString(36),libraryKey,label:name,category:document.getElementById('symbolCategory').value,subcategory:document.getElementById('symbolSubcategory').value.trim(),componentDefaults:{reference:document.getElementById('componentReference').value.trim(),value:document.getElementById('componentValue').value.trim(),legend:document.getElementById('componentLegend').value.trim()},width:geom.width,height:geom.height,sourceViewBox:{x:0,y:0,w:geom.width,h:geom.height},sourceBounds:geom.box,sourcePaintBounds:geom.paintBox,styleManifest,anchorMode:'top-left',ports:geom.items.filter(item=>item.type==='port').map(port=>({id:port.name,x:port.x,y:port.y})),elements:copy(geom.items),circuitGroups:copy(circuitGroups),editorDraft:{width:viewW,height:viewH,elements:copy(elements),circuitGroups:copy(circuitGroups),snapStep:currentSnapStep()},svg,sourceSvg:svg,exportMeta:{encoding:'utf-8',textVectorized:true,strokePreserved:true,strokeWidthPreserved:true,fontSizePreserved:true,componentDimensionsPreserved:true,preserveElementStyles:true,preserveCircuitGroups:true,gridCoordinatesStable:true,topLeftNormalized:true,preservesMakerWorkspace:true,createdAt:new Date().toISOString()}};}
 function syncSymbolToSharedCircuitLibrary(payload){
   try{
     if(!payload||payload.kind!=='qs-studio-circuit-symbol'||!Array.isArray(payload.elements)||!payload.elements.length)return false;
@@ -1470,7 +1564,7 @@ function notifySharedCircuitSymbolUpdate(){
     }
   }catch(_){ }
 }
-function updateOutput(){document.getElementById('codeOut').value=svgMarkup();document.getElementById('outputInfo').textContent=`${elements.length} element${elements.length===1?'':'s'} | ${elements.filter(item=>item.type==='port').length} port${elements.filter(item=>item.type==='port').length===1?'':'s'}`;}
+function updateOutput(){document.getElementById('codeOut').value=svgMarkup();document.getElementById('outputInfo').textContent=`${elements.length} element${elements.length===1?'':'s'} | ${elements.filter(item=>item.type==='port').length} port${elements.filter(item=>item.type==='port').length===1?'':'s'} | ${circuitGroups.length} locked circuit${circuitGroups.length===1?'':'s'}`;}
 function copyText(value,label){navigator.clipboard?.writeText(value).then(()=>setStatus(label)).catch(()=>{const box=document.getElementById('codeOut');box.focus();box.select();document.execCommand('copy');setStatus(label);});}
 function copySvg(){copyText(svgMarkup(),'SVG copied to clipboard');}
 function download(name,contents,type){const rawType=String(type||'application/octet-stream');const safeType=/^(?:application\/json|text\/|image\/svg\+xml)\b/i.test(rawType)&&!/charset=/i.test(rawType)?rawType+';charset=utf-8':rawType;const anchor=document.createElement('a');anchor.href=URL.createObjectURL(new Blob([contents],{type:safeType}));anchor.download=name;anchor.click();setTimeout(()=>URL.revokeObjectURL(anchor.href),1000);}
@@ -1508,10 +1602,11 @@ async function saveSymbolToLibrary(){
   }
 }
 function resizeCanvas(){const width=clamp(+document.getElementById('canvasW').value||680,120,1400),height=clamp(+document.getElementById('canvasH').value||440,100,1000);viewW=width;viewH=height;svg.setAttribute('viewBox',`0 0 ${viewW} ${viewH}`);svg.setAttribute('width',viewW);svg.setAttribute('height',viewH);document.getElementById('gridSurface').setAttribute('width',viewW);document.getElementById('gridSurface').setAttribute('height',viewH);setStatus('Canvas resized');renderAll();}
-function insertItemsAsGroup(items,label){
+function insertItemsAsGroup(items,label,lockAsCircuit=false){
   const safe=(Array.isArray(items)?items:[]).filter(Boolean);
   if(!safe.length)return;
   pushHistory();
+  if(lockAsCircuit&&safe.length>1){const group={id:'circuit_'+uid(),name:label?.match(/^([A-Z]+ gate)/i)?.[1]||nextCircuitName(),elementIds:safe.map(item=>item.id),locked:true,createdGridStep:currentSnapStep()};safe.forEach(item=>{item.circuitId=group.id;});circuitGroups.push(group);}
   elements.push(...safe);
   applySelectionIds(safe.map(item=>item.id));
   renderAll();
@@ -1548,7 +1643,7 @@ function logicGatePresetElements(kind){
 function insertLogicGatePreset(){
   const select=document.getElementById('logicGateSelect'),kind=select.value;
   if(!kind){setStatus('Choose AND, NAND, OR, NOR, XOR, XNOR, or NOT first.');return;}
-  insertItemsAsGroup(logicGatePresetElements(kind),`${kind.toUpperCase()} gate inserted as editable SVG Maker parts.`);
+  insertItemsAsGroup(logicGatePresetElements(kind),`${kind.toUpperCase()} gate inserted as one locked circuit. Unlock it to edit internal parts.`,true);
   select.value='';
 }
 function attrNumber(node,name,fallback=0){const value=parseFloat(node.getAttribute(name));return Number.isFinite(value)?value:fallback;}
@@ -1616,6 +1711,7 @@ function normalizedImportDraft(data){
   if(data.editorDraft&&Array.isArray(data.editorDraft.elements)){
     return{
       items:copy(data.editorDraft.elements),
+      circuitGroups:copy(data.editorDraft.circuitGroups||data.circuitGroups||[]),
       width:clamp(+data.editorDraft.width||680,120,1400),
       height:clamp(+data.editorDraft.height||440,100,1000),
       normalized:false,
@@ -1623,17 +1719,17 @@ function normalizedImportDraft(data){
     };
   }
   const imported=copy(data.elements||[]);
-  if(!imported.length)return{items:[],width:clamp(Math.max(680,+data.width||680),120,1400),height:clamp(Math.max(440,+data.height||440),100,1000),normalized:false};
+  if(!imported.length)return{items:[],circuitGroups:[],width:clamp(Math.max(680,+data.width||680),120,1400),height:clamp(Math.max(440,+data.height||440),100,1000),normalized:false};
   if(data.exportMeta?.topLeftNormalized||data.anchorMode==='top-left'){
     const width=clamp(Math.max(680,(+data.width||0)+96),120,1400);
     const height=clamp(Math.max(440,(+data.height||0)+96),100,1000);
-    return{items:imported.map(item=>translateExportItem(item,48,48)),width,height,normalized:false,workspacePreserved:false};
+    return{items:imported.map(item=>translateExportItem(item,48,48)),circuitGroups:copy(data.circuitGroups||[]),width,height,normalized:false,workspacePreserved:false};
   }
   const raw=groupBounds(imported),pad=2;
   const x=Math.floor(raw.x-pad),y=Math.floor(raw.y-pad);
   const width=clamp(Math.max(680,Math.ceil(raw.w+pad*2)+96),120,1400);
   const height=clamp(Math.max(440,Math.ceil(raw.h+pad*2)+96),100,1000);
-  return{items:imported.map(item=>translateExportItem(item,48-x,48-y)),width,height,normalized:true,workspacePreserved:false};
+  return{items:imported.map(item=>translateExportItem(item,48-x,48-y)),circuitGroups:copy(data.circuitGroups||[]),width,height,normalized:true,workspacePreserved:false};
 }
 function importSymbolJson(event){
   const file=event.target.files?.[0];
@@ -1645,6 +1741,8 @@ function importSymbolJson(event){
       if(data?.kind!=='qs-studio-circuit-symbol'||!Array.isArray(data.elements))throw new Error('Not a QS Studio circuit symbol file.');
       const draft=normalizedImportDraft(data);
       elements=draft.items;
+      circuitGroups=draft.circuitGroups||[];
+      normalizeCircuitGroups();
       viewW=draft.width;
       viewH=draft.height;
       document.getElementById('symbolName').value=data.label||'Custom Symbol';

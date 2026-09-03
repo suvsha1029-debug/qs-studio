@@ -9,7 +9,7 @@
       })
     : null;
   try{
-    setAppTheme(localStorage.getItem(APP_THEME_KEY) || 'normal');
+    setAppTheme();
     if(typeof bootstrapProjectState === 'function'){
       const result=bootstrapProjectState({preparationToken:token});
       if(result?.then) await result;
@@ -25,5 +25,4 @@
     if(token && typeof finishPaperPreparation==='function') await finishPaperPreparation(token,{timedOut:true,failed:1,reason:'startup-error'});
   }
 })();
-
 

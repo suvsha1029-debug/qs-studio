@@ -7,7 +7,28 @@ function waitForEditorCanvasReady(timeoutMs=10000){
   return Promise.race([editorCanvasReadyPromise,timeout]);
 }
 
-function loadQ(id){ cur = qs.find(q=>q.id===id)||null; renderSidebar(); return renderEditor(); }
+let questionLoadGeneration=0;
+async function loadQ(id){
+  const next=qs.find(q=>q.id===id)||null;
+  if(!next) return;
+  const token=++questionLoadGeneration;
+  const overlay=document.getElementById('questionLoadOverlay');
+  overlay?.classList.add('is-active');
+  overlay?.setAttribute('aria-hidden','false');
+  cur=next;
+  renderSidebar();
+  try{
+    await renderEditor();
+    if(cur!==next || token!==questionLoadGeneration) return;
+    if(typeof settleWorkspaceImages==='function') await settleWorkspaceImages('#editor img',3500);
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  }finally{
+    if(token===questionLoadGeneration){
+      overlay?.classList.remove('is-active');
+      overlay?.setAttribute('aria-hidden','true');
+    }
+  }
+}
 
 function renderEditor(){
   const ed = document.getElementById('editor');
@@ -97,7 +118,7 @@ function renderEditor(){
     <div class="sec-lbl">Question Content</div>
     <div class="canvas-wrap" id="qCanvasWrap">
       <div class="canvas-tools" id="qTools">
-        <button class="tool-btn active" id="toolText" onclick="setTool('text','q')">Text</button>
+        <button class="tool-btn active" id="toolText" type="button" aria-label="Add text" title="Add text" onclick="setTool('text','q')">Aa</button>
         <button class="tool-btn" id="toolLegend" onclick="setTool('legend','q')">Aa Legend</button>
         <button class="tool-btn" id="toolFigure" onclick="setTool('figure','q')">Figure</button>
         <button class="tool-btn" id="toolGraph" onclick="setTool('graph','q')">Graph</button>
@@ -117,7 +138,7 @@ function renderEditor(){
         <button class="tool-btn" onclick="expandCanvasPane('q')">Expand Pane</button>
         <button class="tool-btn" onclick="contractCanvasPane('q')">Contract Pane</button>
         <button class="tool-btn" onclick="autoAdjustCanvasPane('q')">Auto Adjust</button>
-        <button class="tool-btn" onclick="openMixedComposer('q')">Hallmark HD Composer</button>
+        <button class="tool-btn" type="button" onclick="openMixedComposer('q')">Edit content</button>
         <button class="tool-btn" onclick="undoCanvas('q')">Undo</button>
       </div>
       <canvas id="qCanvas" width="640" height="90" style="max-width:100%;margin:0 auto"></canvas>
@@ -141,7 +162,7 @@ function renderEditor(){
 
   ${isNAT ? `
   <!-- NAT ANSWER -->
-  <div>
+  <div id="answerSection">
     <div class="sec-lbl">NAT Answer (goes to answer key only)</div>
     <div class="field">
       <input type="text" id="natAns" value="${escA(q.natAnswer||'')}"
@@ -152,7 +173,7 @@ function renderEditor(){
   </div>
   ` : `
   <!-- OPTIONS -->
-  <div>
+  <div id="answerSection">
     <div class="sec-lbl">Options &nbsp;<span style="font-size:9px;font-weight:400">${isMSQ?'(multiple correct)':'(single correct)'}</span></div>
     <div id="optList">
       ${q.options.map((opt,i)=>`
@@ -174,13 +195,13 @@ function renderEditor(){
             <button class="tool-btn" onclick="expandCanvasPane('opt${i}')">Expand Pane</button>
             <button class="tool-btn" onclick="contractCanvasPane('opt${i}')">Contract Pane</button>
             <button class="tool-btn" onclick="autoAdjustCanvasPane('opt${i}')">Auto Adjust</button>
-            <button class="tool-btn" onclick="openMixedComposer('opt${i}')">Hallmark HD Composer</button>
+            <button class="tool-btn" type="button" onclick="openMixedComposer('opt${i}')">Edit content</button>
             <button class="tool-btn" onclick="undoCanvas('opt${i}')">Undo</button>
             <span class="opt-id-row">${opt.oid||genOid(q.qid,i+1)}</span>
           </div>
           <div class="canvas-wrap" id="opt${i}CanvasWrap">
             <div class="canvas-tools" id="opt${i}Tools">
-              <button class="tool-btn active" id="opt${i}toolText" onclick="setTool('text','opt${i}')">Text</button>
+              <button class="tool-btn active" id="opt${i}toolText" type="button" aria-label="Add text" title="Add text" onclick="setTool('text','opt${i}')">Aa</button>
               <button class="tool-btn" id="opt${i}toolLegend" onclick="setTool('legend','opt${i}')">Aa</button>
               <button class="tool-btn" id="opt${i}toolFigure" onclick="setTool('figure','opt${i}')">&#128444;</button>
               <button class="tool-btn" id="opt${i}toolGraph" onclick="setTool('graph','opt${i}')">&#128200;</button>

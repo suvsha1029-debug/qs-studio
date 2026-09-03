@@ -2488,8 +2488,6 @@ function pushMixedComposerUndo(editor){
 }
 
 function undoMixedComposer(){
-  const shell=document.querySelector('.modal-card:has(.mixed-composer)');
-  if(shell && !document.getElementById('mixedComposerShellGrip')){ const grip=document.createElement('div'); grip.className='mixed-composer-shell-grip'; grip.id='mixedComposerShellGrip'; grip.title='Drag to resize composer'; shell.appendChild(grip); }
   const editor=document.getElementById('mixedComposerEditor');
   if(!editor) return;
   const current=getMixedComposerSnapshot(editor);
@@ -3373,14 +3371,6 @@ function insertConfiguredInlineMatrix(){
   insertInlineMatrixWidget(rows?.value, cols?.value);
 }
 
-function adjustMixedComposerEditorHeight(delta){
-  const editor=document.getElementById('mixedComposerEditor');
-  if(!editor) return;
-  const current=parseInt(editor.style.minHeight || getComputedStyle(editor).minHeight || '200',10) || 200;
-  const next=Math.max(140, Math.min(720, current + delta));
-  editor.style.minHeight=next+'px';
-}
-
 function applyMixedComposerFrameWidth(editor, key){
   if(!editor) return;
   editor.style.boxSizing='border-box';
@@ -3617,7 +3607,7 @@ function renderMixedComposerEquationPreview(){
   if(!el) return;
   const tex=getMixedComposerLatex();
   if(!tex){
-    el.textContent='Build the equation below, then insert it into the statement or add the whole block to the frame.';
+    el.textContent='';
     return;
   }
   renderTexPreviewInto(el, tex);
@@ -3661,7 +3651,7 @@ function insertEquationIntoMixedComposer(){
   const displayText=String(getMixedComposerDisplayText() || '').trim();
   const displayHTML=getMixedComposerDisplayHTML();
   if(!editor || !latex){
-    showNotice('Type the equation first, then insert it into the statement.', 'Composer');
+    showNotice('Add an equation first.', 'Edit content');
     return;
   }
   if(insertIntoFocusedFractionInput(latex || displayText)){
@@ -3872,11 +3862,11 @@ function importPdfSourceIntoMixedComposer(){
   const source=getActiveMixedComposerPdfSource();
   const preview=document.getElementById('mixedComposerPreview');
   if(!String(source||'').trim()){
-    if(preview) preview.textContent='No PDF text is available for this frame.';
+    if(preview) preview.textContent='Nothing to import.';
     return;
   }
   if(insertPdfSourceIntoMixedComposer(source,{replace:true}) && preview){
-    preview.textContent='PDF text imported. Prose is editable, LaTeX is rendered inline, and Undo restores the previous composer content.';
+    preview.textContent='Imported.';
   }
 }
 
@@ -5951,7 +5941,7 @@ function addImageFigureDirect(key, dataUrl){
     renderPaper();
   }).catch(()=>{
     if(isCanvasRenderTargetCurrent(key,expectedQuestion,expectedCanvas)){
-      showNotice('Composed statement could not be inserted into the frame.', 'Composer');
+      showNotice('Content could not be inserted into the frame.', 'Edit content');
     }
   });
 }
@@ -6036,8 +6026,8 @@ async function applyMixedComposerSurfaceToCanvas(key, source, opts={}){
 
 function applyMixedComposerToCanvas(key, dataUrl){
   return loadImg(dataUrl).then(img=>applyMixedComposerSurfaceToCanvas(key, img)).catch(()=>{
-    showNotice('Composed statement could not be written into the canvas.', 'Composer');
-    throw new Error('Composed statement could not be written into the canvas.');
+    showNotice('Content could not be written into the canvas.', 'Edit content');
+    throw new Error('Content could not be written into the canvas.');
   });
 }
 
@@ -6050,38 +6040,48 @@ function openMixedComposer(key){
   const storedHTML=getComposerSourceHTML(key);
   const existingDraft=(previousComposerKey===key && String(mixedComposerDraftHTML||'').trim()) ? mixedComposerDraftHTML : storedHTML;
   openModal({
-    title:'Statement Composer',
-    subtitle:'Type normal question text and equations together, then add the whole clean block to the selected question or option frame in one click.',
+    title:'Edit content',
+    subtitle:'',
     closable:true,
     body:`
       <div class="mixed-composer">
-        <div class="mixed-composer-toolbar">
-          <button class="btn" type="button" onclick="formatMixedComposer('bold')">Bold</button>
-          <button class="btn" type="button" onclick="formatMixedComposer('italic')">Italic</button>
-          <button class="btn" type="button" onclick="formatMixedComposer('underline')">Underline</button>
-          <button class="btn" type="button" onclick="formatMixedComposer('subscript')">Sub</button>
-          <button class="btn" type="button" onclick="formatMixedComposer('superscript')">Sup</button>
-          <button class="btn" type="button" onclick="insertMixedComposerNormalLine()">New line</button>
-          <button class="btn" type="button" onclick="insertMixedComposerNumberedLine()">1) Line</button>
-          <button class="btn" type="button" onclick="undoMixedComposer()">Undo</button>
-          <button class="btn" type="button" onclick="importPdfSourceIntoMixedComposer()">Import PDF Text</button>
-          <label class="field" style="display:inline-flex;align-items:center;gap:6px;margin:0 4px;min-width:auto;border:0;padding:0">Text <select id="mixedComposerTextSize" class="input" style="width:82px;padding:6px 8px">${getMixedComposerTextOptionsHTML(readMixedComposerTextSize(key))}</select></label>
-          <label class="field" style="display:inline-flex;align-items:center;gap:6px;margin:0 4px;min-width:auto;border:0;padding:0">Math <select id="mixedComposerMathSize" class="input" style="width:82px;padding:6px 8px">${getMixedComposerMathOptionsHTML(readMixedComposerMathSize(key))}</select></label>
-          <label class="field" style="display:inline-flex;align-items:center;gap:6px;margin:0 4px;min-width:auto;border:0;padding:0">Inner <select id="mixedComposerInnerMathScale" class="input" style="width:92px;padding:6px 8px">${getMixedComposerInnerMathOptionsHTML(readMixedComposerInnerMathScale(key))}</select></label>
-          <span class="composer-profile-badge" title="High-resolution canvas rendering">Hallmark HD</span>
-          <label class="field" style="display:inline-flex;align-items:center;gap:6px;margin:0 4px;min-width:auto;border:0;padding:0">Hallmark ink <select id="mixedComposerEquationStroke" class="input" style="width:104px;padding:6px 8px">${getMixedComposerEquationStrokeOptionsHTML(readMixedComposerEquationStroke(key))}</select></label>
-          <div class="mixed-composer-actions">
-            <button class="btn" type="button" onclick="adjustMixedComposerEditorHeight(80)">Expand</button>
-            <button class="btn" type="button" onclick="adjustMixedComposerEditorHeight(-80)">Contract</button>
+        <div class="mixed-composer-toolbar" role="toolbar" aria-label="Formatting">
+          <div class="mixed-composer-actions" role="group" aria-label="Apply">
             <button class="btn pri composer-apply-btn" type="button" id="mixedComposerApplyTopBtn">Apply</button>
           </div>
-          <span class="modal-note">Hallmark HD renders text and equations once at final resolution. Hallmark ink gives Fine, Light, Regular, Bold, and Extra bold visibly different print weights.</span>
+          <div class="composer-format-group" role="group" aria-label="Text formatting">
+            <button class="btn composer-format-button" type="button" aria-label="Bold" title="Bold" onclick="formatMixedComposer('bold')"><strong>B</strong></button>
+            <button class="btn composer-format-button" type="button" aria-label="Italic" title="Italic" onclick="formatMixedComposer('italic')"><em>I</em></button>
+            <button class="btn composer-format-button" type="button" aria-label="Underline" title="Underline" onclick="formatMixedComposer('underline')"><u>U</u></button>
+            <button class="btn composer-format-button" type="button" aria-label="Subscript" title="Subscript" onclick="formatMixedComposer('subscript')">x<sub>2</sub></button>
+            <button class="btn composer-format-button" type="button" aria-label="Superscript" title="Superscript" onclick="formatMixedComposer('superscript')">x<sup>2</sup></button>
+          </div>
+          <div class="composer-line-group" role="group" aria-label="Lines and history">
+            <button class="btn composer-format-button" type="button" aria-label="New line" title="New line" onclick="insertMixedComposerNormalLine()">↵</button>
+            <button class="btn composer-format-button" type="button" aria-label="Numbered line" title="Numbered line" onclick="insertMixedComposerNumberedLine()">1.</button>
+            <button class="btn composer-format-button" type="button" aria-label="Undo" title="Undo" onclick="undoMixedComposer()">↶</button>
+            <button class="btn composer-import-button" type="button" aria-label="Import PDF source" title="Import PDF source" onclick="importPdfSourceIntoMixedComposer()">PDF</button>
+          </div>
+          <div class="composer-quick-math" role="group" aria-label="Quick math">
+            <button class="btn composer-math-button" type="button" aria-label="Fraction" title="Fraction" onmousedown="event.preventDefault()" onclick="openMixedComposerFractionModal('stacked')"><span class="quick-fraction"><span>a</span><span>b</span></span></button>
+            <button class="btn composer-math-button" type="button" aria-label="Integral" title="Integral" onmousedown="event.preventDefault()" onclick="insertInlineStructureWidget('integralPlain')">∫</button>
+            <button class="btn composer-math-button" type="button" aria-label="Integral with limits" title="Integral with limits" onmousedown="event.preventDefault()" onclick="insertInlineStructureWidget('integral')">∫<sub>a</sub><sup>b</sup></button>
+            <button class="btn composer-math-button composer-math-button-wide" type="button" aria-label="Derivative" title="Derivative" onmousedown="event.preventDefault()" onclick="insertInlineStructureWidget('derivative')">d/dx</button>
+            <button class="btn composer-math-button composer-math-button-wide" type="button" aria-label="Partial derivative" title="Partial derivative" onmousedown="event.preventDefault()" onclick="insertInlineStructureWidget('partialDerivative')">∂/∂x</button>
+            <button class="btn composer-math-button" type="button" aria-label="Summation" title="Summation" onmousedown="event.preventDefault()" onclick="insertInlineStructureWidget('summation')">Σ</button>
+          </div>
+          <div class="composer-setting-group" role="group" aria-label="Size and weight">
+            <label class="composer-setting" title="Content size"><span>Aa</span><select id="mixedComposerTextSize" class="input" aria-label="Content size">${getMixedComposerTextOptionsHTML(readMixedComposerTextSize(key))}</select></label>
+            <label class="composer-setting" title="Equation size"><span>∑</span><select id="mixedComposerMathSize" class="input" aria-label="Equation size">${getMixedComposerMathOptionsHTML(readMixedComposerMathSize(key))}</select></label>
+            <label class="composer-setting" title="Inner equation scale"><span>↔</span><select id="mixedComposerInnerMathScale" class="input" aria-label="Inner equation scale">${getMixedComposerInnerMathOptionsHTML(readMixedComposerInnerMathScale(key))}</select></label>
+            <label class="composer-setting" title="Equation weight"><span>W</span><select id="mixedComposerEquationStroke" class="input" aria-label="Equation weight">${getMixedComposerEquationStrokeOptionsHTML(readMixedComposerEquationStroke(key))}</select></label>
+          </div>
+          <span class="composer-profile-badge" title="High-resolution output">HD</span>
         </div>
-        <div class="field">
-          <label>Statement And Equation Block</label>
+        <div class="mixed-composer-workspace">
+        <div class="field mixed-composer-content-field">
           <div class="mixed-composer-editor-wrap">
-            <div id="mixedComposerEditor" class="mixed-composer-editor" contenteditable="true" spellcheck="true" data-placeholder="Type the full statement here. You can mix normal text and inserted equations in the same block."></div>
-            <div class="mixed-composer-pane-grip" id="mixedComposerEditorGrip" title="Drag to resize editor"></div>
+            <div id="mixedComposerEditor" class="mixed-composer-editor" contenteditable="true" spellcheck="true" data-placeholder="Start here…"></div>
           </div>
         </div>
         <div class="mixed-composer-footer">
@@ -6126,20 +6126,35 @@ function openMixedComposer(key){
             </div>
             <div class="composer-eq-tabs" id="composerEqTabs"></div>
             <div class="composer-eq-palette" id="composerEqPalette"></div>
-            <div class="mixed-composer-pane-grip" id="mixedComposerMathGrip" title="Drag to resize math tools"></div>
           </div>
-          <div class="mixed-composer-preview" id="mixedComposerPreview">Fractions, vectors, limits, integrals, and summations now insert directly into the main statement editor at the caret. Fill the boxes there, then keep typing normally.</div>
+          <div class="mixed-composer-preview" id="mixedComposerPreview" aria-live="polite"></div>
         </div>
-        <div class="modal-actions">
-            <button class="btn pri composer-apply-btn" type="button" id="mixedComposerApplyBtn">Apply</button>
-          <button class="btn" type="button" onclick="closeModal()">Cancel</button>
         </div>
       </div>
     `
   });
   const editor=document.getElementById('mixedComposerEditor');
-  document.querySelectorAll('.mixed-composer-toolbar .btn').forEach(btn=>{
-    btn.addEventListener('mousedown', e=>e.preventDefault());
+  const composerRoot=document.querySelector('.mixed-composer');
+  let composerViewportState=null;
+  composerRoot?.addEventListener('mousedown',event=>{
+    const button=event.target.closest('button');
+    if(!button || !composerRoot.contains(button)) return;
+    const workspace=composerRoot.querySelector('.mixed-composer-workspace');
+    composerViewportState={workspaceScroll:workspace?.scrollTop||0,editorScroll:editor?.scrollTop||0};
+    saveMixedComposerRange();
+    event.preventDefault();
+  });
+  composerRoot?.addEventListener('click',event=>{
+    const button=event.target.closest('button');
+    if(!button || button.classList.contains('composer-apply-btn') || !composerViewportState) return;
+    const snapshot=composerViewportState;
+    requestAnimationFrame(()=>{
+      const liveRoot=document.querySelector('.mixed-composer');
+      const liveEditor=document.getElementById('mixedComposerEditor');
+      const workspace=liveRoot?.querySelector('.mixed-composer-workspace');
+      if(workspace) workspace.scrollTop=snapshot.workspaceScroll;
+      if(liveEditor) liveEditor.scrollTop=Math.min(snapshot.editorScroll,Math.max(0,liveEditor.scrollHeight-liveEditor.clientHeight));
+    });
   });
   if(editor){
     const sizeSel=document.getElementById('mixedComposerTextSize');
@@ -6150,7 +6165,6 @@ function openMixedComposer(key){
     if(innerMathSel){ innerMathSel.value=String(readMixedComposerInnerMathScale(key)); innerMathSel.onchange=()=>updateMixedComposerInnerMathScale(innerMathSel.value, key); }
     const equationStrokeSel=document.getElementById('mixedComposerEquationStroke');
     if(equationStrokeSel){ equationStrokeSel.value=readMixedComposerEquationStroke(key); equationStrokeSel.onchange=()=>updateMixedComposerEquationStroke(equationStrokeSel.value, key); }
-    initMixedComposerResizeUI();
     applyMixedComposerFrameWidth(editor, key);
     applyMixedComposerEditorTypography(editor, key);
     if(existingDraft) editor.innerHTML=existingDraft;
@@ -6262,7 +6276,7 @@ function openMixedComposer(key){
     const renderContext=captureMixedComposerRenderContext(key);
     const plainText=getMixedComposerPlainText(renderRoot);
     if(!plainText){
-      showNotice('Please type the statement first.', 'Composer');
+      showNotice('Add content first.', 'Edit content');
       return;
     }
     setApplyBusy(true);
@@ -6271,7 +6285,7 @@ function openMixedComposer(key){
       if(!ownsApplyTarget()){
         setApplyBusy(false);
         if(document.getElementById('mixedComposerEditor')===editorEl){
-          showNotice('The selected question changed before rendering finished, so nothing was applied.', 'Composer');
+          showNotice('The selected question changed, so nothing was applied.', 'Edit content');
         }
         return;
       }
@@ -6314,7 +6328,7 @@ function openMixedComposer(key){
       if(applied===false || !ownsApplyTarget()){
         setApplyBusy(false);
         if(document.getElementById('mixedComposerEditor')===editorEl){
-          showNotice('The selected question changed before the canvas update finished, so the result was not committed.', 'Composer');
+          showNotice('The selected question changed, so the result was not applied.', 'Edit content');
         }
         return;
       }
@@ -6322,11 +6336,11 @@ function openMixedComposer(key){
       mixedComposerDraftHTML='';
       setApplyBusy(false);
       closeModal();
-      toast('Statement written to canvas');
+      toast('Applied');
     }catch(err){
       setApplyBusy(false);
       if(document.getElementById('mixedComposerEditor')===editorEl){
-        showNotice(err?.message || 'Composer render failed.', 'Composer');
+        showNotice(err?.message || 'Rendering failed.', 'Edit content');
       }else{
         console.warn('Composer render failed after its editor was replaced:', err);
       }
@@ -6334,49 +6348,6 @@ function openMixedComposer(key){
   };
   if(applyBtn) applyBtn.onclick=runApply;
   if(applyTopBtn) applyTopBtn.onclick=runApply;
-}
-
-function initMixedComposerResizeUI(){
-  const shell=document.querySelector('.modal-shell:has(.mixed-composer)');
-  const shellGrip=document.getElementById('mixedComposerShellGrip');
-  const editor=document.getElementById('mixedComposerEditor');
-  const editorGrip=document.getElementById('mixedComposerEditorGrip');
-  const mathBox=document.querySelector('.mixed-composer-mathbox');
-  const mathGrip=document.getElementById('mixedComposerMathGrip');
-  const bind=(grip,target,minW,minH,maxW,maxH)=>{
-    if(!grip || !target) return;
-    grip.onpointerdown=(e)=>{
-      e.preventDefault();
-      const startX=e.clientX, startY=e.clientY;
-      const rect=target.getBoundingClientRect();
-      const startW=rect.width, startH=rect.height;
-      grip.setPointerCapture?.(e.pointerId);
-      const onMove=(ev)=>{
-        if(minW!=null){
-          const nextW=Math.max(minW, Math.min(maxW, startW + (ev.clientX-startX)));
-          target.style.width=nextW+'px';
-          target.style.maxWidth=nextW+'px';
-        }
-        if(minH!=null){
-          const nextH=Math.max(minH, Math.min(maxH, startH + (ev.clientY-startY)));
-          target.style.height=nextH+'px';
-          target.style.minHeight=nextH+'px';
-        }
-      };
-      const onUp=(ev)=>{
-        grip.releasePointerCapture?.(ev.pointerId);
-        grip.removeEventListener('pointermove', onMove);
-        grip.removeEventListener('pointerup', onUp);
-        grip.removeEventListener('pointercancel', onUp);
-      };
-      grip.addEventListener('pointermove', onMove);
-      grip.addEventListener('pointerup', onUp);
-      grip.addEventListener('pointercancel', onUp);
-    };
-  };
-  bind(shellGrip, shell, 980, 760, Math.max(1180, Math.round(window.innerWidth*0.98)), Math.max(760, Math.round(window.innerHeight*0.97)));
-  bind(editorGrip, editor, null, 260, null, Math.max(620, Math.round(window.innerHeight*0.72)));
-  bind(mathGrip, mathBox, null, 240, null, Math.max(720, Math.round(window.innerHeight*0.78)));
 }
 
 function getEquationStudioBuilder(){
@@ -7161,16 +7132,36 @@ function normalizePdfTextForAutoCompare(value){
     .trim();
 }
 
+function placeAutoPdfFigureMarker(value, figures){
+  const text=displayPdfText(value||'').replace(/\r\n?/g,'\n');
+  const hasFigure=(Array.isArray(figures) ? figures : []).some(fig=>fig && (fig.src || String(fig.sourceSvg||'').trim()));
+  if(!hasFigure || /\[\[FIGURE\]\]|\[Figure\]|\[Image\]/.test(text)) return text;
+  // Composer canvases commonly reserve a vertical slot with several blank
+  // rows, while the placed figure remains a separate vector layer. Convert
+  // the largest such slot into the semantic marker used by selectable PDFs.
+  // Requiring at least two blank rows avoids consuming ordinary paragraph
+  // spacing. If no slot exists, append the figure after the authored text.
+  const gaps=[...text.matchAll(/\n(?:[ \t]*\n){2,}/g)];
+  if(gaps.length){
+    const slot=gaps.reduce((best,item)=>item[0].length>best[0].length ? item : best,gaps[0]);
+    const at=slot.index;
+    return text.slice(0,at)+'\n[Figure]\n'+text.slice(at+slot[0].length);
+  }
+  return text+(text.trim()?'\n':'')+'[Figure]';
+}
+
 function getQuestionAutoPdfSourceText(qObj=null){
   const q=qObj || cur;
   if(!q) return '';
-  return derivePdfTextFromComposerHTML(q.questionComposerHTML, q.questionText||'');
+  const source=derivePdfTextFromComposerHTML(q.questionComposerHTML, q.questionText||'');
+  return placeAutoPdfFigureMarker(source,[...(q.questionFigures||[]),...(q.questionBurnedFigures||[])]);
 }
 
 function getOptionAutoPdfSourceText(optObj=null){
   const opt=optObj || null;
   if(!opt) return '';
-  return derivePdfTextFromComposerHTML(opt.composerHTML, opt.text||'');
+  const source=derivePdfTextFromComposerHTML(opt.composerHTML, opt.text||'');
+  return placeAutoPdfFigureMarker(source,[...(opt.figures||[]),...(opt.burnedFigures||[])]);
 }
 
 function shouldKeepManualPdfOverride(manual, autoText){
@@ -8734,6 +8725,9 @@ function applyLinkedPreviewTypography(key, el){
   el.style.minHeight='48px';
   el.style.height='auto';
   el.style.fontFamily="'Cambria Math','STIX Two Math','STIXGeneral','Times New Roman','Georgia','Noto Serif','Segoe UI Symbol',serif";
+  const ink=readMixedComposerEquationStroke(key);
+  const weights={fine:300,light:400,regular:500,bold:650,extra:800};
+  el.style.fontWeight=String(weights[ink]||400);
 }
 
 function normalizeLinkedPreviewDOM(el){
@@ -9903,7 +9897,8 @@ function renderLinkedPdfPreview(key){
   const composerHtml=getLinkedComposerHTMLForKey(key);
   const manualOverride=displayPdfText(getFramePdfTextOverride(key));
   const plain=manualOverride || getLinkedPreviewTextForKey(key) || getLinkedPlainTextForKey(key);
-  const selectableSource=String(plain||'').replace(/\[\[FIGURE\]\]|\[Figure\]|\[Image\]/g,'');
+  const rawSelectableSource=String(plain||'');
+  const selectableSource=rawSelectableSource.replace(/\[\[FIGURE\]\]|\[Figure\]|\[Image\]/g,'');
   const selectableClean=selectableSource.trim();
   const sourceIsLatex=isSelectableLatexSource(selectableSource);
   const composerRendered=!manualOverride && composerHtml ? getLinkedPreviewRichHTMLFromComposerHTML(composerHtml) : '';
@@ -9922,14 +9917,22 @@ function renderLinkedPdfPreview(key){
   const figureLayer=getSelectableCanvasFigureLayer([...(getFigureStore(key)||[]), ...(getBurnedFigureStore(key)||[])]);
   const markerRe=/(\[\[FIGURE\]\]|\[Figure\]|\[Image\])/g;
   const markerTest=/^(?:\[\[FIGURE\]\]|\[Figure\]|\[Image\])$/;
-  const renderedWithMarker=(figureLayer.flowHtml && markerRe.test(selectableSource))
-    ? String(selectableSource||'').split(markerRe).map(part=>markerTest.test(part) ? figureLayer.flowHtml : formatLinkedPreviewTextHTML(part)).join('')
+  const markerParts=rawSelectableSource.split(markerRe);
+  markerParts.forEach((part,index,parts)=>{
+    if(markerTest.test(part)) return;
+    let textPart=part;
+    if(markerTest.test(parts[index+1]||'')) textPart=textPart.replace(/\r?\n[ \t]*$/,'');
+    if(markerTest.test(parts[index-1]||'')) textPart=textPart.replace(/^[ \t]*\r?\n/,'');
+    parts[index]=textPart;
+  });
+  const renderedWithMarker=(figureLayer.flowHtml && markerRe.test(rawSelectableSource))
+    ? markerParts.map(part=>markerTest.test(part) ? figureLayer.flowHtml : formatLinkedPreviewTextHTML(part)).join('')
     : '';
   markerRe.lastIndex=0;
-  const rendered=renderedWithMarker || (figureLayer.html
-    ? '<span class="lp-coordinate-frame" style="--lp-coordinate-height:'+Math.max(48, Math.round(figureLayer.height||0))+'px"><span class="lp-coordinate-source">'+renderedText+'</span>'+figureLayer.html+'</span>'
+  const rendered=renderedWithMarker || (figureLayer.flowHtml
+    ? renderedText+figureLayer.flowHtml
     : renderedText);
-  el.innerHTML=rendered || formatLinkedPreviewTextHTML(plain || 'No linked composer content yet.');
+  el.innerHTML=rendered || formatLinkedPreviewTextHTML(plain || 'No linked content.');
   el.classList.toggle('has-linked-content', !!(rendered || plain));
   queueLinkedPreviewLayout(el);
 }
@@ -10006,7 +10009,7 @@ function openCanvasTextBox(key, boxX, boxY, x, y){
     </div>` : ''}
     ${mode!=='legend' ? getEquationRibbonHTML(key) : ''}
     ${mode!=='legend' ? `<div class="canvas-textbox-actions" style="justify-content:flex-start;margin-top:6px">
-      <button class="btn" type="button" onclick="openMixedComposer('${key}')">Open Composer</button>
+      <button class="btn" type="button" onclick="openMixedComposer('${key}')">Edit content</button>
       <button class="btn" type="button" onclick="importFigureFromEditor('${key}')">Import Figure</button>
       <button class="btn" type="button" onclick="insertFigureMarkerFromEditor('${key}')">Insert [Figure]</button>
       <button class="btn" type="button" onclick="expandCanvasPane('${key}')">Expand Pane</button>

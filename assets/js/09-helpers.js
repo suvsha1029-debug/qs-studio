@@ -181,12 +181,12 @@ function beginPaperPreparation(options={}){
     overlay.setAttribute('aria-hidden','false');
     overlay.setAttribute('aria-busy','true');
   }
-  if(title) title.textContent=options.title||'Preparing your question paper';
+  if(title) title.textContent=options.title||'Loading';
   updatePaperPreparation(
     token,
-    options.detail||'Loading fonts, equations, canvas ink, and paper previews...',
+    options.detail||'Preparing questions...',
     7,
-    options.foot||'Please wait—the paper will open when it is ready to scroll.'
+    options.foot||''
   );
   const hardTimeout=Math.max(4000,Number(options.hardTimeoutMs)||18000);
   paperPreparationHardTimer=setTimeout(()=>{
@@ -202,9 +202,7 @@ async function finishPaperPreparation(token, report={}){
   if(paperPreparationHardTimer){ clearTimeout(paperPreparationHardTimer); paperPreparationHardTimer=null; }
   const failed=Math.max(0,Number(report.failed)||0);
   const timedOut=!!report.timedOut;
-  const readyDetail=timedOut
-    ? 'Paper opened safely. A slow resource may finish in the background.'
-    : (failed ? `Paper ready. ${failed} unavailable preview resource${failed===1?' was':'s were'} skipped.` : 'Paper ready—canvas ink and previews are prepared.');
+  const readyDetail=timedOut ? 'Opening...' : 'Ready';
   const state=window.__paperPreparationState||{};
   window.__paperPreparationState={...state,active:true,releasing:true,progress:100,failed,timedOut,completedAt:Date.now(),reason:report.reason||state.reason||'workspace'};
   const detailEl=document.getElementById('paperLoadDetail');

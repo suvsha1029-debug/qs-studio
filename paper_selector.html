@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QS Paper Selector</title>
+<link rel="icon" type="image/png" href="assets/brand/favicon.png">
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;color:#102b46;background:#dcebf7}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 15% 5%,#fff 0,transparent 32%),linear-gradient(145deg,#eaf5fc,#c8dded)}
+.top{height:58px;padding:0 clamp(18px,4vw,50px);display:flex;align-items:center;justify-content:space-between;background:#123b67;color:#fff;box-shadow:0 3px 16px #0a315333}.top strong{letter-spacing:.04em}.back{color:#fff;text-decoration:none;font-size:13px}
+main{width:min(1040px,94vw);margin:clamp(28px,6vh,70px) auto}.hero{margin-bottom:22px}.hero h1{font-size:clamp(26px,5vw,45px);letter-spacing:-.04em;margin:0 0 7px}.hero p{margin:0;color:#4e6b84}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.card{background:#ffffffd9;border:1px solid #87a9c4;border-radius:18px;padding:20px;box-shadow:0 18px 50px #174c7420;backdrop-filter:blur(12px)}
+.card h2{font-size:14px;margin:0 0 13px}.drop{display:flex;min-height:130px;align-items:center;justify-content:center;text-align:center;border:2px dashed #7aa3c4;border-radius:13px;background:#f4faff;cursor:pointer;padding:18px;transition:.15s}.drop:hover,.drop.drag{border-color:#075d92;background:#e8f4fc}.drop input{display:none}.drop span{font-size:13px;color:#4e6b84}.drop b{display:block;color:#123b67;margin-bottom:5px}
+.status{grid-column:1/-1;display:none}.status.show{display:block}.summary{display:flex;gap:12px;flex-wrap:wrap}.pill{background:#e6f2fa;border:1px solid #9abbd2;border-radius:999px;padding:7px 11px;font-size:12px}.bad{background:#fff0f0;border-color:#e1a0a0;color:#8b2828}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:17px}.btn{border:1px solid #174b7c;border-radius:8px;padding:10px 15px;background:#fff;color:#123b67;font-weight:750;cursor:pointer}.btn.primary{background:#075d92;color:#fff}.btn:disabled{opacity:.45;cursor:not-allowed}.error{margin-top:13px;color:#9b2828;font-size:12px;white-space:pre-wrap}.note{font-size:12px;color:#58748b;margin-top:12px;line-height:1.45}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.top{height:52px}}
+</style>
+</head>
+<body>
+<header class="top"><strong>Paper Selector</strong><a class="back" href="qs_studio.html">QS Studio</a></header>
+<main>
+  <div class="hero"><h1>Select from the source bank.</h1><p>Match an assembled paper to its original question bank.</p></div>
+  <section class="grid">
+    <div class="card"><h2>1. Source bank</h2><label class="drop" id="bankDrop"><input id="bankFile" type="file" accept=".json,.qbank.json"><span><b>Choose .qbank.json</b><i id="bankName">Original question bank</i></span></label></div>
+    <div class="card"><h2>2. Assembled paper</h2><label class="drop" id="paperDrop"><input id="paperFile" type="file" accept=".json"><span><b>Choose Paper JSON</b><i id="paperName">Exported assembled paper</i></span></label></div>
+    <div class="card status" id="resultCard">
+      <div class="summary" id="summary"></div><div class="error" id="errors"></div>
+      <div class="actions"><button class="btn primary" id="downloadBank" disabled>Selected .qbank</button><button class="btn" id="downloadPaper" disabled>Selected Paper JSON</button></div>
+      <div class="note">Open the selected .qbank in QS Studio, then use Text PDF or cleantheam. The source files are never changed.</div>
+    </div>
+  </section>
+</main>
+<script>
+let bank=null,paper=null,bankFileName='question-bank.qbank.json',selection=null;
+const $=id=>document.getElementById(id);
+function safeName(value,fallback){return (String(value||fallback).replace(/[^a-z0-9 _-]/gi,'').trim().replace(/\s+/g,'_').slice(0,70)||fallback)}
+async function readJson(file){const data=JSON.parse(await file.text());if(!data||typeof data!=='object')throw new Error('Invalid JSON');return data}
+function valuesFor(obj,fields){return fields.map(k=>String(obj?.[k]||'').trim()).filter(Boolean)}
+function questionKeys(q){return new Set(valuesFor(q,['qid','id','question_id','bank_question_id','source_question_id','legacy_question_id','export_question_alias']).map(v=>v.toLowerCase()))}
+function paperQuestions(data){if(Array.isArray(data?.questions))return data.questions;if(Array.isArray(data?.qs))return data.qs;throw new Error('Assembled paper has no questions array.')}
+function matchSelection(){
+  if(!bank||!paper)return;
+  if(!Array.isArray(bank.qs))throw new Error('Source bank has no questions array.');
+  const requested=paperQuestions(paper),lookup=new Map();
+  bank.qs.forEach((q,index)=>questionKeys(q).forEach(key=>{if(!lookup.has(key))lookup.set(key,{q,index})}));
+  const matched=[],missing=[],used=new Set();
+  requested.forEach((pq,index)=>{
+    const keys=valuesFor(pq,['bank_question_id','source_question_id','legacy_question_id','question_id','export_question_alias','qid','id']).map(v=>v.toLowerCase());
+    const hit=keys.map(k=>lookup.get(k)).find(Boolean);
+    if(!hit){missing.push(valuesFor(pq,['bank_question_id','source_question_id','question_id','qid'])[0]||`Question ${index+1}`);return}
+    if(!used.has(hit.index)){matched.push(hit.q);used.add(hit.index)}
+  });
+  const selectedBank={...bank,_savedAt:new Date().toISOString(),_selection:{source_question_count:bank.qs.length,assembled_question_count:requested.length,selected_question_count:matched.length},qs:matched};
+  const selectedPaper={...paper,total_questions:requested.length,questions:requested};
+  selection={bank:selectedBank,paper:selectedPaper,matched:matched.length,requested:requested.length,missing};
+  showResult();
+}
+function showResult(){
+  const r=selection;$('resultCard').classList.add('show');
+  $('summary').innerHTML=`<span class="pill">${r.matched} matched</span><span class="pill">${bank.qs.length} in bank</span>${r.missing.length?`<span class="pill bad">${r.missing.length} unmatched</span>`:''}`;
+  $('errors').textContent=r.missing.length?'Unmatched: '+r.missing.join(', '):'';
+  $('downloadBank').disabled=!r.matched||r.missing.length>0;$('downloadPaper').disabled=!r.matched||r.missing.length>0;
+}
+function downloadJson(data,name){const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+async function receive(kind,file){
+  try{const data=await readJson(file);if(kind==='bank'){bank=data;bankFileName=file.name;$('bankName').textContent=file.name}else{paper=data;$('paperName').textContent=file.name}matchSelection()}
+  catch(err){$('resultCard').classList.add('show');$('errors').textContent=err.message;$('downloadBank').disabled=true;$('downloadPaper').disabled=true}
+}
+function bindPicker(kind,inputId,dropId){const input=$(inputId),drop=$(dropId);input.onchange=()=>input.files[0]&&receive(kind,input.files[0]);['dragenter','dragover'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add('drag')}));['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove('drag')}));drop.addEventListener('drop',ev=>ev.dataTransfer.files[0]&&receive(kind,ev.dataTransfer.files[0]))}
+bindPicker('bank','bankFile','bankDrop');bindPicker('paper','paperFile','paperDrop');
+$('downloadBank').onclick=()=>downloadJson(selection.bank,safeName(selection.bank.examName||selection.bank.project_name,'selected')+'.selected.qbank.json');
+$('downloadPaper').onclick=()=>downloadJson(selection.paper,safeName(selection.paper.exam_name||selection.paper.exam,'selected')+'.selected.paper.json');
+</script>
+</body>
+</html>
