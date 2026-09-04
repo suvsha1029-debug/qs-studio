@@ -3,7 +3,7 @@
   "short_name": "QS Studio",
   "description": "Question-paper authoring workspace for phones, tablets, and desktop browsers.",
   "id": "./",
-  "start_url": "./index.html",
+  "start_url": "./qs_studio.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",

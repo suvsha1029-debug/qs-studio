@@ -418,6 +418,7 @@ function _cCustomPortName(value, fallback){
   const name=String(value||'').toUpperCase().replace(/[^A-Z0-9_]/g,'').slice(0,16);
   return name||fallback;
 }
+function _cCustomPortDirection(value){return ['input','output','bidirectional','passive'].includes(value)?value:'passive';}
 function _cCustomTextValue(value){ return String(value??'').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g,'').slice(0,1200); }
 function _cSvgDataUrl(svgText){
   const svg=String(svgText||'');
@@ -720,7 +721,8 @@ function _cCustomSanitizeElement(raw,index){
   if(_cCustomLine({type})) return {...common,x1:_cCustomNumber(raw.x1),y1:_cCustomNumber(raw.y1),x2:_cCustomNumber(raw.x2),y2:_cCustomNumber(raw.y2),amp:Math.max(4,Math.min(120,_cCustomNumber(raw.amp,14))),coil:!!raw.coil,turns:Math.max(2,Math.min(24,Math.round(_cCustomNumber(raw.turns,4)))),bend:Math.max(-600,Math.min(600,_cCustomNumber(raw.bend,32)))};
   if(type==='text'||type==='mathText'){const text=_cCustomTextValue(raw.text);return text?{...common,type,x:_cCustomNumber(raw.x),y:_cCustomNumber(raw.y),text,fs:Math.max(4,Math.min(260,_cCustomNumber(raw.fs||raw.fontSize,16))),fontSize:Math.max(4,Math.min(260,_cCustomNumber(raw.fs||raw.fontSize,16))),bold:!!raw.bold,italic:!!raw.italic,underline:!!raw.underline,fontFamily:_cCustomTextValue(raw.fontFamily||'Georgia, Times New Roman, serif')}:null;}
   if(['plus','minus','ground'].includes(type)) return {...common,x:_cCustomNumber(raw.x),y:_cCustomNumber(raw.y),size:Math.max(6,Math.min(240,_cCustomNumber(raw.size,type==='ground'?22:16)))};
-  if(type==='port') return {...common,x:_cCustomNumber(raw.x),y:_cCustomNumber(raw.y),name:_cCustomPortName(raw.name,'P'+(index+1)),size:Math.max(4,Math.min(20,_cCustomNumber(raw.size,6)))};
+  if(type==='port') return {...common,x:_cCustomNumber(raw.x),y:_cCustomNumber(raw.y),name:_cCustomPortName(raw.name,'P'+(index+1)),direction:_cCustomPortDirection(raw.direction),showLabel:raw.showLabel!==false,size:Math.max(4,Math.min(20,_cCustomNumber(raw.size,6)))};
+  if(type==='junction') return {...common,x:_cCustomNumber(raw.x),y:_cCustomNumber(raw.y),size:Math.max(2,Math.min(14,_cCustomNumber(raw.size,4))),fill:_cCustomColor(raw.fill,raw.stroke||'#111')};
   return null;
 }
 
@@ -736,6 +738,7 @@ function _cCustomBounds(elements,fallbackW=120,fallbackH=80){
     if(item.type==='freehand'){const box=_cCustomFreehandBounds(item);if(box){include(box.minX,box.minY);include(box.maxX,box.maxY);}return;}
     if(_cCustomLine(item)){const pad=['curveArrow','arc','dottedCurveArrow','dottedArc'].includes(item.type)?Math.abs(item.bend||0):item.type==='wave'?Math.abs(item.amp||0):0;include(item.x1-pad,item.y1-pad);include(item.x2+pad,item.y2+pad);return;}
     if(item.type==='text'||item.type==='mathText'){const metrics=_cCustomTextMetrics(item);include(item.x,item.y-metrics.fs);include(item.x+metrics.w,item.y-metrics.fs+metrics.h);return;}
+    if(item.type==='port'){const size=item.size||6,code={input:'IN',output:'OUT',bidirectional:'I/O',passive:''}[_cCustomPortDirection(item.direction)],label=item.showLabel!==false?`${item.name||'P'}${code?` · ${code}`:''}`:'';include(item.x-size,item.y-size-14);include(item.x+size+(label?label.length*7+6:0),item.y+size);return;}
     const size=item.size||12;include(item.x-size,item.y-size);include(item.x+size,item.y+size);
   });
   if(!Number.isFinite(minX)){minX=0;minY=0;maxX=Math.max(20,_cCustomNumber(fallbackW,120));maxY=Math.max(20,_cCustomNumber(fallbackH,80));}
@@ -974,7 +977,7 @@ function _cCustomSymbolDefinition(payload){
     originX:Number.isFinite(+rawBounds.minX) ? +rawBounds.minX : rawBounds.originX-rawBounds.w/2,
     originY:Number.isFinite(+rawBounds.minY) ? +rawBounds.minY : rawBounds.originY-rawBounds.h/2
   } : rawBounds;
-  const ports=elements.filter(item=>item.type==='port').map((item,index)=>({id:_cCustomPortName(item.name,'P'+(index+1)),x:item.x-bounds.originX,y:item.y-bounds.originY}));
+  const ports=elements.filter(item=>item.type==='port').map((item,index)=>({id:_cCustomPortName(item.name,'P'+(index+1)),x:item.x-bounds.originX,y:item.y-bounds.originY,direction:_cCustomPortDirection(item.direction),size:item.size||6,showLabel:item.showLabel!==false}));
   const editableTexts=source ? [] : elements.filter(item=>item.type==='text'||item.type==='mathText').map(item=>({type:item.type,text:item.text,x:item.x-bounds.originX,y:item.y-bounds.originY,fill:item.fill==='none'?item.stroke:item.fill,fs:item.fs,bold:!!item.bold,italic:!!item.italic,underline:!!item.underline,fontFamily:item.fontFamily||'Georgia, Times New Roman, serif',rotation:_cCustomRotation(item.rotation)}));
   return {version:1,kind:'qs-studio-circuit-symbol',id,libraryKey,label:_cCustomTextValue(payload.label||'Custom Symbol')||'Custom Symbol',group:'Custom',w:bounds.w,h:bounds.h,originX:bounds.originX,originY:bounds.originY,anchorMode:source?'top-left':'center',ports,elements,editableTexts,svg:source?.svg||'',sourceSvgInner:source?.inner||'',sourceViewBox:source?.viewBox||null,styleManifest,componentDefaults:_cCustomComponentDefaults(payload.componentDefaults)};
 }
@@ -1027,7 +1030,8 @@ function _cCustomSymbolMarkup(def,selected,markerScope=''){
     else if(item.type==='wave') markup=`<path d="${_cCustomWavePath(item,ox,oy)}" fill="none" stroke="${s}" stroke-width="${item.sw}" stroke-linecap="round" stroke-linejoin="round"/>`;
     else if(item.type==='plus'||item.type==='minus'){const size=item.size||16,x=item.x-ox,y=item.y-oy,d=item.type==='plus'?`M ${x-size} ${y} H ${x+size} M ${x} ${y-size} V ${y+size}`:`M ${x-size} ${y} H ${x+size}`;markup=`<path d="${d}" fill="none" stroke="${s}" stroke-width="${item.sw}" stroke-linecap="round"/>`;}
     else if(item.type==='ground'){const size=item.size||22,x=item.x-ox,y=item.y-oy;markup=`<path d="M ${x} ${y-size} V ${y-size/3} M ${x-size} ${y-size/3} H ${x+size} M ${x-size*.65} ${y+size*.05} H ${x+size*.65} M ${x-size*.3} ${y+size*.4} H ${x+size*.3}" fill="none" stroke="${s}" stroke-width="${item.sw}" stroke-linecap="round"/>`;}
-    else if(item.type==='port') markup=`<circle cx="${item.x-ox}" cy="${item.y-oy}" r="${item.size||5}" fill="#fff" stroke="${s}" stroke-width="${item.sw}"/>`;
+    else if(item.type==='port'){const x=item.x-ox,y=item.y-oy,size=item.size||6,code={input:'IN',output:'OUT',bidirectional:'I/O',passive:''}[_cCustomPortDirection(item.direction)],label=item.showLabel!==false?`<text x="${x+size+4}" y="${y-size-2}" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="${s}" paint-order="stroke" stroke="#fff" stroke-width="3">${item.name}${code?` · ${code}`:''}</text>`:'';markup=`<g data-qs-port-id="${item.name}" data-qs-port-direction="${_cCustomPortDirection(item.direction)}"><circle cx="${x}" cy="${y}" r="${size}" fill="#fff" stroke="${s}" stroke-width="${item.sw}"/><circle cx="${x}" cy="${y}" r="1.4" fill="${s}"/>${label}</g>`;}
+    else if(item.type==='junction') markup=`<circle data-qs-junction="1" cx="${item.x-ox}" cy="${item.y-oy}" r="${item.size||4}" fill="${fill==='none'?s:fill}" stroke="#fff" stroke-width="0.8"/>`;
     else if(item.type==='text'||item.type==='mathText') markup=_cCustomElementTextMarkup(item,ox,oy,!!color);
     return markup?`<g opacity="${opacity}"${_cCustomRotationTransform(item,ox,oy)}>${markup}</g>`:'';
   }).join('');

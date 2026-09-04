@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>QS Studio SVG Symbol Maker</title>
 <link rel="stylesheet" href="assets/vendor/katex/katex.min.css?v=katex1">
 <script src="assets/vendor/katex/katex.min.js?v=katex1"></script>
@@ -13,7 +13,7 @@
 .metadata,.toolbar,.properties{display:flex;gap:8px;align-items:end;flex-wrap:wrap;padding:10px 14px;background:#edf5ff;border-bottom:1px solid var(--line);font-family:Arial,sans-serif}.field{display:flex;flex-direction:column;gap:3px;min-width:118px}.field label,.toolbar-label{font-size:10px;font-weight:800;letter-spacing:.05em;color:#38516d;text-transform:uppercase}.field input,.field select,.properties input,.properties select,.properties textarea{border:1px solid #6683a1;background:#fff;color:#10233f;min-height:30px;padding:5px 7px;font:13px Arial,sans-serif;border-radius:0}.field input[type=number]{width:76px}.field input[type=color],.toolbar input[type=color],.properties input[type=color]{width:35px;padding:2px}.field-grow{flex:1;min-width:190px}
 button{appearance:none;border:1px solid #4b6680;background:#fff;color:#10233f;min-height:30px;padding:5px 9px;cursor:pointer;font:700 12px Arial,sans-serif;border-radius:0;box-shadow:2px 2px 0 rgba(16,35,63,.16)}button:hover{background:#e4f0fc}button:active{transform:translate(1px,1px);box-shadow:none}button.active{background:#1e6fbe;color:#fff;border-color:#124b86}.primary{background:#155fa8;color:#fff;border-color:#0d477f}.danger{color:#8c1f24;border-color:#a9272c}.sep{width:1px;height:30px;background:#9db2c8;margin:0 2px}.toolbar{align-items:center;padding:8px 14px}.toolbar-group{display:flex;gap:4px;align-items:center;flex-wrap:wrap}.toolbar select{height:30px;border:1px solid #6683a1;background:#fff}.toolbar input[type=range]{width:82px}.toolbar small{font:11px Arial,sans-serif;color:var(--muted)}
 .workspace{display:grid;grid-template-columns:minmax(0,1fr) 294px;min-height:570px}.stage{position:relative;padding:16px;background:#cbd9e8;border-right:1px solid var(--line);overflow:auto}.canvas-shell{position:relative;min-width:680px;background:#fff;border:2px solid #344e68;box-shadow:5px 5px 0 rgba(16,35,63,.22)}#svgCanvas{display:block;width:100%;height:auto;min-height:440px;touch-action:none;background:#fff;cursor:crosshair}.side{background:#f9fbfd;padding:14px;font-family:Arial,sans-serif}.side h2{font:700 13px/1 Arial,sans-serif;text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px;padding-bottom:7px;border-bottom:2px solid #1e6fbe}.side p{margin:0 0 12px;color:#536b82;font-size:12px}.prop-row{display:flex;gap:7px;align-items:center;margin:8px 0}.prop-row label{font-size:11px;font-weight:700;color:#3b526a;min-width:64px}.prop-row input,.prop-row select{flex:1;width:100%}.prop-row textarea{width:100%;min-height:72px;resize:vertical}.prop-check{font-size:12px;color:#344e68}.output{border-top:2px solid #315b85;background:#10233f;padding:12px 14px;font-family:Arial,sans-serif}.output-head{display:flex;justify-content:space-between;gap:8px;align-items:center;color:#fff;margin-bottom:8px}.output-head strong{font-size:12px;letter-spacing:.04em;text-transform:uppercase}.output textarea{display:block;width:100%;height:144px;resize:vertical;border:1px solid #6683a1;background:#f7fbff;color:#10233f;padding:8px;font:11px/1.35 Consolas,"Courier New",monospace}
-.text-entry{position:absolute;display:none;z-index:10;width:390px;max-width:calc(100% - 12px);padding:10px;background:#10233f;border:2px solid #d97706;box-shadow:4px 4px 0 rgba(16,35,63,.35);font-family:Arial,sans-serif}.text-entry textarea,.text-entry select{width:100%;border:1px solid #fff;padding:5px;font:13px Arial,sans-serif}.text-entry textarea{min-height:86px;resize:vertical}.text-entry .entry-toolbar,.text-entry .entry-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.text-entry .entry-toolbar button{min-width:32px}.text-entry .entry-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px}.text-entry .entry-label{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#d7e7ff}.text-entry button{min-height:26px;padding:3px 7px}.math-preview{display:none;margin-top:7px;padding:7px;background:#f8fbff;border:1px solid #bdd3ed;color:#10233f;min-height:34px;overflow:auto}.math-preview.on{display:block}.math-preview .katex{font-size:1.1em}.selection-box{fill:none;stroke:#d97706;stroke-width:1.5;stroke-dasharray:5 3;pointer-events:none}.selection-group-box{fill:rgba(30,111,190,.05);stroke:#155fa8;stroke-width:2;stroke-dasharray:7 4;pointer-events:none}.selection-group-box.locked{fill:rgba(21,95,168,.09);stroke:#0c315b;stroke-width:2.5;stroke-dasharray:none}.group-tools{position:absolute;display:none;z-index:9;gap:4px;align-items:center;padding:5px;background:#10233f;border:2px solid #d97706;box-shadow:4px 4px 0 rgba(16,35,63,.25);font-family:Arial,sans-serif;white-space:nowrap}.group-tools.on{display:flex}.group-tools button{min-height:24px;padding:3px 7px;font-size:11px;box-shadow:none}.group-tools .group-close{min-width:24px;color:#a9272c}.handle{fill:#1e6fbe;stroke:#fff;stroke-width:1.5;cursor:crosshair}.handle.group-handle{fill:#0c315b;cursor:nwse-resize}.workflow-strip{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:6px 14px;background:#dcecff;border-bottom:1px solid #8aa8c5;font:700 11px Arial,sans-serif;color:#294866}.workflow-strip strong{color:#0c315b}.workflow-strip .hint{font-weight:400;color:#536b82}.port-label{font:11px Arial,sans-serif;fill:#10233f;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}.hidden{display:none!important}#svgCanvas[data-tool]:not([data-tool="select"]) [data-id]{cursor:inherit!important}
+.text-entry{position:absolute;display:none;z-index:10;width:390px;max-width:calc(100% - 12px);padding:10px;background:#10233f;border:2px solid #d97706;box-shadow:4px 4px 0 rgba(16,35,63,.35);font-family:Arial,sans-serif}.text-entry textarea,.text-entry select{width:100%;border:1px solid #fff;padding:5px;font:13px Arial,sans-serif}.text-entry textarea{min-height:86px;resize:vertical}.text-entry .entry-toolbar,.text-entry .entry-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.text-entry .entry-toolbar button{min-width:32px}.text-entry .entry-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px}.text-entry .entry-label{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#d7e7ff}.text-entry button{min-height:26px;padding:3px 7px}.math-preview{display:none;margin-top:7px;padding:7px;background:#f8fbff;border:1px solid #bdd3ed;color:#10233f;min-height:34px;overflow:auto}.math-preview.on{display:block}.math-preview .katex{font-size:1.1em}.selection-box{fill:none;stroke:#d97706;stroke-width:1.5;stroke-dasharray:5 3;pointer-events:none}.selection-group-box{fill:rgba(30,111,190,.05);stroke:#155fa8;stroke-width:2;stroke-dasharray:7 4;pointer-events:none}.selection-group-box.locked{fill:rgba(21,95,168,.09);stroke:#0c315b;stroke-width:2.5;stroke-dasharray:none}.group-tools{position:absolute;display:none;z-index:9;gap:4px;align-items:center;padding:5px;background:#10233f;border:2px solid #d97706;box-shadow:4px 4px 0 rgba(16,35,63,.25);font-family:Arial,sans-serif;white-space:nowrap}.group-tools.on{display:flex}.group-tools button{min-height:24px;padding:3px 7px;font-size:11px;box-shadow:none}.group-tools .group-close{min-width:24px;color:#a9272c}.handle{fill:#1e6fbe;stroke:#fff;stroke-width:1.5;cursor:crosshair}.handle.group-handle{fill:#0c315b;cursor:nwse-resize}.workflow-strip{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:6px 14px;background:#dcecff;border-bottom:1px solid #8aa8c5;font:700 11px Arial,sans-serif;color:#294866}.workflow-strip strong{color:#0c315b}.workflow-strip .hint{font-weight:400;color:#536b82}.port-label{font:700 11px Arial,sans-serif;fill:#10233f;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}.port-direction{font:800 8px Arial,sans-serif;fill:#1e6fbe;paint-order:stroke;stroke:#fff;stroke-width:2px}.joint-dot{fill:#111;stroke:#fff;stroke-width:.8;vector-effect:non-scaling-stroke}.properties:focus-within{outline:2px solid rgba(30,111,190,.15);outline-offset:4px}.hidden{display:none!important}#svgCanvas[data-tool]:not([data-tool="select"]) [data-id]{cursor:inherit!important}
 @media(max-width:900px){.workspace{grid-template-columns:1fr}.stage{border-right:0;border-bottom:1px solid var(--line)}.side{min-height:220px}.masthead{align-items:flex-start;flex-direction:column}.maker{margin:0;border-width:0;box-shadow:none}.metadata,.toolbar{padding:9px}.field-grow{min-width:150px}}
 </style>
 </head>
@@ -65,7 +65,8 @@ button{appearance:none;border:1px solid #4b6680;background:#fff;color:#10233f;mi
       <button data-tool="plus" type="button" onclick="setTool('plus')">+</button>
       <button data-tool="minus" type="button" onclick="setTool('minus')">-</button>
       <button data-tool="ground" type="button" onclick="setTool('ground')">Ground</button>
-      <button data-tool="port" type="button" onclick="setTool('port')">Port</button>
+      <button data-tool="port" type="button" onclick="setTool('port')">+ Port</button>
+      <button data-tool="junction" type="button" onclick="setTool('junction')">● Joint</button>
     </div>
     <span class="sep"></span>
     <div class="toolbar-group"><span class="toolbar-label">Stroke</span><input id="stroke" type="color" value="#111111"><span class="toolbar-label">Fill</span><input id="fill" type="color" value="#ffffff"><span class="toolbar-label">Width</span><select id="strokeWidth"><option value="1">1</option><option value="1.5">1.5</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option><option value="6">6</option></select><span class="toolbar-label">Opacity</span><input id="opacity" type="number" min="0.05" max="1" step="0.05" value="1" title="0.05 = faint, 1 = solid"><label class="prop-check"><input id="snap" type="checkbox" checked onchange="updateSnapLabel()"> Snap</label><select id="snapStep" title="Grid choice affects new edits only; existing geometry never shifts" onchange="updateSnapLabel()"><option value="10">1 grid</option><option value="5">1/2 grid</option><option value="2.5">1/4 grid</option><option value="1">1px</option></select><span id="snapInfo" class="toolbar-label">10px</span></div>
@@ -174,7 +175,7 @@ button{appearance:none;border:1px solid #4b6680;background:#fff;color:#10233f;mi
 <script>
 const NS='http://www.w3.org/2000/svg';
 let viewW=680,viewH=440,tool='select',elements=[],circuitGroups=[],selectedId=null,multiSelectedIds=[],marquee=null,drawing=null,drag=null,handleDrag=null,pendingText=null,polylineDraft=null,freehandDraft=null,idCount=0;
-let groupClipboard=null,groupPasteCount=0,groupToolsDismissedFor='';
+let groupClipboard=null,groupPasteCount=0,groupToolsDismissedFor='',propertyEditSnapshot=null;
 let undoStack=[],redoStack=[];
 let libraryRootHandle=null;
 const SHARED_CIRCUIT_SYMBOLS_STORAGE='qsStudioCustomCircuitSymbolsV1';
@@ -196,8 +197,21 @@ function selectOne(id){selectedId=id||null;multiSelectedIds=[];groupToolsDismiss
 function selectedItems(){const ids=multiSelectedIds.length?multiSelectedIds:(selectedId?[selectedId]:[]);return elements.filter(item=>ids.includes(item.id));}
 function circuitForElementId(id){const item=elements.find(entry=>entry.id===id),direct=item?.circuitId?circuitGroups.find(group=>group.id===item.circuitId&&group.locked!==false):null;return direct||circuitGroups.find(group=>group.locked!==false&&group.elementIds.includes(id))||null;}
 function normalizeCircuitGroups(){
+  const usedPorts=new Set();
+  elements.forEach(item=>{
+    if(item.type==='port'){
+      item.name=uniquePortName(item.name,usedPorts);usedPorts.add(item.name);
+      item.direction=portDirection(item);item.size=portSize(item);item.showLabel=item.showLabel!==false;
+    }
+    if(item.type==='junction'){item.size=clamp(+item.size||4,2,14);item.fill=item.fill&&item.fill!=='none'?item.fill:(item.stroke||'#111');}
+  });
   const ids=new Set(elements.map(item=>item.id));
-  circuitGroups=circuitGroups.map(group=>({...group,elementIds:[...new Set((group.elementIds||[]).filter(id=>ids.has(id)))]})).filter(group=>group.elementIds.length>1);
+  const claimed=new Set();
+  circuitGroups=circuitGroups.map(group=>{
+    const members=[...new Set((group.elementIds||[]).filter(id=>ids.has(id)&&!claimed.has(id)))];
+    members.forEach(id=>claimed.add(id));
+    return{...group,locked:group.locked!==false,elementIds:members};
+  }).filter(group=>group.elementIds.length>1);
   const valid=new Set(circuitGroups.map(group=>group.id));
   elements.forEach(item=>{if(item.circuitId&&!valid.has(item.circuitId))delete item.circuitId;});
   circuitGroups.forEach(group=>group.elementIds.forEach(id=>{const item=elements.find(entry=>entry.id===id);if(item)item.circuitId=group.id;}));
@@ -759,7 +773,7 @@ function restore(snapshot){const state=JSON.parse(snapshot);if(Array.isArray(sta
 function undo(){if(!undoStack.length)return;redoStack.push(editorSnapshot());restore(undoStack.pop());setStatus('Undo applied');}
 function redo(){if(!redoStack.length)return;undoStack.push(editorSnapshot());restore(redoStack.pop());setStatus('Redo applied');}
 function setStatus(value){document.getElementById('status').textContent=value;}
-function setTool(next){tool=next;drawing=null;drag=null;handleDrag=null;polylineDraft=null;freehandDraft=null;hidePreview();svg.dataset.tool=next;document.querySelectorAll('[data-tool]').forEach(button=>button.classList.toggle('active',button.dataset.tool===next));svg.style.cursor=next==='select'?'default':(next==='text'||next==='mathText')?'text':next==='paint'?'cell':(next==='pen'||next==='dottedPen')?'crosshair':'crosshair';const arcTools=['arc','dottedArc','curveArrow','dottedCurveArrow'];setStatus(next==='select'?'Double-click an element to edit it':next==='port'?'Click to add named circuit ports':next==='mathText'?'Click to place vector math text with Greek/LaTeX recognition':next==='text'?'Click to place editable text boxes':next==='paint'?'Click closed shapes to apply the selected fill':next==='polyline'?'Click each sharp corner, then double-click the last point to finish.':next==='pen'?'Hold and draw freely. Release to auto-smooth into a clean vector path.':next==='dottedPen'?'Hold and draw freely. Release to auto-smooth into a clean dotted vector path.':arcTools.includes(next)?'Drag to draw. Select it and pull the blue middle dot to bend or soften it.':'Drawing '+next+' - press Esc to stop');updateGroupTools();}
+function setTool(next){tool=next;drawing=null;drag=null;handleDrag=null;polylineDraft=null;freehandDraft=null;hidePreview();svg.dataset.tool=next;document.querySelectorAll('[data-tool]').forEach(button=>button.classList.toggle('active',button.dataset.tool===next));svg.style.cursor=next==='select'?'default':(next==='text'||next==='mathText')?'text':next==='paint'?'cell':(next==='pen'||next==='dottedPen')?'crosshair':'crosshair';const arcTools=['arc','dottedArc','curveArrow','dottedCurveArrow'];setStatus(next==='select'?'Double-click an element to edit it':next==='port'?'Click to add a named wire anchor':next==='junction'?'Click wire intersections to add a bold connection dot':next==='mathText'?'Click to place vector math text with Greek/LaTeX recognition':next==='text'?'Click to place editable text boxes':next==='paint'?'Click closed shapes to apply the selected fill':next==='polyline'?'Click each sharp corner, then double-click the last point to finish.':next==='pen'?'Hold and draw freely. Release to auto-smooth into a clean vector path.':next==='dottedPen'?'Hold and draw freely. Release to auto-smooth into a clean dotted vector path.':arcTools.includes(next)?'Drag to draw. Select it and pull the blue middle dot to bend or soften it.':'Drawing '+next+' - press Esc to stop');updateGroupTools();}
 function add(item){pushHistory();elements.push(item);selectOne(item.id);renderAll();}
 function removeSelected(){const ids=selectedItems().map(item=>item.id);if(!ids.length)return;pushHistory();elements=elements.filter(item=>!ids.includes(item.id));circuitGroups=circuitGroups.map(group=>({...group,elementIds:group.elementIds.filter(id=>!ids.includes(id))})).filter(group=>group.elementIds.length>1);normalizeCircuitGroups();clearSelection();renderAll();}
 function deleteSelected(){removeSelected();}
@@ -949,7 +963,7 @@ function rotationTransform(item){
   return `rotate(${angle} ${center.x} ${center.y})`;
 }
 function cuboidFaces(item){const x=item.x,y=item.y,w=Math.max(12,item.w),h=Math.max(12,item.h),d=clamp(+item.depth||Math.min(w,h)*.22,6,Math.max(6,Math.min(w,h)*.45));return{front:`${x},${y+d} ${x+w-d},${y+d} ${x+w-d},${y+h} ${x},${y+h}`,top:`${x},${y+d} ${x+d},${y} ${x+w},${y} ${x+w-d},${y+d}`,side:`${x+w-d},${y+d} ${x+w},${y} ${x+w},${y+h-d} ${x+w-d},${y+h}`};}
-function rawBounds(item){if(['rect','ellipse','triangle','triangleDown','diamond','cuboid'].includes(item.type))return{x:item.x,y:item.y,w:item.w,h:item.h};if(item.type==='path')return item.box?{...item.box}:pathBoundsFromD(item.d);if(item.type==='embeddedSvg')return embeddedSvgBounds(item);if(item.type==='polyline')return polylineBounds(item.points);if(item.type==='freehand')return freehandBounds(item);if(isLineItem(item)){const pad=['curveArrow','arc','dottedCurveArrow','dottedArc'].includes(item.type)?Math.abs(+item.bend||24):item.type==='wave'?Math.abs(+item.amp||14):0;return{x:Math.min(item.x1,item.x2)-pad,y:Math.min(item.y1,item.y2)-pad,w:Math.abs(item.x2-item.x1)+pad*2,h:Math.abs(item.y2-item.y1)+pad*2};}if(item.type==='text'||item.type==='mathText'){const fs=item.fs||16,lines=textLines(displayTextForItem(item)),w=estimateTextWidth(item);return{x:alignedTextLeft(item,w),y:item.y-fs,w,h:Math.max(1,lines.length)*fs*1.18};}return{x:item.x-14,y:item.y-14,w:28,h:28};}
+function rawBounds(item){if(['rect','ellipse','triangle','triangleDown','diamond','cuboid'].includes(item.type))return{x:item.x,y:item.y,w:item.w,h:item.h};if(item.type==='path')return item.box?{...item.box}:pathBoundsFromD(item.d);if(item.type==='embeddedSvg')return embeddedSvgBounds(item);if(item.type==='polyline')return polylineBounds(item.points);if(item.type==='freehand')return freehandBounds(item);if(isLineItem(item)){const pad=['curveArrow','arc','dottedCurveArrow','dottedArc'].includes(item.type)?Math.abs(+item.bend||24):item.type==='wave'?Math.abs(+item.amp||14):0;return{x:Math.min(item.x1,item.x2)-pad,y:Math.min(item.y1,item.y2)-pad,w:Math.abs(item.x2-item.x1)+pad*2,h:Math.abs(item.y2-item.y1)+pad*2};}if(item.type==='text'||item.type==='mathText'){const fs=item.fs||16,lines=textLines(displayTextForItem(item)),w=estimateTextWidth(item);return{x:alignedTextLeft(item,w),y:item.y-fs,w,h:Math.max(1,lines.length)*fs*1.18};}if(item.type==='port'){const size=portSize(item),label=item.showLabel!==false?`${sanitizePortName(item.name)||'P'}${portDirectionCode(item)?` · ${portDirectionCode(item)}`:''}`:'';return{x:item.x-size,y:item.y-size-14,w:size*2+(label?label.length*7+6:0),h:size*2+14};}if(item.type==='junction'){const size=clamp(+item.size||4,2,14);return{x:item.x-size,y:item.y-size,w:size*2,h:size*2};}return{x:item.x-14,y:item.y-14,w:28,h:28};}
 function bounds(item){const box=rawBounds(item),angle=Number(item?.rotation)||0;return angle?rotatedPaintBox(box,angle,{x:box.x+box.w/2,y:box.y+box.h/2}):box;}
 function rounded(value){return Math.round((Number(value)||0)*10)/10;}
 function groupBounds(items){
@@ -1000,7 +1014,7 @@ function groupPaintBounds(items){
 function translateExportItem(item,dx,dy){
   const next=copy(item);
   const moveXY=()=>{next.x=+(next.x||0)+dx;next.y=+(next.y||0)+dy;};
-  if(['rect','ellipse','triangle','triangleDown','diamond','cuboid','text','mathText','plus','minus','ground','port','embeddedSvg'].includes(next.type))moveXY();
+  if(['rect','ellipse','triangle','triangleDown','diamond','cuboid','text','mathText','plus','minus','ground','port','junction','embeddedSvg'].includes(next.type))moveXY();
   if(isLineItem(next)){next.x1=+(next.x1||0)+dx;next.y1=+(next.y1||0)+dy;next.x2=+(next.x2||0)+dx;next.y2=+(next.y2||0)+dy;}
   if(next.type==='polyline'&&Array.isArray(next.points))next.points=next.points.map(point=>({x:+point.x+dx,y:+point.y+dy}));
   if(next.type==='freehand'&&Array.isArray(next.points))next.points=next.points.map(point=>({x:+point.x+dx,y:+point.y+dy}));
@@ -1032,6 +1046,9 @@ function exportStyleManifest(geom){
       id:item.id,
       type:item.type,
       circuitId:item.circuitId||undefined,
+      name:item.name||undefined,
+      direction:item.direction||undefined,
+      showLabel:item.showLabel!==false,
       x:item.x,
       y:item.y,
       x1:item.x1,
@@ -1066,17 +1083,21 @@ function circuitName(group){return group?.name||'Locked Circuit';}
 function nextCircuitName(){return `Circuit ${circuitGroups.length+1}`;}
 function lockSelectedAsCircuit(){
   const items=selectedItems();
-  if(items.length<2){setStatus('Select at least two unlocked parts to lock as a circuit.');return;}
+  if(items.length<2){setStatus('Select at least two parts to lock as a circuit.');return;}
   const existing=[...new Set(items.map(item=>circuitForElementId(item.id)?.id).filter(Boolean))];
   if(existing.length===1&&selectedCircuit()){setStatus(`${circuitName(selectedCircuit())} is already locked.`);return;}
-  if(existing.length){setStatus('Unlock existing circuit groups before combining them into a new circuit.');return;}
   pushHistory();
-  const group={id:'circuit_'+uid(),name:nextCircuitName(),elementIds:items.map(item=>item.id),locked:true,createdGridStep:currentSnapStep()};
+  const mergedNames=circuitGroups.filter(group=>existing.includes(group.id)).map(circuitName);
+  if(existing.length){
+    circuitGroups=circuitGroups.filter(group=>!existing.includes(group.id));
+    items.forEach(item=>{if(existing.includes(item.circuitId))delete item.circuitId;});
+  }
+  const group={id:'circuit_'+uid(),name:mergedNames.length===1?mergedNames[0]:nextCircuitName(),elementIds:[...new Set(items.map(item=>item.id))],locked:true,createdGridStep:currentSnapStep()};
   circuitGroups.push(group);
   items.forEach(item=>{item.circuitId=group.id;});
   applySelectionIds(group.elementIds);
   renderAll();
-  setStatus(`${group.name} locked as one reversible circuit.`);
+  setStatus(existing.length?`${group.name} merged and locked as one reversible circuit.`:`${group.name} locked as one reversible circuit.`);
 }
 function unlockSelectedCircuit(){
   const group=selectedCircuit();
@@ -1089,7 +1110,7 @@ function unlockSelectedCircuit(){
   renderAll();
   setStatus(`${circuitName(group)} unlocked; its parts are individually editable again.`);
 }
-function renameSelectedCircuit(value){const group=selectedCircuit();if(!group)return;group.name=String(value||'').trim().slice(0,80)||'Locked Circuit';updateWorkflowStatus();setStatus(`Circuit renamed ${group.name}.`);}
+function renameSelectedCircuit(value){const group=selectedCircuit();if(!group)return;group.name=String(value||'').trim().slice(0,80)||'Locked Circuit';updateWorkflowStatus();updateOutput();setStatus(`Circuit renamed ${group.name}.`);}
 function updateGroupTools(items=selectedItems()){
   const tools=document.getElementById('groupTools');
   if(!tools)return;
@@ -1114,7 +1135,7 @@ function moveItemBy(item,dx,dy){
   if(item.type==='polyline'){item.points=normalizedPolylinePoints(item.points).map(point=>({x:rounded(point.x+dx),y:rounded(point.y+dy)}));return item;}
   if(item.type==='freehand'){item.points=normalizedFreehandPoints(item.points).map(point=>({x:rounded(point.x+dx),y:rounded(point.y+dy)}));return item;}
   if(isLineItem(item)){item.x1=rounded(item.x1+dx);item.y1=rounded(item.y1+dy);item.x2=rounded(item.x2+dx);item.y2=rounded(item.y2+dy);return item;}
-  if(['text','mathText','plus','minus','ground','port'].includes(item.type)){item.x=rounded(item.x+dx);item.y=rounded(item.y+dy);}
+  if(['text','mathText','plus','minus','ground','port','junction'].includes(item.type)){item.x=rounded(item.x+dx);item.y=rounded(item.y+dy);}
   return item;
 }
 function rewritePathNumbers(d,fn){
@@ -1161,7 +1182,7 @@ function scaleItemFrom(item,center,factor){
     scaleStroke(item,factor);
     return item;
   }
-  if(['text','mathText','plus','minus','ground','port'].includes(item.type)){
+  if(['text','mathText','plus','minus','ground','port','junction'].includes(item.type)){
     const p=scalePointFrom({x:item.x,y:item.y},center,factor);
     item.x=p.x;item.y=p.y;
     if(Number.isFinite(+item.fs))item.fs=scaleNumber(item.fs,factor,6,180);
@@ -1275,6 +1296,15 @@ function duplicateSelection(){
 }
 function make(type){return document.createElementNS(NS,type);}
 function setAttrs(node,attrs){Object.entries(attrs).forEach(([key,value])=>node.setAttribute(key,String(value)));return node;}
+function portSize(item){return clamp(+item?.size||6,4,18);}
+function portDirection(item){return ['input','output','bidirectional','passive'].includes(item?.direction)?item.direction:'passive';}
+function portDirectionCode(item){return({input:'IN',output:'OUT',bidirectional:'I/O',passive:''})[portDirection(item)];}
+function portSvgMarkup(item,ox=0,oy=0,withLabel=true){
+  const x=item.x-ox,y=item.y-oy,size=portSize(item),stroke=esc(item.stroke||'#111'),name=sanitizePortName(item.name)||'P',direction=portDirection(item),code=portDirectionCode(item);
+  const label=withLabel&&item.showLabel!==false?`<text x="${x+size+4}" y="${y-size-2}" class="port-label" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="${stroke}" paint-order="stroke" stroke="#fff" stroke-width="3">${esc(name)}${code?` · ${code}`:''}</text>`:'';
+  return `<g data-qs-port-id="${esc(name)}" data-qs-port-direction="${direction}"><circle cx="${x}" cy="${y}" r="${size}" fill="#fff" stroke="${stroke}" stroke-width="${Math.max(1,+item.sw||2)}"/><circle cx="${x}" cy="${y}" r="1.4" fill="${stroke}"/>${label}</g>`;
+}
+function junctionSvgMarkup(item,ox=0,oy=0){const x=item.x-ox,y=item.y-oy,size=clamp(+item?.size||4,2,14),fill=esc(item.fill&&item.fill!=='none'?item.fill:(item.stroke||'#111'));return `<circle data-qs-junction="1" cx="${x}" cy="${y}" r="${size}" fill="${fill}" stroke="#fff" stroke-width="${Math.max(.5,Math.min(1.2,+item.sw||.8))}"/>`;}
 function renderElement(item){const group=make('g');group.dataset.id=item.id;if(item.circuitId)group.dataset.circuitId=item.circuitId;group.style.cursor='move';group.setAttribute('opacity',String(itemOpacity(item)));const transform=rotationTransform(item);if(transform)group.setAttribute('transform',transform);let node;
   if(item.type==='rect'){node=setAttrs(make('rect'),{x:item.x,y:item.y,width:item.w,height:item.h,fill:item.fill,stroke:item.stroke,'stroke-width':item.sw,rx:item.rx||0});}
   if(item.type==='ellipse'){node=setAttrs(make('ellipse'),{cx:item.x+item.w/2,cy:item.y+item.h/2,rx:item.w/2,ry:item.h/2,fill:item.fill,stroke:item.stroke,'stroke-width':item.sw});}
@@ -1292,7 +1322,8 @@ function renderElement(item){const group=make('g');group.dataset.id=item.id;if(i
   if(item.type==='text'||item.type==='mathText'){node=makeTextNode(item);}
   if(item.type==='plus'||item.type==='minus'){node=make('g');const size=item.size||16;const path=item.type==='plus'?`M ${item.x-size} ${item.y} H ${item.x+size} M ${item.x} ${item.y-size} V ${item.y+size}`:`M ${item.x-size} ${item.y} H ${item.x+size}`;node.appendChild(setAttrs(make('path'),{d:path,fill:'none',stroke:item.stroke,'stroke-width':item.sw,'stroke-linecap':'round'}));}
   if(item.type==='ground'){node=make('g');const s=item.size||22;node.appendChild(setAttrs(make('path'),{d:`M ${item.x} ${item.y-s} V ${item.y-s/3} M ${item.x-s} ${item.y-s/3} H ${item.x+s} M ${item.x-s*.65} ${item.y+s*.05} H ${item.x+s*.65} M ${item.x-s*.3} ${item.y+s*.4} H ${item.x+s*.3}`,fill:'none',stroke:item.stroke,'stroke-width':item.sw,'stroke-linecap':'round'}));}
-  if(item.type==='port'){node=make('g');node.appendChild(setAttrs(make('circle'),{cx:item.x,cy:item.y,r:5,fill:'#fff',stroke:item.stroke,'stroke-width':item.sw}));const label=setAttrs(make('text'),{x:item.x+8,y:item.y-7,class:'port-label'});label.textContent=item.name;node.appendChild(label);}
+  if(item.type==='port'){node=make('g');node.innerHTML=portSvgMarkup(item);}
+  if(item.type==='junction'){node=make('g');node.innerHTML=junctionSvgMarkup(item);}
   group.appendChild(node);return group;
 }
 function updateWorkflowStatus(){const host=document.getElementById('selectionWorkflow'),items=selectedItems(),group=selectedCircuit();if(!host)return;host.textContent=group?`🔒 ${circuitName(group)} · ${items.length} parts · one unit`:items.length>1?`${items.length} parts selected · ready to lock`:items.length===1?`1 ${items[0].type} selected`:'Nothing selected';}
@@ -1324,7 +1355,7 @@ function renderSelection(){
   if(item.type==='text'||item.type==='mathText')handles.push(['size',box.x+box.w,box.y]);
   handles.forEach(([kind,x,y])=>{const node=setAttrs(make('circle'),{cx:x,cy:y,r:kind==='bend'?7:5,'class':'handle','data-handle':kind});if(kind==='bend')node.setAttribute('title','Drag to bend / soften the arc');selectionLayer.appendChild(node);});
 }
-function renderProperties(){const host=document.getElementById('properties'),item=selected(),locked=selectedCircuit();const ports=elements.filter(entry=>entry.type==='port');document.getElementById('portSummary').textContent='Ports: '+(ports.length?ports.map(port=>port.name).join(', '):'none');if(multiSelectedIds.length>1){const box=groupBounds(selectedItems());host.innerHTML=locked?`<p style="font-size:12px;color:#244d78;margin:0 0 10px"><strong>Locked circuit:</strong> ${esc(circuitName(locked))}. Internal geometry stays intact; move, resize, rotate, copy, or unlock the complete unit.</p><div class="prop-row"><label>Name</label><input value="${esc(circuitName(locked))}" oninput="renameSelectedCircuit(this.value)"></div><div class="prop-row"><label>Size</label><input aria-label="Circuit width" type="number" min="4" max="1400" step=".5" value="${rounded(box.w)}" onchange="resizeSelectedGroupTo('w',this.value)"><span>×</span><input aria-label="Circuit height" type="number" min="4" max="1000" step=".5" value="${rounded(box.h)}" onchange="resizeSelectedGroupTo('h',this.value)"></div><div class="prop-row"><label>Circuit</label><button type="button" onclick="duplicateSelection()">Duplicate</button><button type="button" onclick="rotateSelected(90)">Rotate 90°</button><button type="button" onclick="unlockSelectedCircuit()">Unlock</button></div><div class="prop-row"><label>Scale</label><button type="button" onclick="scaleSelectedGroup(.9)">90%</button><button type="button" onclick="scaleSelectedGroup(1.1)">110%</button></div><button class="danger" type="button" onclick="deleteSelected()">Delete Complete Circuit</button>`:`<p style="font-size:12px;color:#617a90;margin:0 0 10px">${multiSelectedIds.length} elements selected. Lock them to make one reversible circuit.</p><div class="prop-row"><label>Group</label><button type="button" onclick="lockSelectedAsCircuit()">Lock Circuit</button><button type="button" onclick="groupMoveHint()">Move</button><button type="button" onclick="duplicateSelection()">Duplicate</button></div><div class="prop-row"><label>Scale</label><button type="button" onclick="scaleSelectedGroup(.9)">90%</button><button type="button" onclick="scaleSelectedGroup(1.1)">110%</button></div><div class="prop-row"><label>Stroke all</label><input type="number" min=".5" max="12" step=".5" value="2" oninput="applyMultiProp('sw',+this.value)"></div><div class="prop-row"><label>Opacity all</label><input type="number" min="0.05" max="1" step="0.05" value="1" oninput="applyMultiProp('opacity',+this.value)"></div><button class="danger" type="button" onclick="deleteSelected()">Delete Selected Elements</button>`;return;}if(!item){host.innerHTML='<p style="font-size:12px;color:#617a90;margin:0">Select an element to edit properties. Drag a selection box for multiple items, or double-click an element to edit it.</p>';return;}
+function renderProperties(){const host=document.getElementById('properties'),item=selected(),locked=selectedCircuit();const ports=elements.filter(entry=>entry.type==='port'),joints=elements.filter(entry=>entry.type==='junction');document.getElementById('portSummary').textContent=`Ports: ${ports.length?ports.map(port=>port.name).join(', '):'none'} · Joints: ${joints.length}`;if(multiSelectedIds.length>1){const box=groupBounds(selectedItems());host.innerHTML=locked?`<p style="font-size:12px;color:#244d78;margin:0 0 10px"><strong>Locked circuit:</strong> ${esc(circuitName(locked))}. Internal geometry stays intact; move, resize, rotate, copy, or unlock the complete unit.</p><div class="prop-row"><label>Name</label><input value="${esc(circuitName(locked))}" oninput="renameSelectedCircuit(this.value)"></div><div class="prop-row"><label>Size</label><input aria-label="Circuit width" type="number" min="4" max="1400" step=".5" value="${rounded(box.w)}" onchange="resizeSelectedGroupTo('w',this.value)"><span>×</span><input aria-label="Circuit height" type="number" min="4" max="1000" step=".5" value="${rounded(box.h)}" onchange="resizeSelectedGroupTo('h',this.value)"></div><div class="prop-row"><label>Circuit</label><button type="button" onclick="duplicateSelection()">Duplicate</button><button type="button" onclick="rotateSelected(90)">Rotate 90°</button><button type="button" onclick="unlockSelectedCircuit()">Unlock</button></div><div class="prop-row"><label>Scale</label><button type="button" onclick="scaleSelectedGroup(.9)">90%</button><button type="button" onclick="scaleSelectedGroup(1.1)">110%</button></div><button class="danger" type="button" onclick="deleteSelected()">Delete Complete Circuit</button>`:`<p style="font-size:12px;color:#617a90;margin:0 0 10px">${multiSelectedIds.length} elements selected. Lock them to make one reversible circuit.</p><div class="prop-row"><label>Group</label><button type="button" onclick="lockSelectedAsCircuit()">Lock Circuit</button><button type="button" onclick="groupMoveHint()">Move</button><button type="button" onclick="duplicateSelection()">Duplicate</button></div><div class="prop-row"><label>Scale</label><button type="button" onclick="scaleSelectedGroup(.9)">90%</button><button type="button" onclick="scaleSelectedGroup(1.1)">110%</button></div><div class="prop-row"><label>Stroke all</label><input type="number" min=".5" max="12" step=".5" value="2" oninput="applyMultiProp('sw',+this.value)"></div><div class="prop-row"><label>Opacity all</label><input type="number" min="0.05" max="1" step="0.05" value="1" oninput="applyMultiProp('opacity',+this.value)"></div><button class="danger" type="button" onclick="deleteSelected()">Delete Selected Elements</button>`;return;}if(!item){host.innerHTML='<p style="font-size:12px;color:#617a90;margin:0">Select an element to edit properties. Drag a selection box for multiple items, or double-click an element to edit it.</p>';return;}
   let html=`<div class="prop-row"><label>Type</label><strong>${esc(item.type)}</strong></div>`;
   if(item.stroke)html+=`<div class="prop-row"><label>Stroke</label><input type="color" value="${esc(item.stroke)}" oninput="setProp('stroke',this.value)"><label style="min-width:auto">Width</label><input type="number" min=".5" max="12" step=".5" value="${item.sw||1}" oninput="setProp('sw',+this.value)"></div>`;
   if(['rect','ellipse','triangle','triangleDown','diamond','cuboid'].includes(item.type)){const fill=item.fill&&item.fill!=='none'?item.fill:'#ffffff';html+=`<div class="prop-row"><label>Fill</label><input type="color" value="${esc(fill)}" oninput="setProp('fill',this.value)"><button type="button" onclick="setProp('fill','none')">No Fill</button></div><div class="prop-row"><label>Rotate</label><button type="button" onclick="rotateSelected(-15)">CCW 15</button><button type="button" onclick="rotateSelected(15)">CW 15</button><button type="button" onclick="rotateSelected(-90)">CCW 90</button><button type="button" onclick="rotateSelected(90)">CW 90</button></div><div class="prop-row"><label>Angle</label><input type="number" min="-360" max="360" step="1" value="${Number(item.rotation)||0}" oninput="setProp('rotation',+this.value)"></div>`;}
@@ -1332,7 +1363,8 @@ function renderProperties(){const host=document.getElementById('properties'),ite
   if(item.type==='embeddedSvg')html+=`<div class="prop-row"><label>Width</label><input type="number" min="4" max="1400" value="${Math.round(item.w||1)}" oninput="setProp('w',+this.value)"></div><div class="prop-row"><label>Height</label><input type="number" min="4" max="1000" value="${Math.round(item.h||1)}" oninput="setProp('h',+this.value)"></div><p style="font-size:11px;color:#617a90;margin:0 0 8px">Complex imported SVG kept as a vector group. Use group tools to scale it with native parts.</p>`;
   if(item.type==='text'||item.type==='mathText')html+=`<div class="prop-row"><label>${item.type==='mathText'?'Math src':'Text'}</label><textarea oninput="setProp('text',this.value)">${esc(item.text)}</textarea></div>${item.type==='mathText'?`<div class="prop-row"><label>Rendered</label><textarea readonly>${esc(renderMathLabelText(item.text))}</textarea></div>`:''}<div class="prop-row"><label>Font size</label><input type="number" min="8" max="96" value="${item.fs||16}" oninput="setProp('fs',+this.value)"></div><div class="prop-row"><label>Font</label><select onchange="setProp('fontFamily',this.value)"><option value="Georgia, Times New Roman, serif" ${(item.fontFamily||'Georgia, Times New Roman, serif')==='Georgia, Times New Roman, serif'?'selected':''}>Serif</option><option value="Arial, Helvetica, sans-serif" ${item.fontFamily==='Arial, Helvetica, sans-serif'?'selected':''}>Sans</option><option value="Cambria, Georgia, serif" ${item.fontFamily==='Cambria, Georgia, serif'?'selected':''}>Cambria</option><option value="Courier New, Consolas, monospace" ${item.fontFamily==='Courier New, Consolas, monospace'?'selected':''}>Mono</option></select></div><div class="prop-row"><label>Style</label><span class="prop-check"><input type="checkbox" ${item.bold?'checked':''} onchange="setProp('bold',this.checked)"> Bold</span><span class="prop-check"><input type="checkbox" ${item.italic?'checked':''} onchange="setProp('italic',this.checked)"> Italic</span><span class="prop-check"><input type="checkbox" ${item.underline?'checked':''} onchange="setProp('underline',this.checked)"> Underline</span></div><div class="prop-row"><label>Align</label><select onchange="setProp('align',this.value)"><option value="left" ${(item.align||'left')==='left'?'selected':''}>Left</option><option value="center" ${item.align==='center'?'selected':''}>Center</option><option value="right" ${item.align==='right'?'selected':''}>Right</option></select></div><div class="prop-row"><label>Rotate</label><button type="button" onclick="rotateSelected(-15)">CCW 15</button><button type="button" onclick="rotateSelected(15)">CW 15</button><button type="button" onclick="rotateSelected(-90)">CCW 90</button><button type="button" onclick="rotateSelected(90)">CW 90</button></div><div class="prop-row"><label>Angle</label><input type="number" min="-360" max="360" step="1" value="${Number(item.rotation)||0}" oninput="setProp('rotation',+this.value)"></div>`;
   if(item.type==='freehand'){const fill=item.fill&&item.fill!=='none'?item.fill:'#ffffff';html+=`<div class="prop-row"><label>Line</label><span class="prop-check"><input type="checkbox" ${item.dotted?'checked':''} onchange="setProp('dotted',this.checked)"> Dotted stroke</span></div><div class="prop-row"><label>Close</label><span class="prop-check"><input type="checkbox" ${item.closed?'checked':''} onchange="setProp('closed',this.checked)"> Close shape</span></div><div class="prop-row"><label>Fill</label><input type="color" value="${esc(fill)}" oninput="setProp('fill',this.value)"><button type="button" onclick="setProp('fill','none')">No Fill</button></div><div class="prop-row"><label>Smooth</label><input type="range" min="0" max="5" step="1" value="${Number.isFinite(+item.smooth)?item.smooth:2}" oninput="setProp('smooth',+this.value)"><small>${Number.isFinite(+item.smooth)?item.smooth:2}</small></div><div class="prop-row"><label>Simplify</label><input type="number" min="0" max="12" step="0.5" value="${Number.isFinite(+item.simplify)?item.simplify:1.5}" oninput="setProp('simplify',+this.value)"></div><p style="font-size:11px;color:#617a90;margin:6px 0 0">Raw points: ${(item.points||[]).length}; exported as a smooth ${item.dotted?'dotted ':' '}vector path.</p>`;}
-  if(item.type==='port')html+=`<div class="prop-row"><label>Port name</label><input maxlength="16" value="${esc(item.name)}" oninput="setProp('name',this.value.toUpperCase().replace(/[^A-Z0-9_]/g,''))"></div>`;
+  if(item.type==='port')html+=`<div class="prop-row"><label>Port name</label><input maxlength="16" value="${esc(item.name)}" oninput="setProp('name',this.value.toUpperCase().replace(/[^A-Z0-9_]/g,''))"></div><div class="prop-row"><label>Direction</label><select onchange="setProp('direction',this.value)"><option value="passive" ${portDirection(item)==='passive'?'selected':''}>Passive</option><option value="input" ${portDirection(item)==='input'?'selected':''}>Input</option><option value="output" ${portDirection(item)==='output'?'selected':''}>Output</option><option value="bidirectional" ${portDirection(item)==='bidirectional'?'selected':''}>Bidirectional</option></select></div><div class="prop-row"><label>Dot size</label><input type="number" min="4" max="18" step="1" value="${portSize(item)}" oninput="setProp('size',+this.value)"></div><div class="prop-row"><label>Label</label><span class="prop-check"><input type="checkbox" ${item.showLabel!==false?'checked':''} onchange="setProp('showLabel',this.checked)"> Show name in SVG</span></div>`;
+  if(item.type==='junction')html+=`<div class="prop-row"><label>Joint size</label><input type="number" min="2" max="14" step="1" value="${clamp(+item.size||4,2,14)}" oninput="setProp('size',+this.value)"></div><div class="prop-row"><label>Joint fill</label><input type="color" value="${esc(item.fill&&item.fill!=='none'?item.fill:(item.stroke||'#111111'))}" oninput="setProp('fill',this.value)"></div><p style="font-size:11px;color:#4d6c8c;margin:0 0 8px">Connection joints stay visible in SVG, JSON, QS Gen import, and final circuit export.</p>`;
   if(item.type==='wave')html+=`<div class="prop-row"><label>Amplitude</label><input type="number" min="4" max="80" value="${item.amp||14}" oninput="setProp('amp',+this.value)"></div>${item.coil?`<div class="prop-row"><label>Coil turns</label><input type="number" min="2" max="24" value="${item.turns||4}" oninput="setProp('turns',+this.value)"></div>`:''}`;
   if(item.type==='arc'||item.type==='dottedArc')html+=`<div class="prop-row"><label>Arc bend</label><input type="number" min="-260" max="260" value="${Number.isFinite(+item.bend)?item.bend:44}" oninput="setProp('bend',+this.value)"></div><p style="font-size:11px;color:#4d6c8c;margin:0 0 8px">Tip: drag the blue middle handle to make the arc softer, flatter, or sharper.</p>`;
   if(item.type==='curveArrow'||item.type==='dottedCurveArrow')html+=`<div class="prop-row"><label>Curve bend</label><input type="number" min="-220" max="220" value="${Number.isFinite(+item.bend)?item.bend:32}" oninput="setProp('bend',+this.value)"></div><p style="font-size:11px;color:#4d6c8c;margin:0 0 8px">Tip: drag the blue middle handle to shape the curve arrow.</p>`;
@@ -1341,11 +1373,26 @@ function renderProperties(){const host=document.getElementById('properties'),ite
   if(['plus','minus','ground'].includes(item.type))html+=`<div class="prop-row"><label>Size</label><input type="number" min="6" max="80" value="${item.size||16}" oninput="setProp('size',+this.value)"></div>`;
   html+='<div class="prop-row"><button class="danger" type="button" onclick="deleteSelected()">Delete Selected</button></div>';host.innerHTML=html;
 }
-function setProp(key,value){const item=selected();if(!item)return;item[key]=value;renderAll();}
+function renderSceneWithoutPropertyReset(){svg.dataset.tool=tool;elementLayer.innerHTML='';elements.forEach(item=>elementLayer.appendChild(renderElement(item)));renderSelection();updateOutput();updateWorkflowStatus();}
+function setProp(key,value){
+  const item=selected();
+  if(!item)return;
+  if(key==='name'&&item.type==='port'){
+    const used=new Set(elements.filter(entry=>entry.type==='port'&&entry.id!==item.id).map(entry=>String(entry.name||'').toUpperCase()));
+    value=uniquePortName(value,used);
+  }
+  if(key==='direction'&&item.type==='port')value=portDirection({direction:value});
+  if(key==='size'&&item.type==='port')value=clamp(+value||8,4,18);
+  if(key==='size'&&item.type==='junction')value=clamp(+value||4,2,14);
+  item[key]=value;
+  if(key==='d'&&item.type==='path')item.box=pathBoundsFromD(value);
+  if(key==='name'&&document.activeElement?.matches?.('#properties input'))document.activeElement.value=value;
+  renderSceneWithoutPropertyReset();
+}
 function rotateSelected(delta){
   rotateSelectionAsUnit(delta);
 }
-function applyMultiProp(key,value){selectedItems().forEach(item=>{item[key]=value;});renderAll();}
+function applyMultiProp(key,value){selectedItems().forEach(item=>{item[key]=value;});renderSceneWithoutPropertyReset();}
 function equalizeMultiWidths(width){
   const safe=clamp(+width||0,12,1200);
   selectedItems().forEach(item=>{
@@ -1434,7 +1481,8 @@ svg.addEventListener('pointerdown',event=>{
   clearSelection();renderAll();
   if(tool==='text'||tool==='mathText'){showTextEntry(p,null,tool);return;}
   if(tool==='ground'){placeMark(tool,p);return;}
-  if(tool==='port'){const name='P'+(elements.filter(item=>item.type==='port').length+1),s=style();add({id:uid(),type:'port',x:p.x,y:p.y,name,...s});return;}
+  if(tool==='junction'){const s=style();add({id:uid(),type:'junction',x:p.x,y:p.y,size:4,...s,fill:s.stroke});setStatus('Connection joint added. Tool remains active.');return;}
+  if(tool==='port'){const used=new Set(elements.filter(item=>item.type==='port').map(item=>sanitizePortName(item.name))),name=uniquePortName('',used),s=style();add({id:uid(),type:'port',x:p.x,y:p.y,name,direction:'passive',size:6,showLabel:true,...s});setStatus(`${name} port added. Set its direction and label in the right panel.`);return;}
   drawing={kind:tool,start:p};showPreview(tool,p,p);svg.setPointerCapture(event.pointerId);
 });
 svg.addEventListener('pointermove',event=>{
@@ -1485,9 +1533,20 @@ svg.addEventListener('pointermove',event=>{
 });
 svg.addEventListener('pointerup',event=>{const p=point(event);if(freehandDraft){const draft=freehandDraft;freehandDraft=null;hidePreview();const pts=normalizedFreehandPoints(draft.points);let added=false;if(pts.length>3&&pointDistance(pts[0],pts[pts.length-1])>1){const s=draft.style||style();const close=pts.length>8&&pointDistance(pts[0],pts[pts.length-1])<18;const cleanPts=close?pts.slice(0,-1):pts;add({id:uid(),type:'freehand',points:cleanPts,...s,fill:'none',closed:close,smooth:2,simplify:1.5,dotted:!!draft.dotted});added=true;}setStatus(added?(draft.dotted?'Dotted Pen added. Use Smooth/Simplify controls to refine it.':'Smooth Pen added. Use Smooth/Simplify controls to refine it.'):(draft.dotted?'Dotted Pen cancelled.':'Smooth Pen cancelled.'));try{svg.releasePointerCapture(event.pointerId);}catch(_){}return;}if(marquee){marquee.end=p;const box=normalizedBox(marquee.start.x,marquee.start.y,p.x,p.y);const ids=(box.w>2||box.h>2)?elements.filter(item=>boxesIntersect(box,bounds(item))).map(item=>item.id):[];applySelectionIds(ids);marquee=null;renderAll();setStatus(ids.length?`${ids.length} element${ids.length===1?'':'s'} selected.`:'Selection cleared.');}else if(drawing){const kind=drawing.kind,start=drawing.start,box=normalizedBox(start.x,start.y,p.x,p.y),s=style();let added=false;if(['line','arrow','wave','coil','curveArrow','arc','dottedLine','dottedArrow','dottedArc','dottedCurveArrow'].includes(kind)&&Math.hypot(p.x-start.x,p.y-start.y)>6){add({id:uid(),type:kind==='coil'?'wave':kind,x1:start.x,y1:start.y,x2:p.x,y2:p.y,...s,amp:14,coil:kind==='coil',turns:4,bend:['curveArrow','dottedCurveArrow'].includes(kind)?Math.min(80,Math.max(20,Math.hypot(p.x-start.x,p.y-start.y)*.24)):['arc','dottedArc'].includes(kind)?Math.min(90,Math.max(24,Math.hypot(p.x-start.x,p.y-start.y)*.32)):undefined});added=true;}if(['plus','minus'].includes(kind)){add({id:uid(),type:kind,x:start.x,y:start.y,...s,size:markSize(start,p)});added=true;}if(['rect','ellipse','triangle','triangleDown','diamond','cuboid'].includes(kind)&&box.w>6&&box.h>6){add({id:uid(),type:kind,...box,...s,fill:'none',rx:0,depth:kind==='cuboid'?Math.min(box.w,box.h)*.22:undefined});added=true;}drawing=null;hidePreview();setStatus(added?`Added ${kind}. Tool remains active.`:`${kind} cancelled. Tool remains active.`);}drag=null;handleDrag=null;try{svg.releasePointerCapture(event.pointerId);}catch(_){}});
 svg.addEventListener('dblclick',event=>{if(tool==='polyline'&&polylineDraft){event.preventDefault();event.stopPropagation();finishPolyline();return;}const hit=event.target.closest('[data-id]')?.dataset.id;if(!hit)return;event.preventDefault();event.stopPropagation();drawing=null;marquee=null;hidePreview();setTool('select');applySelectionIds(circuitForElementId(hit)?.elementIds||[hit]);renderAll();const item=selected();if(!selectedCircuit()&&(item?.type==='text'||item?.type==='mathText'))showTextEntry({x:item.x,y:item.y},item,item.type);setStatus(selectedCircuit()?'Locked circuit selected. Unlock it to edit internal parts.':'Element selected - drag, resize, or edit it in the side panel.');});
+function isPropertyEditor(target){return target instanceof Element&&!!target.closest('#properties input,#properties textarea,#properties select');}
+function beginPropertyEdit(){if(propertyEditSnapshot===null)propertyEditSnapshot=editorSnapshot();}
+function commitPropertyEdit(){
+  if(propertyEditSnapshot===null)return;
+  const before=propertyEditSnapshot;propertyEditSnapshot=null;
+  if(before!==editorSnapshot()){undoStack.push(before);if(undoStack.length>60)undoStack.shift();redoStack=[];}
+  renderProperties();
+}
+document.getElementById('properties').addEventListener('focusin',event=>{if(isPropertyEditor(event.target))beginPropertyEdit();});
+document.getElementById('properties').addEventListener('focusout',event=>{if(!isPropertyEditor(event.relatedTarget))setTimeout(commitPropertyEdit,0);});
+function isTypingOrControlTarget(target){return target instanceof Element&&!!target.closest('input,textarea,select,button,[contenteditable="true"],[contenteditable="plaintext-only"]');}
 document.addEventListener('keydown',event=>{
   const target=event.target;
-  if(target instanceof HTMLInputElement||target instanceof HTMLTextAreaElement){
+  if(isTypingOrControlTarget(target)){
     if((event.ctrlKey||event.metaKey)&&event.key==='Enter'&&target.id==='textValue'){event.preventDefault();commitText();return;}
     if(event.key==='Escape'){event.preventDefault();cancelText();setTool('select');}
     return;
@@ -1499,13 +1558,14 @@ document.addEventListener('keydown',event=>{
   if((event.ctrlKey||event.metaKey)&&key==='d'){event.preventDefault();duplicateSelection();return;}
   if((event.ctrlKey||event.metaKey)&&key==='c'){event.preventDefault();copySelectedGroup();return;}
   if((event.ctrlKey||event.metaKey)&&key==='v'){event.preventDefault();pasteCopiedGroup();return;}
-  if(event.key==='Delete'||event.key==='Backspace'){event.preventDefault();deleteSelected();}
+  if(event.key==='Backspace'){event.preventDefault();setStatus('Backspace is protected. Use Delete or the red Delete button to remove the selected part.');return;}
+  if(event.key==='Delete'){event.preventDefault();deleteSelected();}
   if((event.ctrlKey||event.metaKey)&&key==='z'){event.preventDefault();event.shiftKey?redo():undo();}
   if((event.ctrlKey||event.metaKey)&&key==='y'){event.preventDefault();redo();}
   if(event.key==='Escape'){cancelText();setTool('select');}
 });
 
-function legacySvgMarkup(){const body=elements.map(item=>{if(item.type==='rect')return `<rect x="${item.x}" y="${item.y}" width="${item.w}" height="${item.h}" rx="${item.rx||0}" fill="${esc(item.fill)}" stroke="${esc(item.stroke)}" stroke-width="${item.sw}"/>`;if(item.type==='ellipse')return `<ellipse cx="${item.x+item.w/2}" cy="${item.y+item.h/2}" rx="${item.w/2}" ry="${item.h/2}" fill="${esc(item.fill)}" stroke="${esc(item.stroke)}" stroke-width="${item.sw}"/>`;if(item.type==='triangle')return `<polygon points="${item.x+item.w/2},${item.y} ${item.x+item.w},${item.y+item.h} ${item.x},${item.y+item.h}" fill="${esc(item.fill)}" stroke="${esc(item.stroke)}" stroke-width="${item.sw}" stroke-linejoin="round"/>`;if(item.type==='diamond')return `<polygon points="${item.x+item.w/2},${item.y} ${item.x+item.w},${item.y+item.h/2} ${item.x+item.w/2},${item.y+item.h} ${item.x},${item.y+item.h/2}" fill="${esc(item.fill)}" stroke="${esc(item.stroke)}" stroke-width="${item.sw}" stroke-linejoin="round"/>`;if(item.type==='line'||item.type==='arrow')return `<line x1="${item.x1}" y1="${item.y1}" x2="${item.x2}" y2="${item.y2}" stroke="${esc(item.stroke)}" stroke-width="${item.sw}" stroke-linecap="round"${item.type==='arrow'?' marker-end="url(#arrowHead)"':''}/>`;if(item.type==='arc')return `<path d="${arcPath(item)}" fill="none" stroke="${esc(item.stroke)}" stroke-width="${item.sw}" stroke-linecap="round" stroke-linejoin="round"/>`;if(item.type==='freehand')return `<path d="${freehandPath(item)}" fill="${item.closed?esc(item.fill||'none'):'none'}" stroke="${esc(item.stroke)}" stroke-width="${item.sw}" stroke-linecap="round" stroke-linejoin="round"${item.dotted?' stroke-dasharray="1 7"':''}/>`;if(item.type==='wave')return `<path d="${wavePath(item)}" fill="none" stroke="${esc(item.stroke)}" stroke-width="${item.sw}" stroke-linecap="round" stroke-linejoin="round"/>`;if(item.type==='text'||item.type==='mathText')return svgTextMarkup(item);if(item.type==='plus'||item.type==='minus'){const s=item.size||16;const d=item.type==='plus'?`M ${item.x-s} ${item.y} H ${item.x+s} M ${item.x} ${item.y-s} V ${item.y+s}`:`M ${item.x-s} ${item.y} H ${item.x+s}`;return `<path d="${d}" fill="none" stroke="${esc(item.stroke)}" stroke-width="${item.sw}" stroke-linecap="round"/>`;}if(item.type==='ground'){const s=item.size||22;return `<path d="M ${item.x} ${item.y-s} V ${item.y-s/3} M ${item.x-s} ${item.y-s/3} H ${item.x+s} M ${item.x-s*.65} ${item.y+s*.05} H ${item.x+s*.65} M ${item.x-s*.3} ${item.y+s*.4} H ${item.x+s*.3}" fill="none" stroke="${esc(item.stroke)}" stroke-width="${item.sw}" stroke-linecap="round"/>`;}if(item.type==='port')return `<circle cx="${item.x}" cy="${item.y}" r="5" fill="#fff" stroke="${esc(item.stroke)}" stroke-width="${item.sw}"/>`;return '';}).join('\n  ');const defs=elements.some(item=>item.type==='arrow')?'<defs><marker id="arrowHead" viewBox="0 0 18 12" refX="17.2" refY="6" markerWidth="6" markerHeight="5.5" markerUnits="strokeWidth" orient="auto"><path d="M0 .8L18 6L0 11.2L5.2 6Z" fill="context-stroke"/></marker></defs>':'';return `<svg xmlns="http://www.w3.org/2000/svg" width="${viewW}" height="${viewH}" viewBox="0 0 ${viewW} ${viewH}">${defs}\n  ${body}\n</svg>`;}
+function legacySvgMarkup(){const body=elements.map(item=>{if(item.type==='rect')return `<rect x="${item.x}" y="${item.y}" width="${item.w}" height="${item.h}" rx="${item.rx||0}" fill="${esc(item.fill)}" stroke="${esc(item.stroke)}" stroke-width="${item.sw}"/>`;if(item.type==='ellipse')return `<ellipse cx="${item.x+item.w/2}" cy="${item.y+item.h/2}" rx="${item.w/2}" ry="${item.h/2}" fill="${esc(item.fill)}" stroke="${esc(item.stroke)}" stroke-width="${item.sw}"/>`;if(item.type==='triangle')return `<polygon points="${item.x+item.w/2},${item.y} ${item.x+item.w},${item.y+item.h} ${item.x},${item.y+item.h}" fill="${esc(item.fill)}" stroke="${esc(item.stroke)}" stroke-width="${item.sw}" stroke-linejoin="round"/>`;if(item.type==='diamond')return `<polygon points="${item.x+item.w/2},${item.y} ${item.x+item.w},${item.y+item.h/2} ${item.x+item.w/2},${item.y+item.h} ${item.x},${item.y+item.h/2}" fill="${esc(item.fill)}" stroke="${esc(item.stroke)}" stroke-width="${item.sw}" stroke-linejoin="round"/>`;if(item.type==='line'||item.type==='arrow')return `<line x1="${item.x1}" y1="${item.y1}" x2="${item.x2}" y2="${item.y2}" stroke="${esc(item.stroke)}" stroke-width="${item.sw}" stroke-linecap="round"${item.type==='arrow'?' marker-end="url(#arrowHead)"':''}/>`;if(item.type==='arc')return `<path d="${arcPath(item)}" fill="none" stroke="${esc(item.stroke)}" stroke-width="${item.sw}" stroke-linecap="round" stroke-linejoin="round"/>`;if(item.type==='freehand')return `<path d="${freehandPath(item)}" fill="${item.closed?esc(item.fill||'none'):'none'}" stroke="${esc(item.stroke)}" stroke-width="${item.sw}" stroke-linecap="round" stroke-linejoin="round"${item.dotted?' stroke-dasharray="1 7"':''}/>`;if(item.type==='wave')return `<path d="${wavePath(item)}" fill="none" stroke="${esc(item.stroke)}" stroke-width="${item.sw}" stroke-linecap="round" stroke-linejoin="round"/>`;if(item.type==='text'||item.type==='mathText')return svgTextMarkup(item);if(item.type==='plus'||item.type==='minus'){const s=item.size||16;const d=item.type==='plus'?`M ${item.x-s} ${item.y} H ${item.x+s} M ${item.x} ${item.y-s} V ${item.y+s}`:`M ${item.x-s} ${item.y} H ${item.x+s}`;return `<path d="${d}" fill="none" stroke="${esc(item.stroke)}" stroke-width="${item.sw}" stroke-linecap="round"/>`;}if(item.type==='ground'){const s=item.size||22;return `<path d="M ${item.x} ${item.y-s} V ${item.y-s/3} M ${item.x-s} ${item.y-s/3} H ${item.x+s} M ${item.x-s*.65} ${item.y+s*.05} H ${item.x+s*.65} M ${item.x-s*.3} ${item.y+s*.4} H ${item.x+s*.3}" fill="none" stroke="${esc(item.stroke)}" stroke-width="${item.sw}" stroke-linecap="round"/>`;}if(item.type==='port')return portSvgMarkup(item);if(item.type==='junction')return junctionSvgMarkup(item);return '';}).join('\n  ');const defs=elements.some(item=>item.type==='arrow')?'<defs><marker id="arrowHead" viewBox="0 0 18 12" refX="17.2" refY="6" markerWidth="6" markerHeight="5.5" markerUnits="strokeWidth" orient="auto"><path d="M0 .8L18 6L0 11.2L5.2 6Z" fill="context-stroke"/></marker></defs>':'';return `<svg xmlns="http://www.w3.org/2000/svg" width="${viewW}" height="${viewH}" viewBox="0 0 ${viewW} ${viewH}">${defs}\n  ${body}\n</svg>`;}
 // Kept separate from the editor DOM so every saved symbol and library file uses
 // exactly the same geometry, color, opacity, and arrow definitions as the canvas.
 function svgItemMarkup(item){
@@ -1527,7 +1587,8 @@ function svgItemMarkup(item){
   else if(item.type==='text'||item.type==='mathText') body=portableSvgTextMarkup(item);
   else if(item.type==='plus'||item.type==='minus'){const s=item.size||16,d=item.type==='plus'?`M ${item.x-s} ${item.y} H ${item.x+s} M ${item.x} ${item.y-s} V ${item.y+s}`:`M ${item.x-s} ${item.y} H ${item.x+s}`;body=`<path d="${d}" fill="none" stroke="${stroke}" stroke-width="${width}" stroke-linecap="round"/>`;}
   else if(item.type==='ground'){const s=item.size||22;body=`<path d="M ${item.x} ${item.y-s} V ${item.y-s/3} M ${item.x-s} ${item.y-s/3} H ${item.x+s} M ${item.x-s*.65} ${item.y+s*.05} H ${item.x+s*.65} M ${item.x-s*.3} ${item.y+s*.4} H ${item.x+s*.3}" fill="none" stroke="${stroke}" stroke-width="${width}" stroke-linecap="round"/>`;}
-  else if(item.type==='port') body=`<circle cx="${item.x}" cy="${item.y}" r="5" fill="#fff" stroke="${stroke}" stroke-width="${width}"/>`;
+  else if(item.type==='port') body=portSvgMarkup(item);
+  else if(item.type==='junction') body=junctionSvgMarkup(item);
   const transform=rotationTransform(item);
   return body?`<g opacity="${opacity}"${item.circuitId?` data-qs-circuit-id="${esc(item.circuitId)}"`:''}${transform?` transform="${transform}"`:''}>${body}</g>`:'';
 }
@@ -1537,9 +1598,10 @@ function svgMarkup(geometry=null){
   const body=items.map(svgItemMarkup).join('\n  ');
   const defs=items.some(item=>isArrow(item))?'<defs><marker id="arrowHead" viewBox="0 0 18 12" refX="17.2" refY="6" markerWidth="6" markerHeight="5.5" markerUnits="strokeWidth" orient="auto"><path d="M0 .8L18 6L0 11.2L5.2 6Z" fill="context-stroke"/></marker></defs>':'';
   const manifest=esc(JSON.stringify(exportStyleManifest(geom)));
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${geom.width}" height="${geom.height}" viewBox="0 0 ${geom.width} ${geom.height}" data-qs-preserve-styles="1"><metadata id="qs-style-manifest" data-preserve-styles="1">${manifest}</metadata>${defs}\n  ${body}\n</svg>`;
+  const structured=esc(JSON.stringify({schema:'qs-studio-svg/v2',version:2,width:geom.width,height:geom.height,items:copy(items),circuitGroups:copy(circuitGroups)}));
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${geom.width}" height="${geom.height}" viewBox="0 0 ${geom.width} ${geom.height}" data-qs-preserve-styles="1" data-qs-symbol-schema="2"><metadata id="qs-style-manifest" data-preserve-styles="1">${manifest}</metadata><metadata id="qs-symbol-data" data-schema="qs-studio-svg/v2">${structured}</metadata>${defs}\n  ${body}\n</svg>`;
 }
-function symbolPayload(){const name=document.getElementById('symbolName').value.trim()||'Custom Symbol',libraryKey=filename(),geom=exportGeometry(),styleManifest=exportStyleManifest(geom),svg=svgMarkup(geom);return{version:4,kind:'qs-studio-circuit-symbol',id:'custom_'+name.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')+'_'+Date.now().toString(36),libraryKey,label:name,category:document.getElementById('symbolCategory').value,subcategory:document.getElementById('symbolSubcategory').value.trim(),componentDefaults:{reference:document.getElementById('componentReference').value.trim(),value:document.getElementById('componentValue').value.trim(),legend:document.getElementById('componentLegend').value.trim()},width:geom.width,height:geom.height,sourceViewBox:{x:0,y:0,w:geom.width,h:geom.height},sourceBounds:geom.box,sourcePaintBounds:geom.paintBox,styleManifest,anchorMode:'top-left',ports:geom.items.filter(item=>item.type==='port').map(port=>({id:port.name,x:port.x,y:port.y})),elements:copy(geom.items),circuitGroups:copy(circuitGroups),editorDraft:{width:viewW,height:viewH,elements:copy(elements),circuitGroups:copy(circuitGroups),snapStep:currentSnapStep()},svg,sourceSvg:svg,exportMeta:{encoding:'utf-8',textVectorized:true,strokePreserved:true,strokeWidthPreserved:true,fontSizePreserved:true,componentDimensionsPreserved:true,preserveElementStyles:true,preserveCircuitGroups:true,gridCoordinatesStable:true,topLeftNormalized:true,preservesMakerWorkspace:true,createdAt:new Date().toISOString()}};}
+function symbolPayload(){const name=document.getElementById('symbolName').value.trim()||'Custom Symbol',libraryKey=filename(),geom=exportGeometry(),styleManifest=exportStyleManifest(geom),svg=svgMarkup(geom);return{version:5,kind:'qs-studio-circuit-symbol',id:'custom_'+name.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')+'_'+Date.now().toString(36),libraryKey,label:name,category:document.getElementById('symbolCategory').value,subcategory:document.getElementById('symbolSubcategory').value.trim(),componentDefaults:{reference:document.getElementById('componentReference').value.trim(),value:document.getElementById('componentValue').value.trim(),legend:document.getElementById('componentLegend').value.trim()},width:geom.width,height:geom.height,sourceViewBox:{x:0,y:0,w:geom.width,h:geom.height},sourceBounds:geom.box,sourcePaintBounds:geom.paintBox,styleManifest,anchorMode:'top-left',ports:geom.items.filter(item=>item.type==='port').map(port=>({id:port.name,x:port.x,y:port.y,direction:portDirection(port),size:portSize(port),showLabel:port.showLabel!==false})),junctions:geom.items.filter(item=>item.type==='junction').map(joint=>({x:joint.x,y:joint.y,size:clamp(+joint.size||4,2,14),fill:joint.fill||joint.stroke||'#111'})),elements:copy(geom.items),circuitGroups:copy(circuitGroups),editorDraft:{width:viewW,height:viewH,elements:copy(elements),circuitGroups:copy(circuitGroups),snapStep:currentSnapStep()},svg,sourceSvg:svg,exportMeta:{encoding:'utf-8',textVectorized:true,strokePreserved:true,strokeWidthPreserved:true,fontSizePreserved:true,componentDimensionsPreserved:true,preserveElementStyles:true,preserveCircuitGroups:true,preservePortsAndJunctions:true,gridCoordinatesStable:true,topLeftNormalized:true,preservesMakerWorkspace:true,createdAt:new Date().toISOString()}};}
 function syncSymbolToSharedCircuitLibrary(payload){
   try{
     if(!payload||payload.kind!=='qs-studio-circuit-symbol'||!Array.isArray(payload.elements)||!payload.elements.length)return false;
@@ -1564,7 +1626,7 @@ function notifySharedCircuitSymbolUpdate(){
     }
   }catch(_){ }
 }
-function updateOutput(){document.getElementById('codeOut').value=svgMarkup();document.getElementById('outputInfo').textContent=`${elements.length} element${elements.length===1?'':'s'} | ${elements.filter(item=>item.type==='port').length} port${elements.filter(item=>item.type==='port').length===1?'':'s'} | ${circuitGroups.length} locked circuit${circuitGroups.length===1?'':'s'}`;}
+function updateOutput(){const ports=elements.filter(item=>item.type==='port'),joints=elements.filter(item=>item.type==='junction');document.getElementById('codeOut').value=svgMarkup();document.getElementById('outputInfo').textContent=`${elements.length} element${elements.length===1?'':'s'} | ${ports.length} port${ports.length===1?'':'s'} | ${joints.length} joint${joints.length===1?'':'s'} | ${circuitGroups.length} locked circuit${circuitGroups.length===1?'':'s'}`;}
 function copyText(value,label){navigator.clipboard?.writeText(value).then(()=>setStatus(label)).catch(()=>{const box=document.getElementById('codeOut');box.focus();box.select();document.execCommand('copy');setStatus(label);});}
 function copySvg(){copyText(svgMarkup(),'SVG copied to clipboard');}
 function download(name,contents,type){const rawType=String(type||'application/octet-stream');const safeType=/^(?:application\/json|text\/|image\/svg\+xml)\b/i.test(rawType)&&!/charset=/i.test(rawType)?rawType+';charset=utf-8':rawType;const anchor=document.createElement('a');anchor.href=URL.createObjectURL(new Blob([contents],{type:safeType}));anchor.download=name;anchor.click();setTimeout(()=>URL.revokeObjectURL(anchor.href),1000);}
@@ -1617,11 +1679,11 @@ function logicGatePresetElements(kind){
   const base={stroke,fill,sw,opacity:s.opacity,linecap:'round',linejoin:'round'};
   const item=(extra)=>({id:uid(),...base,...extra});
   const line=(x1,y1,x2,y2)=>item({type:'line',x1,y1,x2,y2,fill:'none'});
-  const port=(name,px,py)=>({id:uid(),type:'port',name,stroke,fill:'#fff',sw,opacity:s.opacity,x:px,y:py});
+  const port=(name,px,py,direction='passive')=>({id:uid(),type:'port',name,direction,size:6,showLabel:true,stroke,fill:'#fff',sw,opacity:s.opacity,x:px,y:py});
   const bubble=(cx,cy)=>item({type:'ellipse',x:cx-5,y:cy-5,w:10,h:10});
   if(kind==='not')return [
     item({type:'path',d:`M ${x} ${y} L ${x} ${y+70} L ${x+78} ${y+35} Z`,box:{x,y,w:78,h:70}}),
-    bubble(x+85,y+35),line(x-42,y+35,x,y+35),line(x+90,y+35,x+128,y+35),port('A',x-42,y+35),port('Y',x+128,y+35)
+    bubble(x+85,y+35),line(x-42,y+35,x,y+35),line(x+90,y+35,x+128,y+35),port('A',x-42,y+35,'input'),port('Y',x+128,y+35,'output')
   ];
   const andBody=item({type:'path',d:`M ${x} ${y} L ${x+48} ${y} C ${x+98} ${y} ${x+98} ${y+72} ${x+48} ${y+72} L ${x} ${y+72} Z`,box:{x,y,w:98,h:72}});
   const orBody=item({type:'path',d:`M ${x} ${y} C ${x+30} ${y+8} ${x+50} ${y} ${x+78} ${y+36} C ${x+50} ${y+72} ${x+30} ${y+64} ${x} ${y+72} C ${x+20} ${y+48} ${x+20} ${y+24} ${x} ${y} Z`,box:{x,y,w:78,h:72}});
@@ -1635,7 +1697,7 @@ function logicGatePresetElements(kind){
     line(x-44,y+22,x+(kind==='xor'||kind==='xnor'?-12:0),y+22),
     line(x-44,y+50,x+(kind==='xor'||kind==='xnor'?-12:0),y+50),
     line((kind==='nand'||kind==='nor'||kind==='xnor')?outX+10:outX,y+36,finalOutX,y+36),
-    port('A',x-44,y+22),port('B',x-44,y+50),port('Y',finalOutX,y+36)
+    port('A',x-44,y+22,'input'),port('B',x-44,y+50,'input'),port('Y',finalOutX,y+36,'output')
   ];
   if(kind==='nand'||kind==='nor'||kind==='xnor')parts.splice(body.length,0,bubble(outX+5,y+36));
   return parts;
@@ -1652,6 +1714,30 @@ function importedNodeStyle(node){
   const stroke=attrColor(node,'stroke','#111'),fill=attrColor(node,'fill','none');
   const sw=attrNumber(node,'stroke-width',2);
   return{stroke:stroke==='none'?'#111':stroke,fill,sw:Number.isFinite(sw)?sw:2,opacity:clamp(attrNumber(node,'opacity',1),.05,1)};
+}
+function structuredSvgData(markup){
+  try{
+    const doc=new DOMParser().parseFromString(String(markup||''),'image/svg+xml');
+    const node=doc.querySelector('metadata#qs-symbol-data[data-schema="qs-studio-svg/v2"]');
+    const data=node?JSON.parse(node.textContent||''):null;
+    return data?.schema==='qs-studio-svg/v2'&&Array.isArray(data.items)&&data.items.length&&data.items.length<=500?data:null;
+  }catch(_){return null;}
+}
+function remapStructuredSvgData(data){
+  const allowed=new Set(['rect','ellipse','triangle','triangleDown','diamond','cuboid','line','arrow','dottedLine','dottedArrow','polyline','path','embeddedSvg','freehand','arc','dottedArc','curveArrow','dottedCurveArrow','wave','text','mathText','plus','minus','ground','port','junction']);
+  const idMap=new Map(),groupMap=new Map();
+  const items=copy(data.items||[]).filter(item=>item&&allowed.has(item.type)).map(item=>{const old=String(item.id||uid()),next=uid();idMap.set(old,next);item.id=next;return item;});
+  (data.circuitGroups||[]).forEach(group=>groupMap.set(String(group.id||''),'circuit_'+uid()));
+  items.forEach(item=>{if(item.circuitId&&groupMap.has(String(item.circuitId)))item.circuitId=groupMap.get(String(item.circuitId));else delete item.circuitId;});
+  const groups=(data.circuitGroups||[]).map(group=>({id:groupMap.get(String(group.id||'')),name:String(group.name||'Imported Circuit').slice(0,80),locked:true,createdGridStep:+group.createdGridStep||currentSnapStep(),elementIds:(group.elementIds||[]).map(id=>idMap.get(String(id))).filter(Boolean)})).filter(group=>group.id&&group.elementIds.length>1);
+  return{items:fitImportedItems(items),groups};
+}
+function importStructuredSvg(data){
+  const prepared=remapStructuredSvgData(data);
+  if(!prepared.items.length)return false;
+  pushHistory();elements.push(...prepared.items);circuitGroups.push(...prepared.groups);normalizeCircuitGroups();applySelectionIds(prepared.items.map(item=>item.id));renderAll();
+  setStatus(`${prepared.items.length} editable part${prepared.items.length===1?'':'s'} imported with ports, joints, and circuit locks preserved.`);
+  return true;
 }
 function pointsFromAttr(value){const nums=String(value||'').match(/-?\d*\.?\d+(?:e[-+]?\d+)?/gi)?.map(Number)||[];const points=[];for(let i=0;i<nums.length-1;i+=2)points.push({x:nums[i],y:nums[i+1]});return points;}
 function parsedSvgItemsFromMarkup(markup){
@@ -1689,6 +1775,8 @@ function fitImportedItems(items){
 }
 function importSvgMarkup(markup){
   const clean=sanitizeEmbeddedSvg(markup);
+  const structured=structuredSvgData(clean);
+  if(structured&&importStructuredSvg(structured))return;
   let items=null;
   try{items=parsedSvgItemsFromMarkup(clean);}catch(_){items=null;}
   if(items){

@@ -24,6 +24,8 @@ const initJs = read('assets/js/10-init.js');
 const persistenceJs = read('assets/js/11-persistence.js');
 const html = read('qs_studio.html');
 const svgMaker = read('svg_symbol_maker.html');
+const landing = read('qs-gen-svg-maker-landing.html');
+const indexHtml = read('index.html');
 const sheetPipeline = read('pdf_sheet_template_pipeline.html');
 const desktopHtml = readOptional('desktop-electron/dist/win-unpacked/resources/studio/qs_studio.html');
 const desktopCanvas = readOptional('desktop-electron/dist/win-unpacked/resources/studio/assets/js/04-canvas-engine.js');
@@ -1601,6 +1603,51 @@ check(
     'elementIds:clones.map(item=>item.id)'
   ]),
   'lock, unlock, proportional resize, rotation, duplicate, and JSON round trips must retain one stable circuit identity'
+);
+
+check(
+  'SVG maker property editing cannot hand Backspace to canvas deletion',
+  includesAll(svgMaker,[
+    'function renderSceneWithoutPropertyReset()',
+    'function beginPropertyEdit()',
+    'function commitPropertyEdit()',
+    'function isTypingOrControlTarget(target)',
+    "if(event.key==='Backspace'){event.preventDefault();setStatus('Backspace is protected."
+  ]) && !functionBody(svgMaker,'setProp').includes('renderAll()') && !functionBody(svgMaker,'applyMultiProp').includes('renderAll()'),
+  'right-panel inputs must retain focus and Backspace must never delete the selected circuit'
+);
+
+check(
+  'ports and junction dots round-trip through SVG Maker and QS Gen',
+  includesAll(svgMaker,[
+    'data-tool="junction"',
+    'function portDirection(item)',
+    'function portSvgMarkup',
+    'function junctionSvgMarkup',
+    "schema:'qs-studio-svg/v2'",
+    'id="qs-symbol-data"',
+    'function structuredSvgData(markup)',
+    'function importStructuredSvg(data)',
+    'preservePortsAndJunctions:true'
+  ]) && includesAll(circuitJs,[
+    'function _cCustomPortDirection(value)',
+    "if(type==='junction')",
+    'data-qs-port-direction',
+    'data-qs-junction="1"',
+    'direction:_cCustomPortDirection(item.direction)'
+  ]),
+  'port roles, joint dots, and structured SVG metadata must survive maker and circuit-editor imports'
+);
+
+check(
+  'GitHub landing page connects both tools in new tabs with circuit particles',
+  includesAll(landing,[
+    'id="circuitField"',
+    'function drawField()',
+    'href="qs_studio.html" target="_blank" rel="noopener noreferrer"',
+    'href="svg_symbol_maker.html" target="_blank" rel="noopener noreferrer"'
+  ]) && indexHtml.includes("new URL('./qs-gen-svg-maker-landing.html', window.location.href)"),
+  'the root page must open the connected landing experience and preserve both launch tabs'
 );
 
 check(
