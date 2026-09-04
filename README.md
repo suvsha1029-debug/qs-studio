@@ -6,6 +6,10 @@ QS Studio is a browser-based question-paper authoring workspace with structured 
 
 Open `qs_studio.html` directly, or serve this directory with any static web server. The GitHub Pages entry at `index.html` opens the current modular studio automatically.
 
+Live website: [suvsha1029-debug.github.io/qs-studio](https://suvsha1029-debug.github.io/qs-studio/)
+
+The workspace adapts to Android phones, iPhones, tablets, and desktop browsers. On supported mobile browsers, use **Add to Home Screen** to open QS Studio like a standalone web app.
+
 ## Publication boundary
 
 This repository contains only the browser QS Studio. Exam-platform backend services, candidate data, admin systems, desktop clients, generated question banks, answer keys, PDFs, local configuration, and credentials are excluded from publication.

@@ -2,6 +2,15 @@
 (function(){
   const validViews=new Set(['questions','editor','actions']);
   const compactQuery=window.matchMedia('(max-width:1080px)');
+  let viewportFrame=0;
+
+  function syncViewportHeight(){
+    cancelAnimationFrame(viewportFrame);
+    viewportFrame=requestAnimationFrame(()=>{
+      const height=Math.round(window.visualViewport?.height||window.innerHeight);
+      if(height>0) document.documentElement.style.setProperty('--app-height',`${height}px`);
+    });
+  }
 
   function panelFor(view){
     return document.querySelector(`[data-workspace-panel="${view}"]`);
@@ -48,6 +57,7 @@
   }
 
   function initModernWorkspace(){
+    syncViewportHeight();
     setWorkspaceView(document.body.dataset.workspaceView||'questions');
     syncCompactState();
     syncWorkspaceStatus();
@@ -58,6 +68,9 @@
     });
     if(typeof compactQuery.addEventListener==='function') compactQuery.addEventListener('change',syncCompactState);
     else compactQuery.addListener(syncCompactState);
+    window.addEventListener('resize',syncViewportHeight,{passive:true});
+    window.addEventListener('orientationchange',syncViewportHeight,{passive:true});
+    window.visualViewport?.addEventListener('resize',syncViewportHeight,{passive:true});
   }
 
   document.addEventListener('keydown',event=>{
