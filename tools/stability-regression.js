@@ -1659,6 +1659,21 @@ check(
   'SVG Maker must accept code wrappers and QS Gen must directly accept the resulting SVG or Symbol JSON'
 );
 
+const svgPathSandbox=loadFunctionsIntoSandbox(svgMaker,['normalizeSvgPathForEditor']);
+const normalizedMirrorPath=svgPathSandbox.normalizeSvgPathForEditor('M145 72V235H175 M355 72v163h-30');
+check(
+  'imported SVG figures can be exploded into visually editable parts',
+  includesAll(svgMaker,[
+    'function inheritedSvgValue(node,name',
+    'function normalizeSvgPathForEditor(value)',
+    'function mapImportedItemsToEmbedded',
+    'function explodeSelectedSvg()',
+    'Explode to Editable',
+    'Click a line, path, shape, or label to edit it'
+  ]) && normalizedMirrorPath==='M 145 72 L 145 235 L 175 235 M 355 72 L 355 235 L 325 235',
+  'group styles and horizontal/vertical path commands must become stable editable canvas geometry'
+);
+
 check(
   'GitHub landing page connects both tools in new tabs with circuit particles',
   includesAll(landing,[

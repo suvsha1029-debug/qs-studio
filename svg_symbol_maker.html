@@ -1429,7 +1429,7 @@ function renderProperties(){const host=document.getElementById('properties'),ite
   if(item.stroke)html+=`<div class="prop-row"><label>Stroke</label><input type="color" value="${esc(item.stroke)}" oninput="setProp('stroke',this.value)"><label style="min-width:auto">Width</label><input type="number" min=".5" max="12" step=".5" value="${item.sw||1}" oninput="setProp('sw',+this.value)"></div>`;
   if(['rect','ellipse','triangle','triangleDown','diamond','cuboid'].includes(item.type)){const fill=item.fill&&item.fill!=='none'?item.fill:'#ffffff';html+=`<div class="prop-row"><label>Fill</label><input type="color" value="${esc(fill)}" oninput="setProp('fill',this.value)"><button type="button" onclick="setProp('fill','none')">No Fill</button></div><div class="prop-row"><label>Rotate</label><button type="button" onclick="rotateSelected(-15)">CCW 15</button><button type="button" onclick="rotateSelected(15)">CW 15</button><button type="button" onclick="rotateSelected(-90)">CCW 90</button><button type="button" onclick="rotateSelected(90)">CW 90</button></div><div class="prop-row"><label>Angle</label><input type="number" min="-360" max="360" step="1" value="${Number(item.rotation)||0}" oninput="setProp('rotation',+this.value)"></div>`;}
   if(item.type==='path'){const fill=item.fill&&item.fill!=='none'?item.fill:'#ffffff';html+=`<div class="prop-row"><label>Fill</label><input type="color" value="${esc(fill)}" oninput="setProp('fill',this.value)"><button type="button" onclick="setProp('fill','none')">No Fill</button></div><div class="prop-row"><label>Path</label><textarea oninput="setProp('d',this.value)">${esc(item.d||'')}</textarea></div>`;}
-  if(item.type==='embeddedSvg')html+=`<div class="prop-row"><label>Width</label><input type="number" min="4" max="1400" value="${Math.round(item.w||1)}" oninput="setProp('w',+this.value)"></div><div class="prop-row"><label>Height</label><input type="number" min="4" max="1000" value="${Math.round(item.h||1)}" oninput="setProp('h',+this.value)"></div><p style="font-size:11px;color:#617a90;margin:0 0 8px">Complex imported SVG kept as a vector group. Use group tools to scale it with native parts.</p>`;
+  if(item.type==='embeddedSvg')html+=`<div class="prop-row"><label>Width</label><input type="number" min="4" max="1400" value="${Math.round(item.w||1)}" oninput="setProp('w',+this.value)"></div><div class="prop-row"><label>Height</label><input type="number" min="4" max="1000" value="${Math.round(item.h||1)}" oninput="setProp('h',+this.value)"></div><div class="prop-row"><label>Visual</label><button type="button" onclick="rotateSelected(-15)">Rotate -15°</button><button type="button" onclick="rotateSelected(15)">Rotate +15°</button><button type="button" onclick="duplicateSelection()">Duplicate</button></div><div class="prop-row"><label>Parts</label><button type="button" class="primary" onclick="explodeSelectedSvg()">Explode to Editable</button></div><p style="font-size:11px;color:#617a90;margin:0 0 8px">Drag to move and use the four blue handles to resize. Explode compatible SVGs to edit their lines, paths, shapes, colours, widths, and labels separately. You can keep adding any Maker tool around either version.</p>`;
   if(item.type==='text'||item.type==='mathText')html+=`<div class="prop-row"><label>${item.type==='mathText'?'Math src':'Text'}</label><textarea oninput="setProp('text',this.value)">${esc(item.text)}</textarea></div>${item.type==='mathText'?`<div class="prop-row"><label>Rendered</label><textarea readonly>${esc(renderMathLabelText(item.text))}</textarea></div>`:''}<div class="prop-row"><label>Font size</label><input type="number" min="8" max="96" value="${item.fs||16}" oninput="setProp('fs',+this.value)"></div><div class="prop-row"><label>Font</label><select onchange="setProp('fontFamily',this.value)"><option value="Georgia, Times New Roman, serif" ${(item.fontFamily||'Georgia, Times New Roman, serif')==='Georgia, Times New Roman, serif'?'selected':''}>Serif</option><option value="Arial, Helvetica, sans-serif" ${item.fontFamily==='Arial, Helvetica, sans-serif'?'selected':''}>Sans</option><option value="Cambria, Georgia, serif" ${item.fontFamily==='Cambria, Georgia, serif'?'selected':''}>Cambria</option><option value="Courier New, Consolas, monospace" ${item.fontFamily==='Courier New, Consolas, monospace'?'selected':''}>Mono</option></select></div><div class="prop-row"><label>Style</label><span class="prop-check"><input type="checkbox" ${item.bold?'checked':''} onchange="setProp('bold',this.checked)"> Bold</span><span class="prop-check"><input type="checkbox" ${item.italic?'checked':''} onchange="setProp('italic',this.checked)"> Italic</span><span class="prop-check"><input type="checkbox" ${item.underline?'checked':''} onchange="setProp('underline',this.checked)"> Underline</span></div><div class="prop-row"><label>Align</label><select onchange="setProp('align',this.value)"><option value="left" ${(item.align||'left')==='left'?'selected':''}>Left</option><option value="center" ${item.align==='center'?'selected':''}>Center</option><option value="right" ${item.align==='right'?'selected':''}>Right</option></select></div><div class="prop-row"><label>Rotate</label><button type="button" onclick="rotateSelected(-15)">CCW 15</button><button type="button" onclick="rotateSelected(15)">CW 15</button><button type="button" onclick="rotateSelected(-90)">CCW 90</button><button type="button" onclick="rotateSelected(90)">CW 90</button></div><div class="prop-row"><label>Angle</label><input type="number" min="-360" max="360" step="1" value="${Number(item.rotation)||0}" oninput="setProp('rotation',+this.value)"></div>`;
   if(item.type==='freehand'){const fill=item.fill&&item.fill!=='none'?item.fill:'#ffffff';html+=`<div class="prop-row"><label>Line</label><span class="prop-check"><input type="checkbox" ${item.dotted?'checked':''} onchange="setProp('dotted',this.checked)"> Dotted stroke</span></div><div class="prop-row"><label>Close</label><span class="prop-check"><input type="checkbox" ${item.closed?'checked':''} onchange="setProp('closed',this.checked)"> Close shape</span></div><div class="prop-row"><label>Fill</label><input type="color" value="${esc(fill)}" oninput="setProp('fill',this.value)"><button type="button" onclick="setProp('fill','none')">No Fill</button></div><div class="prop-row"><label>Smooth</label><input type="range" min="0" max="5" step="1" value="${Number.isFinite(+item.smooth)?item.smooth:2}" oninput="setProp('smooth',+this.value)"><small>${Number.isFinite(+item.smooth)?item.smooth:2}</small></div><div class="prop-row"><label>Simplify</label><input type="number" min="0" max="12" step="0.5" value="${Number.isFinite(+item.simplify)?item.simplify:1.5}" oninput="setProp('simplify',+this.value)"></div><p style="font-size:11px;color:#617a90;margin:6px 0 0">Raw points: ${(item.points||[]).length}; exported as a smooth ${item.dotted?'dotted ':' '}vector path.</p>`;}
   if(item.type==='port')html+=`<div class="prop-row"><label>Port name</label><input maxlength="16" value="${esc(item.name)}" oninput="setProp('name',this.value.toUpperCase().replace(/[^A-Z0-9_]/g,''))"></div><div class="prop-row"><label>Direction</label><select onchange="setProp('direction',this.value)"><option value="passive" ${portDirection(item)==='passive'?'selected':''}>Passive</option><option value="input" ${portDirection(item)==='input'?'selected':''}>Input</option><option value="output" ${portDirection(item)==='output'?'selected':''}>Output</option><option value="bidirectional" ${portDirection(item)==='bidirectional'?'selected':''}>Bidirectional</option></select></div><div class="prop-row"><label>Dot size</label><input type="number" min="4" max="18" step="1" value="${portSize(item)}" oninput="setProp('size',+this.value)"></div><div class="prop-row"><label>Label</label><span class="prop-check"><input type="checkbox" ${item.showLabel!==false?'checked':''} onchange="setProp('showLabel',this.checked)"> Show name in SVG</span></div>`;
@@ -1777,12 +1777,20 @@ function insertLogicGatePreset(){
   insertItemsAsGroup(logicGatePresetElements(kind),`${kind.toUpperCase()} gate inserted as one locked circuit. Unlock it to edit internal parts.`,true);
   select.value='';
 }
+function inheritedSvgValue(node,name,fallback=''){
+  for(let current=node;current&&current.nodeType===1;current=current.parentElement){
+    const direct=current.getAttribute(name);
+    if(direct!==null&&direct!=='')return direct;
+    const style=current.getAttribute('style')||'',match=style.match(new RegExp(`(?:^|;)\\s*${name.replace(/-/g,'\\-')}\\s*:\\s*([^;]+)`,'i'));
+    if(match)return match[1].trim();
+  }
+  return fallback;
+}
 function attrNumber(node,name,fallback=0){const value=parseFloat(node.getAttribute(name));return Number.isFinite(value)?value:fallback;}
-function attrColor(node,name,fallback){return node.getAttribute(name)||node.style?.[name]||fallback;}
 function importedNodeStyle(node){
-  const stroke=attrColor(node,'stroke','#111'),fill=attrColor(node,'fill','none');
-  const sw=attrNumber(node,'stroke-width',2);
-  return{stroke:stroke==='none'?'#111':stroke,fill,sw:Number.isFinite(sw)?sw:2,opacity:clamp(attrNumber(node,'opacity',1),.05,1)};
+  const stroke=inheritedSvgValue(node,'stroke','#111'),fill=inheritedSvgValue(node,'fill','none');
+  const sw=parseFloat(inheritedSvgValue(node,'stroke-width','2')),opacity=parseFloat(inheritedSvgValue(node,'opacity','1'));
+  return{stroke:stroke==='none'?'#111':stroke,fill,sw:Number.isFinite(sw)?sw:2,opacity:clamp(Number.isFinite(opacity)?opacity:1,.05,1)};
 }
 function structuredSvgData(markup){
   try{
@@ -1809,18 +1817,55 @@ function importStructuredSvg(data){
   return true;
 }
 function pointsFromAttr(value){const nums=String(value||'').match(/-?\d*\.?\d+(?:e[-+]?\d+)?/gi)?.map(Number)||[];const points=[];for(let i=0;i<nums.length-1;i+=2)points.push({x:nums[i],y:nums[i+1]});return points;}
+function normalizeSvgPathForEditor(value){
+  const tokens=String(value||'').match(/[A-Za-z]|[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?/g)||[];
+  const counts={M:2,L:2,H:1,V:1,C:6,S:4,Q:4,T:2,A:7,Z:0};
+  let index=0,command='',cx=0,cy=0,startX=0,startY=0;
+  const output=[],number=value=>Number(value).toFixed(3).replace(/\.?0+$/,'');
+  while(index<tokens.length){
+    if(/^[A-Za-z]$/.test(tokens[index]))command=tokens[index++];
+    if(!command)return null;
+    const upper=command.toUpperCase(),relative=command!==upper,count=counts[upper];
+    if(count===undefined||upper==='A')return null;
+    if(upper==='Z'){output.push('Z');cx=startX;cy=startY;command='';continue;}
+    let first=true,consumed=false;
+    while(index<tokens.length&&!/^[A-Za-z]$/.test(tokens[index])){
+      if(index+count>tokens.length)return null;
+      const values=tokens.slice(index,index+count).map(Number);
+      if(values.some(value=>!Number.isFinite(value)))return null;
+      index+=count;consumed=true;
+      if(upper==='M'||upper==='L'||upper==='T'){
+        const x=(relative?cx:0)+values[0],y=(relative?cy:0)+values[1],outCommand=upper==='M'&&first?'M':upper==='M'?'L':upper;
+        output.push(`${outCommand} ${number(x)} ${number(y)}`);cx=x;cy=y;if(outCommand==='M'){startX=x;startY=y;}
+      }else if(upper==='H'){
+        const x=(relative?cx:0)+values[0];output.push(`L ${number(x)} ${number(cy)}`);cx=x;
+      }else if(upper==='V'){
+        const y=(relative?cy:0)+values[0];output.push(`L ${number(cx)} ${number(y)}`);cy=y;
+      }else{
+        const pairs=[];
+        for(let pair=0;pair<values.length;pair+=2)pairs.push({x:(relative?cx:0)+values[pair],y:(relative?cy:0)+values[pair+1]});
+        output.push(`${upper} ${pairs.map(point=>`${number(point.x)} ${number(point.y)}`).join(' ')}`);cx=pairs[pairs.length-1].x;cy=pairs[pairs.length-1].y;
+      }
+      first=false;
+      if(index<tokens.length&&/^[A-Za-z]$/.test(tokens[index]))break;
+    }
+    if(!consumed)return null;
+  }
+  return output.join(' ');
+}
 function parsedSvgItemsFromMarkup(markup){
   const doc=new DOMParser().parseFromString(markup,'image/svg+xml');
   const root=doc.documentElement;
   if(!root||root.nodeName.toLowerCase()==='parsererror')throw new Error('This SVG could not be parsed.');
   if(root.querySelector('[transform]'))return null;
-  const items=[];
+  const items=[];let unsupported=false;
   root.querySelectorAll('path,line,polyline,polygon,rect,circle,ellipse,text').forEach(node=>{
     if(items.length>300)return;
     const tag=node.nodeName.toLowerCase(),sty=importedNodeStyle(node);
     if(tag==='path'){
-      const d=node.getAttribute('d')||'';
-      if(d)items.push({id:uid(),type:'path',d,box:pathBoundsFromD(d),...sty,linecap:node.getAttribute('stroke-linecap')||'round',linejoin:node.getAttribute('stroke-linejoin')||'round'});
+      const d=normalizeSvgPathForEditor(node.getAttribute('d')||'');
+      if(!d){unsupported=true;return;}
+      items.push({id:uid(),type:'path',d,box:pathBoundsFromD(d),...sty,linecap:inheritedSvgValue(node,'stroke-linecap','round'),linejoin:inheritedSvgValue(node,'stroke-linejoin','round')});
     }else if(tag==='line')items.push({id:uid(),type:'line',x1:attrNumber(node,'x1'),y1:attrNumber(node,'y1'),x2:attrNumber(node,'x2'),y2:attrNumber(node,'y2'),...sty,fill:'none'});
     else if(tag==='polyline'||tag==='polygon'){
       const points=pointsFromAttr(node.getAttribute('points'));
@@ -1828,9 +1873,36 @@ function parsedSvgItemsFromMarkup(markup){
     }else if(tag==='rect')items.push({id:uid(),type:'rect',x:attrNumber(node,'x'),y:attrNumber(node,'y'),w:attrNumber(node,'width',40),h:attrNumber(node,'height',24),rx:attrNumber(node,'rx',0),...sty});
     else if(tag==='circle'){const r=attrNumber(node,'r',8);items.push({id:uid(),type:'ellipse',x:attrNumber(node,'cx')-r,y:attrNumber(node,'cy')-r,w:r*2,h:r*2,...sty});}
     else if(tag==='ellipse'){const rx=attrNumber(node,'rx',12),ry=attrNumber(node,'ry',8);items.push({id:uid(),type:'ellipse',x:attrNumber(node,'cx')-rx,y:attrNumber(node,'cy')-ry,w:rx*2,h:ry*2,...sty});}
-    else if(tag==='text')items.push({id:uid(),type:'text',x:attrNumber(node,'x'),y:attrNumber(node,'y'),text:node.textContent||'',fs:attrNumber(node,'font-size',16),fontFamily:node.getAttribute('font-family')||'Arial, Helvetica, sans-serif',bold:/bold|700/i.test(node.getAttribute('font-weight')||''),italic:/italic/i.test(node.getAttribute('font-style')||''),stroke:sty.stroke,fill:sty.fill==='none'?'#111':sty.fill,sw:sty.sw,opacity:sty.opacity});
+    else if(tag==='text'){const anchor=inheritedSvgValue(node,'text-anchor','start');items.push({id:uid(),type:'text',x:attrNumber(node,'x'),y:attrNumber(node,'y'),text:node.textContent||'',fs:parseFloat(inheritedSvgValue(node,'font-size','16'))||16,fontFamily:inheritedSvgValue(node,'font-family','Arial, Helvetica, sans-serif'),bold:/bold|700/i.test(inheritedSvgValue(node,'font-weight','')),italic:/italic/i.test(inheritedSvgValue(node,'font-style','')),align:anchor==='middle'?'center':anchor==='end'?'right':'left',stroke:sty.stroke,fill:sty.fill==='none'?'#111':sty.fill,sw:sty.sw,opacity:sty.opacity});}
   });
-  return items.length?items:null;
+  return !unsupported&&items.length?items:null;
+}
+function mapImportedItemsToEmbedded(items,embedded){
+  const source=svgViewBoxFromMarkup(embedded.svg),sx=(+embedded.w||source.w)/Math.max(1,source.w),sy=(+embedded.h||source.h)/Math.max(1,source.h);
+  const mapX=value=>(+embedded.x||0)+(value-source.x)*sx,mapY=value=>(+embedded.y||0)+(value-source.y)*sy,strokeScale=Math.sqrt(Math.abs(sx*sy));
+  return copy(items).map(item=>{
+    if(['rect','ellipse','triangle','triangleDown','diamond','cuboid'].includes(item.type)){item.x=mapX(item.x);item.y=mapY(item.y);item.w*=sx;item.h*=sy;}
+    else if(item.type==='path'){item.d=rewritePathNumbers(item.d,(value,axis)=>axis==='x'?mapX(value):mapY(value));item.box=pathBoundsFromD(item.d);}
+    else if(item.type==='polyline')item.points=normalizedPolylinePoints(item.points).map(point=>({x:mapX(point.x),y:mapY(point.y)}));
+    else if(isLineItem(item)){item.x1=mapX(item.x1);item.y1=mapY(item.y1);item.x2=mapX(item.x2);item.y2=mapY(item.y2);}
+    else if(item.type==='text'){item.x=mapX(item.x);item.y=mapY(item.y);item.fs=Math.max(6,item.fs*sy);}
+    if(Number.isFinite(+item.sw))item.sw=Math.max(.5,item.sw*strokeScale);
+    return item;
+  });
+}
+function explodeSelectedSvg(){
+  const item=selected();
+  if(!item||item.type!=='embeddedSvg'){setStatus('Select one imported SVG figure first.');return;}
+  const parsed=parsedSvgItemsFromMarkup(item.svg);
+  if(!parsed){setStatus('This logo uses complex transforms or arc commands. Keep it as a sharp vector object for move, resize, rotate, duplicate, and add-on editing.');return;}
+  const parts=mapImportedItemsToEmbedded(parsed,item);
+  if(!parts.length){setStatus('No editable SVG parts were found.');return;}
+  pushHistory();
+  elements=elements.filter(entry=>entry.id!==item.id);
+  elements.push(...parts);
+  applySelectionIds(parts.map(part=>part.id));
+  renderAll();
+  setStatus(`${parts.length} visual part${parts.length===1?'':'s'} created. Click a line, path, shape, or label to edit it; all Maker tools remain available.`);
 }
 function fitImportedItems(items){
   const box=groupBounds(items),maxW=Math.min(420,viewW-96),maxH=Math.min(280,viewH-96);
