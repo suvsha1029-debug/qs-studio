@@ -1640,6 +1640,26 @@ check(
 );
 
 check(
+  'pasted SVG or wrapped HTML renders faithfully and remains portable to QS Gen',
+  includesAll(svgMaker,[
+    'Paste SVG / HTML Code',
+    'id="svgCodeInput"',
+    'function normalizePastedSvgCode(value)',
+    'function importSvgCode()',
+    'function importPreservedSvgMarkup',
+    "importSvgMarkup(clean,{preserve:!editable,source:'pasted code'})",
+    '.replace(/currentColor/gi,safeColor)'
+  ]) && includesAll(circuitJs,[
+    'function _cCustomExtractSvgFromText(value)',
+    'function _cCustomPayloadFromRawSvg',
+    'function _cCustomStructuredItemsFromSvg',
+    'accept=".svg,image/svg+xml,application/json,.json"',
+    'isSvg?_cCustomPayloadFromRawSvg(raw,file.name):JSON.parse(raw)'
+  ]) && html.includes('12-circuit-editor.js?v=svgcode1'),
+  'SVG Maker must accept code wrappers and QS Gen must directly accept the resulting SVG or Symbol JSON'
+);
+
+check(
   'GitHub landing page connects both tools in new tabs with circuit particles',
   includesAll(landing,[
     'id="circuitField"',

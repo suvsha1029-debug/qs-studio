@@ -14,6 +14,7 @@
 button{appearance:none;border:1px solid #4b6680;background:#fff;color:#10233f;min-height:30px;padding:5px 9px;cursor:pointer;font:700 12px Arial,sans-serif;border-radius:0;box-shadow:2px 2px 0 rgba(16,35,63,.16)}button:hover{background:#e4f0fc}button:active{transform:translate(1px,1px);box-shadow:none}button.active{background:#1e6fbe;color:#fff;border-color:#124b86}.primary{background:#155fa8;color:#fff;border-color:#0d477f}.danger{color:#8c1f24;border-color:#a9272c}.sep{width:1px;height:30px;background:#9db2c8;margin:0 2px}.toolbar{align-items:center;padding:8px 14px}.toolbar-group{display:flex;gap:4px;align-items:center;flex-wrap:wrap}.toolbar select{height:30px;border:1px solid #6683a1;background:#fff}.toolbar input[type=range]{width:82px}.toolbar small{font:11px Arial,sans-serif;color:var(--muted)}
 .workspace{display:grid;grid-template-columns:minmax(0,1fr) 294px;min-height:570px}.stage{position:relative;padding:16px;background:#cbd9e8;border-right:1px solid var(--line);overflow:auto}.canvas-shell{position:relative;min-width:680px;background:#fff;border:2px solid #344e68;box-shadow:5px 5px 0 rgba(16,35,63,.22)}#svgCanvas{display:block;width:100%;height:auto;min-height:440px;touch-action:none;background:#fff;cursor:crosshair}.side{background:#f9fbfd;padding:14px;font-family:Arial,sans-serif}.side h2{font:700 13px/1 Arial,sans-serif;text-transform:uppercase;letter-spacing:.05em;margin:0 0 8px;padding-bottom:7px;border-bottom:2px solid #1e6fbe}.side p{margin:0 0 12px;color:#536b82;font-size:12px}.prop-row{display:flex;gap:7px;align-items:center;margin:8px 0}.prop-row label{font-size:11px;font-weight:700;color:#3b526a;min-width:64px}.prop-row input,.prop-row select{flex:1;width:100%}.prop-row textarea{width:100%;min-height:72px;resize:vertical}.prop-check{font-size:12px;color:#344e68}.output{border-top:2px solid #315b85;background:#10233f;padding:12px 14px;font-family:Arial,sans-serif}.output-head{display:flex;justify-content:space-between;gap:8px;align-items:center;color:#fff;margin-bottom:8px}.output-head strong{font-size:12px;letter-spacing:.04em;text-transform:uppercase}.output textarea{display:block;width:100%;height:144px;resize:vertical;border:1px solid #6683a1;background:#f7fbff;color:#10233f;padding:8px;font:11px/1.35 Consolas,"Courier New",monospace}
 .text-entry{position:absolute;display:none;z-index:10;width:390px;max-width:calc(100% - 12px);padding:10px;background:#10233f;border:2px solid #d97706;box-shadow:4px 4px 0 rgba(16,35,63,.35);font-family:Arial,sans-serif}.text-entry textarea,.text-entry select{width:100%;border:1px solid #fff;padding:5px;font:13px Arial,sans-serif}.text-entry textarea{min-height:86px;resize:vertical}.text-entry .entry-toolbar,.text-entry .entry-actions{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.text-entry .entry-toolbar button{min-width:32px}.text-entry .entry-meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px}.text-entry .entry-label{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#d7e7ff}.text-entry button{min-height:26px;padding:3px 7px}.math-preview{display:none;margin-top:7px;padding:7px;background:#f8fbff;border:1px solid #bdd3ed;color:#10233f;min-height:34px;overflow:auto}.math-preview.on{display:block}.math-preview .katex{font-size:1.1em}.selection-box{fill:none;stroke:#d97706;stroke-width:1.5;stroke-dasharray:5 3;pointer-events:none}.selection-group-box{fill:rgba(30,111,190,.05);stroke:#155fa8;stroke-width:2;stroke-dasharray:7 4;pointer-events:none}.selection-group-box.locked{fill:rgba(21,95,168,.09);stroke:#0c315b;stroke-width:2.5;stroke-dasharray:none}.group-tools{position:absolute;display:none;z-index:9;gap:4px;align-items:center;padding:5px;background:#10233f;border:2px solid #d97706;box-shadow:4px 4px 0 rgba(16,35,63,.25);font-family:Arial,sans-serif;white-space:nowrap}.group-tools.on{display:flex}.group-tools button{min-height:24px;padding:3px 7px;font-size:11px;box-shadow:none}.group-tools .group-close{min-width:24px;color:#a9272c}.handle{fill:#1e6fbe;stroke:#fff;stroke-width:1.5;cursor:crosshair}.handle.group-handle{fill:#0c315b;cursor:nwse-resize}.workflow-strip{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:6px 14px;background:#dcecff;border-bottom:1px solid #8aa8c5;font:700 11px Arial,sans-serif;color:#294866}.workflow-strip strong{color:#0c315b}.workflow-strip .hint{font-weight:400;color:#536b82}.port-label{font:700 11px Arial,sans-serif;fill:#10233f;paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}.port-direction{font:800 8px Arial,sans-serif;fill:#1e6fbe;paint-order:stroke;stroke:#fff;stroke-width:2px}.joint-dot{fill:#111;stroke:#fff;stroke-width:.8;vector-effect:non-scaling-stroke}.properties:focus-within{outline:2px solid rgba(30,111,190,.15);outline-offset:4px}.hidden{display:none!important}#svgCanvas[data-tool]:not([data-tool="select"]) [data-id]{cursor:inherit!important}
+.code-dialog{width:min(780px,calc(100vw - 24px));max-height:min(760px,calc(100vh - 24px));padding:0;border:2px solid var(--navy);background:#f7fbff;color:var(--ink);box-shadow:10px 10px 0 rgba(12,49,91,.28);font-family:Arial,sans-serif}.code-dialog::backdrop{background:rgba(5,23,43,.72);backdrop-filter:blur(3px)}.code-dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:14px 16px;background:var(--navy);color:#fff;border-bottom:4px solid var(--accent)}.code-dialog-head h2{margin:0;font:700 18px/1.2 Georgia,serif}.code-dialog-head p{margin:4px 0 0;color:#c8e8ff;font-size:11px}.code-dialog-body{padding:14px 16px}.code-dialog textarea{display:block;width:100%;height:min(390px,48vh);resize:vertical;border:1px solid #6683a1;background:#fff;color:#10233f;padding:10px;font:12px/1.45 Consolas,"Courier New",monospace}.code-dialog-note{margin:8px 0;color:#536b82;font-size:11px}.code-dialog-option{display:flex;align-items:flex-start;gap:8px;margin:10px 0;color:#294866;font-size:12px}.code-dialog-option input{margin-top:2px}.code-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}.code-error{min-height:18px;margin:7px 0 0;color:#a9272c;font-size:11px;font-weight:700}
 @media(max-width:900px){.workspace{grid-template-columns:1fr}.stage{border-right:0;border-bottom:1px solid var(--line)}.side{min-height:220px}.masthead{align-items:flex-start;flex-direction:column}.maker{margin:0;border-width:0;box-shadow:none}.metadata,.toolbar{padding:9px}.field-grow{min-width:150px}}
 </style>
 </head>
@@ -73,11 +74,22 @@ button{appearance:none;border:1px solid #4b6680;background:#fff;color:#10233f;mi
     <span class="sep"></span>
     <div class="toolbar-group"><button type="button" onclick="undo()">Undo</button><button type="button" onclick="redo()">Redo</button><button type="button" onclick="lockSelectedAsCircuit()">Lock Circuit</button><button type="button" onclick="unlockSelectedCircuit()">Unlock</button><button type="button" onclick="duplicateSelection()">Duplicate</button><button type="button" onclick="rotateSelected(-15)">Rotate CCW</button><button type="button" onclick="rotateSelected(15)">Rotate CW</button><button type="button" class="danger" onclick="deleteSelected()">Delete</button><button type="button" class="danger" onclick="clearAll()">Clear</button></div>
     <span class="sep"></span>
-    <div class="toolbar-group"><select id="logicGateSelect" title="Insert editable logic gate"><option value="">Logic gate...</option><option value="and">AND</option><option value="nand">NAND</option><option value="or">OR</option><option value="nor">NOR</option><option value="xor">XOR</option><option value="xnor">XNOR</option><option value="not">NOT</option></select><button type="button" onclick="insertLogicGatePreset()">Insert Gate</button><label><input id="svgImportFile" type="file" accept=".svg,image/svg+xml" class="hidden" onchange="importSvgFile(event)"><button type="button" onclick="document.getElementById('svgImportFile').click()">Import SVG Gate</button></label></div>
+    <div class="toolbar-group"><select id="logicGateSelect" title="Insert editable logic gate"><option value="">Logic gate...</option><option value="and">AND</option><option value="nand">NAND</option><option value="or">OR</option><option value="nor">NOR</option><option value="xor">XOR</option><option value="xnor">XNOR</option><option value="not">NOT</option></select><button type="button" onclick="insertLogicGatePreset()">Insert Gate</button><label><input id="svgImportFile" type="file" accept=".svg,image/svg+xml" class="hidden" onchange="importSvgFile(event)"><button type="button" onclick="document.getElementById('svgImportFile').click()">Import SVG File</button></label><button type="button" class="primary" onclick="openSvgCodeDialog()">Paste SVG / HTML Code</button></div>
     <span class="sep"></span>
     <div class="toolbar-group"><button type="button" onclick="copySvg()">Copy SVG</button><button type="button" class="primary" onclick="downloadSvg()">Download SVG</button><button type="button" class="primary" onclick="downloadSymbolJson()">Export Symbol JSON</button><button type="button" class="primary" onclick="saveSymbolToLibrary()">Save to Library</button><label><input id="importFile" type="file" accept="application/json,.json" class="hidden" onchange="importSymbolJson(event)"><button type="button" onclick="document.getElementById('importFile').click()">Import JSON</button></label></div>
   </nav>
   <div class="workflow-strip"><strong id="selectionWorkflow">Nothing selected</strong><span id="gridWorkflow">Grid: 1 grid (10px)</span><span class="hint">Shift-click or drag-select parts · Ctrl+G locks a circuit · Ctrl+D duplicates · Ctrl+Shift+G unlocks</span></div>
+
+  <dialog id="svgCodeDialog" class="code-dialog" aria-labelledby="svgCodeTitle">
+    <div class="code-dialog-head"><div><h2 id="svgCodeTitle">Render SVG or HTML Code</h2><p>Paste a standalone SVG or an HTML wrapper containing one SVG.</p></div><button type="button" aria-label="Close code importer" onclick="closeSvgCodeDialog()">Close</button></div>
+    <div class="code-dialog-body">
+      <textarea id="svgCodeInput" spellcheck="false" placeholder="Paste &lt;svg&gt;...&lt;/svg&gt; or &lt;div&gt;&lt;svg&gt;...&lt;/svg&gt;&lt;/div&gt;"></textarea>
+      <p class="code-dialog-note">HTML wrappers, escaped tags, comments, groups, paths, text, viewBox, and currentColor are supported. Scripts and event handlers are removed.</p>
+      <label class="code-dialog-option"><input id="svgCodeEditable" type="checkbox"><span><strong>Convert supported shapes to editable parts.</strong> Leave off for the most faithful rendering of grouped or styled SVG code.</span></label>
+      <p id="svgCodeError" class="code-error" role="alert"></p>
+      <div class="code-dialog-actions"><button type="button" onclick="closeSvgCodeDialog()">Cancel</button><button type="button" class="primary" onclick="importSvgCode()">Render on Canvas</button></div>
+    </div>
+  </dialog>
 
   <section class="workspace">
     <div id="stage" class="stage">
@@ -852,6 +864,63 @@ function sanitizeEmbeddedSvg(raw){
   const text=String(raw||'').replace(/<script[\s\S]*?<\/script>/gi,'').replace(/\son[a-z]+\s*=\s*(['"]).*?\1/gi,'').replace(/\s(?:href|xlink:href)\s*=\s*(['"])\s*(?:javascript:|file:)[\s\S]*?\1/gi,'');
   const match=text.match(/<svg\b[^>]*>([\s\S]*?)<\/svg>/i);
   return match?text:text.replace(/<\/?(?:html|body)[^>]*>/gi,'');
+}
+function decodePastedSvgEntities(value){
+  const text=String(value||'');
+  if(/<svg\b/i.test(text)||!/&lt;svg\b/i.test(text))return text;
+  const box=document.createElement('textarea');
+  box.innerHTML=text;
+  return box.value;
+}
+function normalizePastedSvgCode(value){
+  let text=decodePastedSvgEntities(String(value||'').replace(/\u00a0/g,' ').replace(/\\(?=<)/g,'').replace(/&#x20;|&#32;/gi,' '));
+  const start=text.search(/<svg\b/i),end=text.toLowerCase().lastIndexOf('</svg>');
+  if(start<0||end<start)throw new Error('No complete <svg>...</svg> figure was found in the pasted code.');
+  text=text.slice(start,end+6)
+    .replace(/\bxmlns\s*=\s*(['"])[\s\S]*?\1/i,'xmlns="http://www.w3.org/2000/svg"');
+  if(!/\bxmlns\s*=/.test(text))text=text.replace(/<svg\b/i,'<svg xmlns="http://www.w3.org/2000/svg"');
+  const clean=sanitizeEmbeddedSvg(text);
+  const doc=new DOMParser().parseFromString(clean,'image/svg+xml');
+  const root=doc.documentElement,parseError=doc.querySelector('parsererror');
+  if(parseError||!root||root.nodeName.toLowerCase()!=='svg')throw new Error('The SVG code is incomplete or contains invalid XML.');
+  root.querySelectorAll('script,iframe,object,embed,link,meta,base').forEach(node=>node.remove());
+  root.querySelectorAll('*').forEach(node=>{
+    [...node.attributes].forEach(attr=>{
+      const name=attr.name.toLowerCase(),content=String(attr.value||'');
+      if(name.startsWith('on')||((name==='href'||name==='xlink:href')&&/^\s*(?:javascript:|file:)/i.test(content)))node.removeAttribute(attr.name);
+    });
+  });
+  const rootStyle=root.getAttribute('style')||'';
+  const declaredColor=root.getAttribute('color')||(rootStyle.match(/(?:^|;)\s*color\s*:\s*([^;]+)/i)||[])[1]||'';
+  const safeColor=/^(?:#[0-9a-f]{3,8}|[a-z]+|rgb\([^)]*\)|hsl\([^)]*\))$/i.test(declaredColor.trim())?declaredColor.trim():(document.getElementById('stroke')?.value||'#111111');
+  return new XMLSerializer().serializeToString(root).replace(/currentColor/gi,safeColor);
+}
+function svgCodeLabel(markup){
+  try{
+    const root=new DOMParser().parseFromString(markup,'image/svg+xml').documentElement;
+    return String(root.getAttribute('aria-label')||root.querySelector('title')?.textContent||'').trim().slice(0,80);
+  }catch(_){return '';}
+}
+function openSvgCodeDialog(){
+  const dialog=document.getElementById('svgCodeDialog'),error=document.getElementById('svgCodeError');
+  error.textContent='';
+  if(typeof dialog.showModal==='function')dialog.showModal();else dialog.setAttribute('open','');
+  setTimeout(()=>document.getElementById('svgCodeInput')?.focus(),0);
+}
+function closeSvgCodeDialog(){
+  const dialog=document.getElementById('svgCodeDialog');
+  if(typeof dialog.close==='function'&&dialog.open)dialog.close();else dialog.removeAttribute('open');
+}
+function importSvgCode(){
+  const input=document.getElementById('svgCodeInput'),error=document.getElementById('svgCodeError');
+  try{
+    const clean=normalizePastedSvgCode(input.value),editable=document.getElementById('svgCodeEditable').checked,label=svgCodeLabel(clean);
+    if(label&&document.getElementById('symbolName').value.trim()==='Custom Symbol')document.getElementById('symbolName').value=label;
+    if(label&&!document.getElementById('symbolFileName').value.trim())document.getElementById('symbolFileName').value=label.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+    importSvgMarkup(clean,{preserve:!editable,source:'pasted code'});
+    error.textContent='';
+    closeSvgCodeDialog();
+  }catch(reason){error.textContent=reason?.message||'Could not render this SVG code.';}
 }
 function svgViewBoxFromMarkup(raw){
   const text=String(raw||'');
@@ -1773,8 +1842,13 @@ function fitImportedItems(items){
   placed.forEach(item=>moveItemBy(item,dx,dy));
   return placed;
 }
-function importSvgMarkup(markup){
+function importPreservedSvgMarkup(clean,source='SVG code'){
+  const box=svgViewBoxFromMarkup(clean),factor=Math.min(2.5,Math.min(420/Math.max(1,box.w),280/Math.max(1,box.h)));
+  insertItemsAsGroup([{id:uid(),type:'embeddedSvg',x:48,y:48,w:Math.max(12,box.w*factor),h:Math.max(12,box.h*factor),svg:clean,opacity:1}],`${source} rendered as a faithful vector figure. Download SVG or export Symbol JSON for QS Gen.`);
+}
+function importSvgMarkup(markup,options={}){
   const clean=sanitizeEmbeddedSvg(markup);
+  if(options.preserve){importPreservedSvgMarkup(clean,options.source||'SVG');return;}
   const structured=structuredSvgData(clean);
   if(structured&&importStructuredSvg(structured))return;
   let items=null;

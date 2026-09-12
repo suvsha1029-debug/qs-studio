@@ -901,6 +901,38 @@ function _cCustomPrepareSourceSvg(value,fallbackW=120,fallbackH=80){
   const viewBox=_cCustomSourceSvgViewBox(svg,fallbackW,fallbackH);
   return {svg,inner,viewBox};
 }
+function _cCustomExtractSvgFromText(value){
+  let text=String(value||'').replace(/\u00a0/g,' ').replace(/\\(?=<)/g,'').replace(/&#x20;|&#32;/gi,' ');
+  if(!/<svg\b/i.test(text)&&/&lt;svg\b/i.test(text)) text=_cCustomHtmlDecode(text);
+  const start=text.search(/<svg\b/i),end=text.toLowerCase().lastIndexOf('</svg>');
+  if(start<0||end<start) return '';
+  text=text.slice(start,end+6).replace(/\bxmlns\s*=\s*(['"])[\s\S]*?\1/i,'xmlns="http://www.w3.org/2000/svg"');
+  if(!/\bxmlns\s*=/.test(text)) text=text.replace(/<svg\b/i,'<svg xmlns="http://www.w3.org/2000/svg"');
+  return _cCustomSourceSvgText(text);
+}
+function _cCustomStructuredItemsFromSvg(svg){
+  try{
+    const doc=new DOMParser().parseFromString(svg,'image/svg+xml');
+    const meta=doc.querySelector('metadata#qs-symbol-data[data-schema="qs-studio-svg/v2"]');
+    const data=meta?JSON.parse(meta.textContent||''):null;
+    return data?.schema==='qs-studio-svg/v2'&&Array.isArray(data.items)&&data.items.length&&data.items.length<=500?data:null;
+  }catch(_){return null;}
+}
+function _cCustomPayloadFromRawSvg(value,fileName='custom-symbol.svg'){
+  const svg=_cCustomExtractSvgFromText(value),source=_cCustomPrepareSourceSvg(svg);
+  if(!source) throw new Error('This SVG file is incomplete or contains unsupported active content.');
+  const structured=_cCustomStructuredItemsFromSvg(svg),vb=source.viewBox;
+  let label='';
+  try{
+    const root=new DOMParser().parseFromString(svg,'image/svg+xml').documentElement;
+    label=String(root.getAttribute('aria-label')||root.querySelector('title')?.textContent||'').trim();
+  }catch(_){ }
+  const fileBase=String(fileName||'custom-symbol').replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim();
+  label=(label||fileBase||'Custom SVG').slice(0,80);
+  const slug=label.toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,70)||'custom_svg';
+  const elements=structured?.items||[{type:'embeddedSvg',x:vb.x,y:vb.y,w:vb.w,h:vb.h,svg,stroke:'#111',fill:'none',sw:2,opacity:1}];
+  return {version:5,kind:'qs-studio-circuit-symbol',id:`custom_${slug}_${Date.now().toString(36)}`,libraryKey:slug,label,width:structured?.width||vb.w,height:structured?.height||vb.h,sourceViewBox:vb,anchorMode:'top-left',elements,circuitGroups:structured?.circuitGroups||[],svg,sourceSvg:svg,exportMeta:{importedFromRawSvg:true,preservePortsAndJunctions:!!structured}};
+}
 function _cCustomSourceDrawBounds(source,elements,fallbackW=120,fallbackH=80){
   const base=_cCustomBounds(elements,fallbackW,fallbackH);
   let minX=Number.isFinite(+base.minX)?+base.minX:base.originX-base.w/2;
@@ -2120,9 +2152,9 @@ function openCircuitEditor(key, options={}){
       ${_cPaletteHTML(groups[0])}
     </div>
     <div style="padding:6px 8px;border-top:1px solid var(--border2);font-size:9px;color:var(--muted);line-height:1.55;flex-shrink:0">
-      <button class="tool-btn" type="button" onclick="cEdImportCustomSymbol()" style="width:100%;font-size:10px;margin-bottom:5px">Import SVG Symbol</button>
+      <button class="tool-btn" type="button" onclick="cEdImportCustomSymbol()" style="width:100%;font-size:10px;margin-bottom:5px">Import SVG / Symbol</button>
       <button class="tool-btn" type="button" onclick="cEdLoadLocalSymbolLibrary()" style="width:100%;font-size:10px;margin-bottom:5px">Load Local Library</button>
-      <input id="cEdCustomSymbolInput" type="file" accept="application/json,.json" style="display:none" onchange="cEdLoadCustomSymbol(event)">
+      <input id="cEdCustomSymbolInput" type="file" accept=".svg,image/svg+xml,application/json,.json" style="display:none" onchange="cEdLoadCustomSymbol(event)">
       Click to place at centre.<br>Drag placed symbol to move.
     </div>
   </div>
@@ -2387,7 +2419,8 @@ function cEdLoadCustomSymbol(event){
   const reader=new FileReader();
   reader.onload=()=>{
     try{
-      const symbols=_cRegisterCustomSymbolBundle(JSON.parse(String(reader.result||'')),true);
+      const raw=String(reader.result||''),isSvg=/\.svg$/i.test(file.name)||/image\/svg\+xml/i.test(file.type)||/<svg\b/i.test(raw);
+      const symbols=_cRegisterCustomSymbolBundle(isSvg?_cCustomPayloadFromRawSvg(raw,file.name):JSON.parse(raw),true);
       if(!symbols.length) throw new Error('This is not a valid QS Studio symbol file.');
       _cEnsureCustomTab();
       cEdSetGroup('Custom');
