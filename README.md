@@ -24,4 +24,13 @@ node tools/stability-regression.js
 
 ## Rights
 
-Copyright (c) 2026. No license is granted for redistribution, modification, or commercial use unless a separate license is added by the owner.
+Copyright (c) 2026 **suvsha1029-debug**. QS Studio, QS Gen and SVG Maker are publicly
+viewable, but are **not open source**. See [LICENSE](LICENSE) and [copyright notice](NOTICE.md).
+
+Request written permission for reuse, modification, redistribution, commercial
+licensing or independent deployment at [suvsha1029@gmail.com](mailto:suvsha1029@gmail.com).
+Normal use of the author's hosted application is permitted. No ownership is
+claimed over users' original papers, diagrams or other content.
+
+GitHub's permitted viewing and forking rights, applicable legal exceptions,
+third-party licenses and previously granted permissions remain unaffected.
